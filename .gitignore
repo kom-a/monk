@@ -1,0 +1,8 @@
+#binary
+bin/
+bin-int/
+
+#Visual studio
+.vs/
+*.sln
+**.vcxproj*
