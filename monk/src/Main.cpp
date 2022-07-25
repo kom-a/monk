@@ -7,11 +7,9 @@ int main()
 {
 	using namespace monk;
 
-	Log::GetInstance().SetLevel(Log::Level::TRACE);
-
 	Window window(1280, 720, "Monk");
 
-	while (true)
+	while (!window.Closed())
 	{
 		window.Update();
 	}
