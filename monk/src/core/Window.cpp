@@ -41,7 +41,7 @@ namespace monk
 		wc.lpszClassName = title.c_str();
 
 		if (!RegisterClassEx(&wc))
-			DIE("Could not register window class");
+			DIE("Could not register '{0}' window class", title);
 		else
 			LOG_INFO("Window class '{0}' registered", title);
 
