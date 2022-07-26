@@ -22,6 +22,9 @@ namespace monk
 	private:
 		friend LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
+		bool CreateWin32Window();
+		bool CreateOpenGLContext();
+
 	private:
 		static Window* GetWindowByHandle(const HWND& handle);
 
@@ -33,7 +36,6 @@ namespace monk
 		struct WindowData
 		{
 			bool Closed;
-			bool Initialized;
 			std::string Title;
 			int Width;
 			int Height;
