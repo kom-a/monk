@@ -2,9 +2,8 @@
 
 #include "core/Log.h"
 
-#include <gl/GL.h>
-
-#pragma comment (lib, "opengl32.lib")
+#include <gl/glew.h>
+#include <string>
 
 namespace monk
 {
@@ -51,6 +50,13 @@ namespace monk
 			DIE("Could not create OpenGL context");
 		else
 			LOG_INFO("OpenGL version: {0}", (char*)glGetString(GL_VERSION));
+		
+		if (glewInit() != GLEW_OK)
+			LOG_ERROR("Fauled to init glew");
+		else
+			LOG_INFO("GLEW version: {0}", glewGetString(GLEW_VERSION));
+
+		m_SwapIntervalFn = (PFNWGLSWAPINTERVALEXTPROC)wglGetProcAddress("wglSwapIntervalEXT");
 
 		m_WindowTable[m_WindowHandle] = this;
 
@@ -72,18 +78,7 @@ namespace monk
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 		}
-
-		glClearColor(0.1f, 0.2f, 0.3f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
-
-		glBegin(GL_TRIANGLES);
-
-		glColor3f(0.5f, 0.2f, 0.3f);
-		glVertex2f(-0.5f, -0.5f);
-		glVertex2f(0.0f, 0.5f);
-		glVertex2f(0.5f, -0.5f);
-		glEnd();
-
+		
 		SwapBuffers(GetDC(m_WindowHandle));
 	}
 
@@ -130,7 +125,7 @@ namespace monk
 		desiredPixelFormat.nVersion = 1;
 		desiredPixelFormat.iPixelType = PFD_TYPE_RGBA;
 		desiredPixelFormat.dwFlags = PFD_SUPPORT_OPENGL | PFD_DRAW_TO_WINDOW | PFD_DOUBLEBUFFER;
-		desiredPixelFormat.cColorBits = 32;
+		desiredPixelFormat.cColorBits = 24;
 		desiredPixelFormat.cAlphaBits = 8;
 		desiredPixelFormat.iLayerType = PFD_MAIN_PLANE;
 

@@ -20,7 +20,21 @@ project "monk"
    }
 
    includedirs {
-      "./monk/src"
+      "./monk/src",
+      "./lib/include"
+   }
+
+   defines {
+       "GLEW_STATIC"
+   }
+
+   libdirs {
+       "lib/"
+   }
+
+   links {
+       "glew32s.lib",
+       "opengl32.lib"
    }
 
    filter "configurations:Debug"

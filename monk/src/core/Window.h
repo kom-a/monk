@@ -5,6 +5,9 @@
 #include <functional>
 #include <unordered_map>
 
+// wgl extension pointer typedefs
+typedef BOOL(WINAPI* PFNWGLSWAPINTERVALEXTPROC)(int);
+
 namespace monk
 {
 	class Window
@@ -18,6 +21,8 @@ namespace monk
 
 		inline void Close() { m_WindowData.Closed = true; }
 		inline bool Closed() const { return m_WindowData.Closed; }
+
+		inline void SwapInterval(int interval) { m_SwapIntervalFn(interval); }
 
 	private:
 		friend LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -40,5 +45,7 @@ namespace monk
 			int Width;
 			int Height;
 		} m_WindowData;
+
+		PFNWGLSWAPINTERVALEXTPROC m_SwapIntervalFn;
 	};
 }
