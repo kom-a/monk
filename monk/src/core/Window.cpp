@@ -1,8 +1,8 @@
 #include "Window.h"
 
 #include "core/Log.h"
+#include "utils/OpenGL.h"
 
-#include <gl/glew.h>
 #include <string>
 
 namespace monk
@@ -27,7 +27,8 @@ namespace monk
 			window->m_WindowData.Width = LOWORD(lParam);
 			window->m_WindowData.Height = HIWORD(lParam);
 			int height = HIWORD(lParam);
-			glViewport(0, 0, window->m_WindowData.Width, window->m_WindowData.Height);
+			if(glViewport)
+				glViewport(0, 0, window->m_WindowData.Width, window->m_WindowData.Height);
 		} break;			
 		}
 
@@ -48,13 +49,6 @@ namespace monk
 
 		if (!CreateOpenGLContext())
 			DIE("Could not create OpenGL context");
-		else
-			LOG_INFO("OpenGL version: {0}", (char*)glGetString(GL_VERSION));
-		
-		if (glewInit() != GLEW_OK)
-			LOG_ERROR("Fauled to init glew");
-		else
-			LOG_INFO("GLEW version: {0}", glewGetString(GLEW_VERSION));
 
 		m_SwapIntervalFn = (PFNWGLSWAPINTERVALEXTPROC)wglGetProcAddress("wglSwapIntervalEXT");
 

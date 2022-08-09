@@ -4,14 +4,23 @@
 #include "core/Window.h"
 #include "core/Log.h"
 
-#include <gl/glew.h>
+#include "utils/OpenGL.h"
 
 int main()
 {
 	using namespace monk;
+	using namespace monk::utils;
 
 	Window window(1280, 720, "Monk");
-	window.SwapInterval(1);
+
+	if (!OpenGLLoader::LoadOpenGL(OpenGLVersion::OPENGL_3_3))
+		DIE("Fauiled to load OpenGL functions");
+	else
+		LOG_INFO("OpenGL version: {0}", glGetString(GL_VERSION));
+
+	// NOTE: 
+	// Swap interval is not set to window instance. Maybe change it to Window::SwapInterval? 
+	window.SwapInterval(1); 
 
 	unsigned vertex_array;
 	glGenVertexArrays(1, &vertex_array);
@@ -42,8 +51,6 @@ int main()
 		auto delta = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - lastTime).count();
 		lastTime = currentTime;
 
-		LOG_INFO("delta: {0}", delta);
-
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		glDrawArrays(GL_TRIANGLES, 0, 3);
@@ -51,8 +58,8 @@ int main()
 		window.Update();
 	}
 
-	glDeleteBuffers(1, &vertex_object);
-	glDeleteVertexArrays(1, &vertex_array);
+	/*glDeleteBuffers(1, &vertex_object);
+	glDeleteVertexArrays(1, &vertex_array);*/
 
 	return 0;
 }
