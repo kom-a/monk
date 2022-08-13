@@ -419,6 +419,7 @@ namespace monk::utils
 
 	bool OpenGLLoader::LoadOpenGL(OpenGLVersion version)
 	{
+		// TODO: Return error message if failed to load functions
 		int intVersion = (int)version;
 
 		if (intVersion < 0 || intVersion >= (int)OpenGLVersion::OPENGL_VERSION_COUNT)

@@ -119,8 +119,6 @@ namespace monk
 		template<typename T, typename... Args>
 		void Prepare(const std::vector<Token*>* tokens, int index, T arg, Args... args);
 
-
-
 	private:
 		Level m_Level;
 	};

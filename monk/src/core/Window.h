@@ -5,6 +5,8 @@
 #include <functional>
 #include <unordered_map>
 
+#include "math/vec2.h"
+
 // wgl extension pointer typedefs
 typedef BOOL(WINAPI* PFNWGLSWAPINTERVALEXTPROC)(int);
 
@@ -21,6 +23,9 @@ namespace monk
 
 		inline void Close() { m_WindowData.Closed = true; }
 		inline bool Closed() const { return m_WindowData.Closed; }
+		inline int GetWidth() const { return m_WindowData.Width; }
+		inline int GetHeight() const { return m_WindowData.Height; }
+		inline math::vec2 GetSize() const { return math::vec2((float)m_WindowData.Width, (float)m_WindowData.Height); }
 
 		inline void SwapInterval(int interval) { m_SwapIntervalFn(interval); }
 

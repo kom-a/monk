@@ -2075,5 +2075,3 @@ namespace monk::utils
 		static HMODULE s_OpenGLLib;
 	};
 }
-
-void LoadOpenGL();
