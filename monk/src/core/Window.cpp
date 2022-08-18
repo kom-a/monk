@@ -2,6 +2,8 @@
 
 #include "core/Log.h"
 #include "utils/OpenGL.h"
+#include "events/KeyEvent.h"
+#include "events/MouseEvent.h"
 
 #include <string>
 
@@ -12,7 +14,7 @@ namespace monk
 	LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		Window* window = Window::GetWindowByHandle(hWnd);
-
+	
 		if (!window)
 			return DefWindowProc(hWnd, uMsg, wParam, lParam);
 
@@ -29,7 +31,61 @@ namespace monk
 			int height = HIWORD(lParam);
 			if(glViewport)
 				glViewport(0, 0, window->m_WindowData.Width, window->m_WindowData.Height);
-		} break;			
+		} break;
+		case WM_KEYDOWN:
+		{
+			if (!window->m_WindowData.EventCallbackFn)
+				break;
+
+			KeyDownEvent e((int)wParam, lParam & (1 << 30));
+			window->m_WindowData.EventCallbackFn(e);
+		} break;
+		case WM_LBUTTONDOWN:
+		{
+			if (!window->m_WindowData.EventCallbackFn)
+				break;
+
+			MouseButtonDownEvent e(0);
+			window->m_WindowData.EventCallbackFn(e);
+		} break;
+		case WM_MBUTTONDOWN:
+		{
+			MouseButtonDownEvent e(2);
+			window->m_WindowData.EventCallbackFn(e);
+		} break;
+		case WM_RBUTTONDOWN:
+		{
+			MouseButtonDownEvent e(3);
+			window->m_WindowData.EventCallbackFn(e);
+		} break;
+		case WM_LBUTTONUP:
+		{
+			if (!window->m_WindowData.EventCallbackFn)
+				break;
+
+			MouseButtonUpEvent e(0);
+			window->m_WindowData.EventCallbackFn(e);
+		} break;
+		case WM_MBUTTONUP:
+		{
+			MouseButtonUpEvent e(2);
+			window->m_WindowData.EventCallbackFn(e);
+		} break;
+		case WM_RBUTTONUP:
+		{
+			MouseButtonUpEvent e(1);
+			window->m_WindowData.EventCallbackFn(e);
+		} break;
+		case WM_MOUSEMOVE:
+		{
+			MouseMoveEvent e(LOWORD(lParam), HIWORD(lParam));
+			window->m_WindowData.EventCallbackFn(e);
+		} break;
+		case WM_MOUSEWHEEL:
+		{
+			MouseScrollEvent e(0, GET_WHEEL_DELTA_WPARAM(wParam));
+			window->m_WindowData.EventCallbackFn(e);
+		} break;
 		}
 
 		return DefWindowProc(hWnd, uMsg, wParam, lParam);
@@ -41,6 +97,7 @@ namespace monk
 		m_WindowData.Title = title;
 		m_WindowData.Width = width;
 		m_WindowData.Height = height;
+		m_WindowData.EventCallbackFn = nullptr;
 
 		if (!CreateWin32Window())
 			DIE("Could not create window");
