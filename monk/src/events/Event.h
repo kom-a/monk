@@ -5,6 +5,7 @@ namespace monk
 	enum class EventType
 	{
 		None = 0,
+		WindowClose, WindowResize, 
 		KeyDown, KeyUp,
 		MouseButtonDown, MouseButtonUp, MouseMove, MouseScroll,
 	};

@@ -18,6 +18,9 @@ public:
 private:
 	void OnEvent(Event& e);
 
+	bool OnWindowClose(WindowCloseEvent& e);
+	bool OnWindowResize(WindowResizeEvent& e);
+
 	bool OnKeyDown(KeyDownEvent& e);
 	bool OnKeyUp(KeyUpEvent& e);
 
@@ -61,6 +64,9 @@ void Application::Run()
 
 void Application::OnEvent(Event& e)
 {
+	e.Dispatch<WindowCloseEvent>(BIND_FUNCTION(Application::OnWindowClose));
+	e.Dispatch<WindowResizeEvent>(BIND_FUNCTION(Application::OnWindowResize));
+		
   	e.Dispatch<KeyDownEvent>(BIND_FUNCTION(Application::OnKeyDown));
 	e.Dispatch<KeyUpEvent>(BIND_FUNCTION(Application::OnKeyUp));
 
@@ -68,6 +74,22 @@ void Application::OnEvent(Event& e)
 	e.Dispatch<MouseButtonDownEvent>(BIND_FUNCTION(Application::OnMouseButtonDown));
 	e.Dispatch<MouseButtonUpEvent>(BIND_FUNCTION(Application::OnMouseButtonUp));
 	e.Dispatch<MouseScrollEvent>(BIND_FUNCTION(Application::OnMouseScroll));
+}
+
+bool Application::OnWindowClose(WindowCloseEvent& e)
+{
+	LOG_WARN("Saving data...");
+	LOG_ERROR("Exit");
+
+	return true;
+}
+
+bool Application::OnWindowResize(WindowResizeEvent& e)
+{
+	LOG_TRACE("Window resized: {0}, {1}", e.GetWidth(), e.GetHeight());
+	glViewport(0, 0, e.GetWidth(), e.GetHeight());
+
+	return true;
 }
 
 bool Application::OnKeyDown(KeyDownEvent& e)

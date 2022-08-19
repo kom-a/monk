@@ -2,6 +2,7 @@
 
 #include "core/Log.h"
 #include "utils/OpenGL.h"
+#include "events/WindowEvent.h"
 #include "events/KeyEvent.h"
 #include "events/MouseEvent.h"
 
@@ -15,36 +16,36 @@ namespace monk
 	{
 		Window* window = Window::GetWindowByHandle(hWnd);
 	
-		if (!window)
+		if (!window || !window->m_WindowData.EventCallbackFn)
 			return DefWindowProc(hWnd, uMsg, wParam, lParam);
 
 		switch (uMsg)
 		{
 		case WM_CLOSE:
 		{
+			WindowCloseEvent e;
+			window->m_WindowData.EventCallbackFn(e);
+
 			window->Close();
 		}break;
 		case WM_SIZE:
 		{
-			window->m_WindowData.Width = LOWORD(lParam);
-			window->m_WindowData.Height = HIWORD(lParam);
+			int width = LOWORD(lParam);
 			int height = HIWORD(lParam);
-			if(glViewport)
-				glViewport(0, 0, window->m_WindowData.Width, window->m_WindowData.Height);
+
+			window->m_WindowData.Width = width;
+			window->m_WindowData.Height = height;
+
+			WindowResizeEvent e(width, height);
+			window->m_WindowData.EventCallbackFn(e);
 		} break;
 		case WM_KEYDOWN:
 		{
-			if (!window->m_WindowData.EventCallbackFn)
-				break;
-
 			KeyDownEvent e((int)wParam, lParam & (1 << 30));
 			window->m_WindowData.EventCallbackFn(e);
 		} break;
 		case WM_LBUTTONDOWN:
 		{
-			if (!window->m_WindowData.EventCallbackFn)
-				break;
-
 			MouseButtonDownEvent e(0);
 			window->m_WindowData.EventCallbackFn(e);
 		} break;
@@ -60,9 +61,6 @@ namespace monk
 		} break;
 		case WM_LBUTTONUP:
 		{
-			if (!window->m_WindowData.EventCallbackFn)
-				break;
-
 			MouseButtonUpEvent e(0);
 			window->m_WindowData.EventCallbackFn(e);
 		} break;
