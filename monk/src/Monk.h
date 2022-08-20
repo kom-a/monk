@@ -3,7 +3,7 @@
 #include "core/Window.h"
 #include "core/Log.h"
 #include "utils/OpenGL.h"
-#include "math/math.h"
+#include "math/Math.h"
 #include "events/Event.h"
 #include "events/WindowEvent.h"
 #include "events/KeyEvent.h"

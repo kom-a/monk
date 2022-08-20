@@ -1,10 +1,9 @@
-#include "math/vec3.h"
+#include "math/Vec3.h"
 
 #include <cmath>
 
 namespace monk::math
 {
-
 	vec3::vec3()
 		: x(0), y(0), z(0)
 	{
