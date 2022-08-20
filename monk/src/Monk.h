@@ -8,3 +8,6 @@
 #include "events/WindowEvent.h"
 #include "events/KeyEvent.h"
 #include "events/MouseEvent.h"
+#include "input/Input.h"
+#include "input/KeyCodes.h"
+#include "input/MouseCodes.h"

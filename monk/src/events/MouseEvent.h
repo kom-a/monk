@@ -1,6 +1,7 @@
 #pragma once
 
 #include "events/Event.h"
+#include "input/MouseCodes.h"
 
 namespace monk
 {
@@ -39,31 +40,31 @@ namespace monk
 	class MouseButtonDownEvent : public Event
 	{
 	public:
-		MouseButtonDownEvent(int button)
+		MouseButtonDownEvent(MouseCode button)
 			: m_Button(button) {}
 
-		int GetButton() const { return m_Button; }
+		MouseCode GetButton() const { return m_Button; }
 
 		static EventType GetStaticType() { return EventType::MouseButtonDown; }
 		virtual EventType GetEventType() const override { return GetStaticType(); }
 
 	protected:
-		int m_Button;
+		MouseCode m_Button;
 	};
 
 	class MouseButtonUpEvent : public Event
 	{
 	public:
-		MouseButtonUpEvent(int button)
+		MouseButtonUpEvent(MouseCode button)
 			: m_Button(button) {}
 
-		int GetButton() const { return m_Button; }
+		MouseCode GetButton() const { return m_Button; }
 
 		static EventType GetStaticType() { return EventType::MouseButtonUp; }
 		virtual EventType GetEventType() const override { return GetStaticType(); }
 
 	protected:
-		int m_Button;
+		MouseCode m_Button;
 	};
 
 }

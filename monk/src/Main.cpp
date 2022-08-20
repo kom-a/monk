@@ -3,6 +3,8 @@
 
 #include "Monk.h"
 
+#include <windows.h>
+
 #define BIND_FUNCTION(fn) std::bind(&fn, this, std::placeholders::_1)
 
 using namespace monk;
@@ -58,22 +60,25 @@ void Application::Run()
 	{
 		glClear(GL_COLOR_BUFFER_BIT);
 
+		if (Input::IsKeyPressed(Key::Escape))
+			m_Window->Close();
+		
 		m_Window->Update();
 	}
 }
 
 void Application::OnEvent(Event& e)
 {
-	e.Dispatch<WindowCloseEvent>(BIND_FUNCTION(Application::OnWindowClose));
-	e.Dispatch<WindowResizeEvent>(BIND_FUNCTION(Application::OnWindowResize));
-		
-  	e.Dispatch<KeyDownEvent>(BIND_FUNCTION(Application::OnKeyDown));
-	e.Dispatch<KeyUpEvent>(BIND_FUNCTION(Application::OnKeyUp));
+	//e.Dispatch<WindowCloseEvent>(BIND_FUNCTION(Application::OnWindowClose));
+	//e.Dispatch<WindowResizeEvent>(BIND_FUNCTION(Application::OnWindowResize));
+	//	
+    //e.Dispatch<KeyDownEvent>(BIND_FUNCTION(Application::OnKeyDown));
+	//e.Dispatch<KeyUpEvent>(BIND_FUNCTION(Application::OnKeyUp));
 
-	e.Dispatch<MouseMoveEvent>(BIND_FUNCTION(Application::OnMouseMove));
-	e.Dispatch<MouseButtonDownEvent>(BIND_FUNCTION(Application::OnMouseButtonDown));
-	e.Dispatch<MouseButtonUpEvent>(BIND_FUNCTION(Application::OnMouseButtonUp));
-	e.Dispatch<MouseScrollEvent>(BIND_FUNCTION(Application::OnMouseScroll));
+	//e.Dispatch<MouseMoveEvent>(BIND_FUNCTION(Application::OnMouseMove));
+	//e.Dispatch<MouseButtonDownEvent>(BIND_FUNCTION(Application::OnMouseButtonDown));
+	//e.Dispatch<MouseButtonUpEvent>(BIND_FUNCTION(Application::OnMouseButtonUp));
+	//e.Dispatch<MouseScrollEvent>(BIND_FUNCTION(Application::OnMouseScroll));
 }
 
 bool Application::OnWindowClose(WindowCloseEvent& e)

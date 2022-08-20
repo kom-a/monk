@@ -1,27 +1,28 @@
 #pragma once
 
 #include "events/Event.h"
+#include "input/KeyCodes.h"
 
 namespace monk
 {
 	class KeyEvent : public Event
 	{
 	public:
-		int GetKeyCode() const { return m_KeyCode; }
+		KeyCode GetKeyCode() const { return m_KeyCode; }
 
 	protected:
-		KeyEvent(int keycode)
+		KeyEvent(KeyCode keycode)
 			: m_KeyCode(keycode) {}
 
 		virtual EventType GetEventType() const = 0;
 
-		int m_KeyCode;
+		KeyCode m_KeyCode;
 	};
 
 	class KeyDownEvent : public KeyEvent
 	{
 	public:
-		KeyDownEvent(int keycode, bool isRepeat = false)
+		KeyDownEvent(KeyCode keycode, bool isRepeat = false)
 			: KeyEvent(keycode), m_IsRepeat(isRepeat) {}
 
 		bool IsRepeat() const { return m_IsRepeat; }
@@ -36,7 +37,7 @@ namespace monk
 	class KeyUpEvent : public KeyEvent
 	{
 	public:
-		KeyUpEvent(int keycode)
+		KeyUpEvent(KeyCode keycode)
 			: KeyEvent(keycode) {}
 
 		static EventType GetStaticType() { return EventType::KeyUp; }

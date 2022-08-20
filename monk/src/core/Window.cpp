@@ -6,6 +6,8 @@
 #include "events/KeyEvent.h"
 #include "events/MouseEvent.h"
 
+#include "input/Input.h"
+
 #include <string>
 
 namespace monk
@@ -76,7 +78,13 @@ namespace monk
 		} break;
 		case WM_MOUSEMOVE:
 		{
-			MouseMoveEvent e(LOWORD(lParam), HIWORD(lParam));
+			float x = LOWORD(lParam);
+			float y = HIWORD(lParam);
+
+			Input::s_MouseX = x;
+			Input::s_MouseY = y;
+
+			MouseMoveEvent e(x, y);
 			window->m_WindowData.EventCallbackFn(e);
 		} break;
 		case WM_MOUSEWHEEL:
