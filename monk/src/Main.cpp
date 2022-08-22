@@ -1,5 +1,6 @@
 #include <iostream>
 #include <functional>
+#include <string>
 
 #include "Monk.h"
 
@@ -8,6 +9,7 @@
 #define BIND_FUNCTION(fn) std::bind(&fn, this, std::placeholders::_1)
 
 using namespace monk;
+using namespace monk::gfx;
 
 class Application
 {
@@ -19,17 +21,6 @@ public:
 
 private:
 	void OnEvent(Event& e);
-
-	bool OnWindowClose(WindowCloseEvent& e);
-	bool OnWindowResize(WindowResizeEvent& e);
-
-	bool OnKeyDown(KeyDownEvent& e);
-	bool OnKeyUp(KeyUpEvent& e);
-
-	bool OnMouseMove(MouseMoveEvent& e);
-	bool OnMouseButtonDown(MouseButtonDownEvent& e);
-	bool OnMouseButtonUp(MouseButtonUpEvent& e);
-	bool OnMouseScroll(MouseScrollEvent& e);
 
 private:
 	Window* m_Window;
@@ -44,9 +35,15 @@ Application::Application()
 	if (!utils::OpenGLLoader::LoadOpenGL(utils::OpenGLVersion::OPENGL_3_3))
 		DIE("Failed to load OpenGL functions");
 	else
-		LOG_INFO("OpenGL version: {0}", glGetString(GL_VERSION));
+	{
+		LOG_INFO("OpenGL: ");
+		LOG_INFO("	vendor: {0}", glGetString(GL_VENDOR));
+		LOG_INFO("	renderer: {0}", glGetString(GL_RENDERER));
+		LOG_INFO("	version: {0}", glGetString(GL_VERSION));
+	}
 
-	glClearColor(1.0f, 0.8f, 0.8f, 1.0f);
+
+	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 }
 
 Application::~Application()
@@ -56,12 +53,51 @@ Application::~Application()
 
 void Application::Run()
 {
+	float data[] = {
+		-0.5f, -0.5f, 0.0f,
+		0.0f, 0.5f, 0.0f,
+		0.5f, -0.5f, 0.0f
+	};
+
+	uint32_t vao;
+	glGenVertexArrays(1, &vao);
+	glBindVertexArray(vao);
+
+	VertexBuffer vertexBuffer(data, sizeof(data));
+	vertexBuffer.Bind();
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(0);
+
+	const char* vertexSrc = R"(
+		#version 330 core
+		layout (location = 0) in vec3 a_Position;
+		void main()
+		{
+			gl_Position = vec4(a_Position, 1.0f);
+		}
+	)";
+
+	const char* fragmentSrc = R"(
+		#version 330 core
+		out vec4 FragColor;
+		void main()
+		{
+			FragColor = vec4(1.0f, 0.0f, 0.0f, 1.0f);
+		}
+	)";
+
+	Shader shader(vertexSrc, fragmentSrc);
+	shader.Bind();
+
 	while (!m_Window->Closed())
 	{
-		glClear(GL_COLOR_BUFFER_BIT);
-
 		if (Input::IsKeyPressed(Key::Escape))
 			m_Window->Close();
+
+		glClear(GL_COLOR_BUFFER_BIT);
+
+		glDrawArrays(GL_TRIANGLES, 0, 3);
 		
 		m_Window->Update();
 	}
@@ -69,77 +105,7 @@ void Application::Run()
 
 void Application::OnEvent(Event& e)
 {
-	//e.Dispatch<WindowCloseEvent>(BIND_FUNCTION(Application::OnWindowClose));
-	//e.Dispatch<WindowResizeEvent>(BIND_FUNCTION(Application::OnWindowResize));
-	//	
-    //e.Dispatch<KeyDownEvent>(BIND_FUNCTION(Application::OnKeyDown));
-	//e.Dispatch<KeyUpEvent>(BIND_FUNCTION(Application::OnKeyUp));
 
-	//e.Dispatch<MouseMoveEvent>(BIND_FUNCTION(Application::OnMouseMove));
-	//e.Dispatch<MouseButtonDownEvent>(BIND_FUNCTION(Application::OnMouseButtonDown));
-	//e.Dispatch<MouseButtonUpEvent>(BIND_FUNCTION(Application::OnMouseButtonUp));
-	//e.Dispatch<MouseScrollEvent>(BIND_FUNCTION(Application::OnMouseScroll));
-}
-
-bool Application::OnWindowClose(WindowCloseEvent& e)
-{
-	LOG_WARN("Saving data...");
-	LOG_ERROR("Exit");
-
-	return true;
-}
-
-bool Application::OnWindowResize(WindowResizeEvent& e)
-{
-	LOG_TRACE("Window resized: {0}, {1}", e.GetWidth(), e.GetHeight());
-	glViewport(0, 0, e.GetWidth(), e.GetHeight());
-
-	return true;
-}
-
-bool Application::OnKeyDown(KeyDownEvent& e)
-{
-	if (!e.IsRepeat())
-		LOG_TRACE("{0} key down", e.GetKeyCode());
-	else
-		LOG_TRACE("{0} key repeated", e.GetKeyCode());
-
-	return true;
-}
-
-bool Application::OnKeyUp(KeyUpEvent& e)
-{
-	LOG_TRACE("{0} key up", e.GetKeyCode());
-
-	return true;
-}
-
-bool Application::OnMouseMove(MouseMoveEvent& e)
-{
-	LOG_TRACE("Mouse move: {0}, {1}", e.GetX(), e.GetY());
-
-	return true;
-}
-
-bool Application::OnMouseButtonDown(MouseButtonDownEvent& e)
-{
-	LOG_TRACE("Mouse button down: {0}", e.GetButton());
-
-	return true;
-}
-
-bool Application::OnMouseButtonUp(MouseButtonUpEvent& e)
-{
-	LOG_TRACE("Mouse button up: {0}", e.GetButton());
-
-	return true;
-}
-
-bool Application::OnMouseScroll(MouseScrollEvent& e)
-{
-	LOG_TRACE("Mouse scrolled: {0}", e.GetYOffset());
-
-	return true;
 }
 
 int main()
