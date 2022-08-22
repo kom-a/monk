@@ -11,3 +11,5 @@
 #include "input/Input.h"
 #include "input/KeyCodes.h"
 #include "input/MouseCodes.h"
+#include "graphics/Shader.h"
+#include "graphics/Buffer.h"
