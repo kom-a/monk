@@ -3,6 +3,7 @@
 #include <string>
 
 #include "Monk.h"
+#include "utils/FileManager.h"
 
 #include <windows.h>
 
@@ -42,7 +43,6 @@ Application::Application()
 		LOG_INFO("	version: {0}", glGetString(GL_VERSION));
 	}
 
-
 	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 }
 
@@ -69,23 +69,8 @@ void Application::Run()
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 	glEnableVertexAttribArray(0);
 
-	const char* vertexSrc = R"(
-		#version 330 core
-		layout (location = 0) in vec3 a_Position;
-		void main()
-		{
-			gl_Position = vec4(a_Position, 1.0f);
-		}
-	)";
-
-	const char* fragmentSrc = R"(
-		#version 330 core
-		out vec4 FragColor;
-		void main()
-		{
-			FragColor = vec4(1.0f, 0.0f, 0.0f, 1.0f);
-		}
-	)";
+	std::string vertexSrc = utils::FileManager::ReadFile("res/vertexShader.glsl");
+	std::string fragmentSrc = utils::FileManager::ReadFile("res/fragmentShader.glsl");
 
 	Shader shader(vertexSrc, fragmentSrc);
 	shader.Bind();
