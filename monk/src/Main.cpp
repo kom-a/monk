@@ -54,20 +54,22 @@ Application::~Application()
 void Application::Run()
 {
 	float data[] = {
-		-0.5f, -0.5f, 0.0f,
-		0.0f, 0.5f, 0.0f,
-		0.5f, -0.5f, 0.0f
+		-0.5f, -0.5f, 0.0f,			1.0f, 0.0f, 0.0f, 1.0f,
+		0.0f, 0.5f, 0.0f,			0.0f, 1.0f, 0.0f, 1.0f,
+		0.5f, -0.5f, 0.0f,			0.0f, 0.0f, 1.0f, 1.0f
 	};
 
 	uint32_t vao;
 	glGenVertexArrays(1, &vao);
 	glBindVertexArray(vao);
 
-	VertexBuffer vertexBuffer(data, sizeof(data));
-	vertexBuffer.Bind();
+	BufferLayout layout = {
+		{ 0, BufferLayout::AttribType::Float3 },
+		{ 1, BufferLayout::AttribType::Float4 },
+	};
 
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-	glEnableVertexAttribArray(0);
+	VertexBuffer vertexBuffer(data, sizeof(data), layout);
+	vertexBuffer.Bind();
 
 	std::string vertexSrc = utils::FileManager::ReadFile("res/vertexShader.glsl");
 	std::string fragmentSrc = utils::FileManager::ReadFile("res/fragmentShader.glsl");
