@@ -25,6 +25,7 @@ namespace monk::gfx
 		};
 
 	public:
+		BufferLayout() = default;
 		BufferLayout(std::initializer_list<Attrib> layout);
 
 	private:
@@ -44,6 +45,8 @@ namespace monk::gfx
 		void Bind() const;
 		void Unbind() const;
 
+		void SetData(float* data, size_t size);
+
 	private:
 		uint32_t m_ID;
 		BufferLayout m_Layout;
@@ -58,7 +61,10 @@ namespace monk::gfx
 		void Bind() const;
 		void Unbind() const;
 
+		uint32_t Count() const { return m_Count; }
+
 	private:
 		uint32_t m_ID;
+		uint32_t m_Count;
 	};
 }

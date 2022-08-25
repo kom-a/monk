@@ -95,9 +95,16 @@ namespace monk::gfx
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
 
+	void VertexBuffer::SetData(float* data, size_t size)
+	{
+		glBindBuffer(GL_ARRAY_BUFFER, m_ID);
+		glBufferData(GL_ARRAY_BUFFER, size, data, GL_DYNAMIC_DRAW);
+	}
+
 	// Index Buffer ///////////////////////////////////////////////////
 
 	IndexBuffer::IndexBuffer(uint32_t* data, size_t count)
+		: m_Count(count)
 	{
 		glGenBuffers(1, &m_ID);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ID);

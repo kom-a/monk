@@ -3,6 +3,8 @@
 #include <inttypes.h>
 #include <string>
 
+#include "math/Mat4.h"
+
 namespace monk::gfx
 {
 	class Shader
@@ -13,6 +15,8 @@ namespace monk::gfx
 
 		void Bind() const;
 		void Unbind() const;
+
+		void SetMatrix4(const std::string& name, const math::mat4& matrix);
 
 	private:
 		uint32_t CompileShader(const std::string& shaderSource, uint32_t type);

@@ -22,6 +22,7 @@ public:
 
 private:
 	void OnEvent(Event& e);
+	bool OnWindowResize(WindowResizeEvent& e);
 
 private:
 	Window* m_Window;
@@ -43,7 +44,7 @@ Application::Application()
 		LOG_INFO("	version: {0}", glGetString(GL_VERSION));
 	}
 
-	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+	glClearColor(0.4f, 0.6f, 0.8f, 1.0f);
 }
 
 Application::~Application()
@@ -53,29 +54,7 @@ Application::~Application()
 
 void Application::Run()
 {
-	float data[] = {
-		-0.5f, -0.5f, 0.0f,			1.0f, 0.0f, 0.0f, 1.0f,
-		0.0f, 0.5f, 0.0f,			0.0f, 1.0f, 0.0f, 1.0f,
-		0.5f, -0.5f, 0.0f,			0.0f, 0.0f, 1.0f, 1.0f
-	};
-
-	uint32_t vao;
-	glGenVertexArrays(1, &vao);
-	glBindVertexArray(vao);
-
-	BufferLayout layout = {
-		{ 0, BufferLayout::AttribType::Float3 },
-		{ 1, BufferLayout::AttribType::Float4 },
-	};
-
-	VertexBuffer vertexBuffer(data, sizeof(data), layout);
-	vertexBuffer.Bind();
-
-	std::string vertexSrc = utils::FileManager::ReadFile("res/vertexShader.glsl");
-	std::string fragmentSrc = utils::FileManager::ReadFile("res/fragmentShader.glsl");
-
-	Shader shader(vertexSrc, fragmentSrc);
-	shader.Bind();
+	Renderer2D renderer2D;
 
 	while (!m_Window->Closed())
 	{
@@ -84,15 +63,27 @@ void Application::Run()
 
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		glDrawArrays(GL_TRIANGLES, 0, 3);
-		
+		renderer2D.Begin(math::Ortho(0.0f, (float)m_Window->GetWidth(), (float)m_Window->GetHeight(), 0.0f, -1.0f, 1.0f));
+
+		renderer2D.DrawRect(math::vec2(100, 100), math::vec2(250, 12), math::vec4(0xff / 355.0f, 0x80 / 355.0f, 0.0f, 1.0f));
+		renderer2D.DrawRect(math::vec2(100, 112), math::vec2(250, 123), math::vec4(255 / 255.0f, 215 / 255.0f, 0.0f, 1.0f));
+
+		renderer2D.End();
+
 		m_Window->Update();
 	}
 }
 
 void Application::OnEvent(Event& e)
 {
+	e.Dispatch<WindowResizeEvent>(BIND_FUNCTION(Application::OnWindowResize));
+}
 
+bool Application::OnWindowResize(WindowResizeEvent& e)
+{
+	glViewport(0, 0, e.GetWidth(), e.GetHeight());
+
+	return true;
 }
 
 int main()
