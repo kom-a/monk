@@ -8,6 +8,8 @@ namespace monk
 
 	namespace Mouse
 	{
+		const int MaxCount = 16;
+
 		enum : MouseCode
 		{
 			Button0 = 0x01,

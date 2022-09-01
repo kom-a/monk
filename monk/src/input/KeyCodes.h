@@ -8,6 +8,8 @@ namespace monk
 
 	namespace Key
 	{
+		const int MaxCount = 256;
+
 		enum : KeyCode
 		{
 			D0 = 0x30,

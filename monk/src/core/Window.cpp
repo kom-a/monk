@@ -43,37 +43,63 @@ namespace monk
 		} break;
 		case WM_KEYDOWN:
 		{
-			KeyDownEvent e((int)wParam, lParam & (1 << 30));
+			KeyCode key = (KeyCode) wParam;
+			bool isRepeat = lParam & (1 << 30);
+
+			if (!isRepeat)
+				Input::s_KeyDown[key] = true;
+
+			KeyDownEvent e(key, isRepeat);
+			window->m_WindowData.EventCallbackFn(e);
+		} break;
+		case WM_KEYUP:
+		{
+			KeyCode key = (KeyCode)wParam;
+			Input::s_KeyUp[key] = true;
+
+			KeyUpEvent e(key);
 			window->m_WindowData.EventCallbackFn(e);
 		} break;
 		case WM_LBUTTONDOWN:
 		{
-			MouseButtonDownEvent e(0);
+			Input::s_MouseButtonDown[Mouse::ButtonLeft] = true;
+
+			MouseButtonDownEvent e(Mouse::ButtonLeft);
 			window->m_WindowData.EventCallbackFn(e);
 		} break;
 		case WM_MBUTTONDOWN:
 		{
-			MouseButtonDownEvent e(2);
+			Input::s_MouseButtonDown[Mouse::ButtonMiddle] = true;
+
+			MouseButtonDownEvent e(Mouse::ButtonMiddle);
 			window->m_WindowData.EventCallbackFn(e);
 		} break;
 		case WM_RBUTTONDOWN:
 		{
-			MouseButtonDownEvent e(3);
+			Input::s_MouseButtonDown[Mouse::ButtonRight] = true;
+
+			MouseButtonDownEvent e(Mouse::ButtonRight);
 			window->m_WindowData.EventCallbackFn(e);
 		} break;
 		case WM_LBUTTONUP:
 		{
-			MouseButtonUpEvent e(0);
+			Input::s_MouseButtonUp[Mouse::ButtonLeft] = true;
+
+			MouseButtonUpEvent e(Mouse::ButtonLeft);
 			window->m_WindowData.EventCallbackFn(e);
 		} break;
 		case WM_MBUTTONUP:
 		{
-			MouseButtonUpEvent e(2);
+			Input::s_MouseButtonUp[Mouse::ButtonMiddle] = true;
+
+			MouseButtonUpEvent e(Mouse::ButtonMiddle);
 			window->m_WindowData.EventCallbackFn(e);
 		} break;
 		case WM_RBUTTONUP:
 		{
-			MouseButtonUpEvent e(1);
+			Input::s_MouseButtonUp[Mouse::ButtonRight] = true;
+
+			MouseButtonUpEvent e(Mouse::ButtonRight);
 			window->m_WindowData.EventCallbackFn(e);
 		} break;
 		case WM_MOUSEMOVE:
@@ -128,6 +154,11 @@ namespace monk
 
 	void Window::Update()
 	{
+		SwapBuffers(GetDC(m_WindowHandle));
+	}
+
+	void Window::PollEvents()
+	{
 		MSG msg;
 
 		while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
@@ -135,8 +166,6 @@ namespace monk
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 		}
-		
-		SwapBuffers(GetDC(m_WindowHandle));
 	}
 
 	bool Window::CreateWin32Window()
@@ -149,6 +178,7 @@ namespace monk
 		wc.style = windowStyle;
 		wc.lpfnWndProc = WindowProc;
 		wc.hInstance = GetModuleHandle(NULL);
+		wc.hCursor = LoadCursor(NULL, IDC_ARROW);
 		wc.lpszClassName = m_WindowData.Title.c_str();
 
 		if (!RegisterClassEx(&wc))

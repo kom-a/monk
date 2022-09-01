@@ -21,6 +21,7 @@ namespace monk
 
 	public:
 		void Update();
+		void PollEvents();
 
 		inline void Close() { m_WindowData.Closed = true; }
 		inline bool Closed() const { return m_WindowData.Closed; }
