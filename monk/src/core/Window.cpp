@@ -143,8 +143,10 @@ namespace monk
 	{
 		WNDCLASSEX wc = { };
 
+		int windowStyle = CS_OWNDC | CS_HREDRAW | CS_VREDRAW;
+
 		wc.cbSize = sizeof(wc);
-		wc.style = CS_OWNDC | CS_HREDRAW | CS_VREDRAW;
+		wc.style = windowStyle;
 		wc.lpfnWndProc = WindowProc;
 		wc.hInstance = GetModuleHandle(NULL);
 		wc.lpszClassName = m_WindowData.Title.c_str();
@@ -170,6 +172,11 @@ namespace monk
 			GetModuleHandle(NULL),
 			NULL);
 
+		RECT clientRect;
+		GetClientRect(m_WindowHandle, &clientRect);
+		m_WindowData.Width = clientRect.right - clientRect.left;
+		m_WindowData.Height = clientRect.bottom - clientRect.top;
+	
 		return m_WindowHandle != NULL;
 	}
 
