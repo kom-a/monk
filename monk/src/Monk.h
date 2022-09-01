@@ -19,3 +19,5 @@
 #include "graphics/Shader.h"
 #include "graphics/Buffer.h"
 #include "graphics/Renderer2D.h"
+
+#include "gui/Gui.h"

@@ -87,6 +87,10 @@ void Application::Run()
 
 		Gui::End();
 
+		Gui::Begin("Window 3");
+
+		Gui::End();
+
 		Gui::EndFrame();
 
 		m_Window->Update();
