@@ -1,16 +1,18 @@
 #include <iostream>
 #include <functional>
 #include <string>
+#include <chrono>
 
 #include "Monk.h"
 #include "utils/FileManager.h"
+#include "core/Assert.h"
 
 #include <windows.h>
 
 #define BIND_FUNCTION(fn) std::bind(&fn, this, std::placeholders::_1)
 
+
 using namespace monk;
-using namespace monk::gfx;
 
 class Application
 {
@@ -44,7 +46,7 @@ Application::Application()
 		LOG_INFO("	version: {0}", glGetString(GL_VERSION));
 	}
 
-	glClearColor(0.4f, 0.6f, 0.8f, 1.0f);
+	glClearColor(0.7f, 0.8f, 0.9f, 1.0f);
 }
 
 Application::~Application()
@@ -54,23 +56,41 @@ Application::~Application()
 
 void Application::Run()
 {
-	Renderer2D renderer2D;
+	Gui::Init();
+
+	auto lastTime = std::chrono::system_clock::now();
 
 	while (!m_Window->Closed())
 	{
-		if (Input::IsKeyPressed(Key::Escape))
-			m_Window->Close();
+		auto currentTime = std::chrono::system_clock::now();
+		auto deltaTime = std::chrono::duration_cast<std::chrono::microseconds>(currentTime - lastTime).count();
+		lastTime = currentTime;
+
+		float delta = deltaTime / 1000.0f;
+
+		//LOG_TRACE("FPS: {0}, deltaTime: {1}ms", 1000.0f / delta, delta);
 
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		renderer2D.Begin(math::Ortho(0.0f, (float)m_Window->GetWidth(), (float)m_Window->GetHeight(), 0.0f, -1.0f, 1.0f));
+		m_Window->PollEvents();
 
-		renderer2D.DrawRect(math::vec2(100, 100), math::vec2(250, 12), math::vec4(0xff / 355.0f, 0x80 / 355.0f, 0.0f, 1.0f));
-		renderer2D.DrawRect(math::vec2(100, 112), math::vec2(250, 123), math::vec4(255 / 255.0f, 215 / 255.0f, 0.0f, 1.0f));
+		if (Input::IsKeyPressed(Key::Escape))
+			m_Window->Close();
 
-		renderer2D.End();
+		Gui::NewFrame(math::Ortho(0.0f, (float)m_Window->GetWidth(), (float)m_Window->GetHeight(), 0.0f, -1.0f, 1.0f));
+
+		Gui::Begin("My new window");
+
+		Gui::End();
+
+		Gui::Begin("Window 2");
+
+		Gui::End();
+
+		Gui::EndFrame();
 
 		m_Window->Update();
+		Input::Update();
 	}
 }
 
