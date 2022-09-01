@@ -7,7 +7,7 @@
 #define MONK_EXPAND_MACRO(x) x
 #define MONK_STRINGIFY_MACRO(x) #x
 
-#define MONK_ASSERT_IMPL(condition, msg, ...) { if(!(condition)) { LOG_ERROR(msg, __VA_ARGS__); __debugbreak(); } }
+#define MONK_ASSERT_IMPL(condition, msg, ...) { if(!(condition)) { LOG_CRITICAL(msg, __VA_ARGS__); __debugbreak(); } }
 #define MONK_ASSERT_WITH_MSG(condition, ...) MONK_ASSERT_IMPL(condition, "Assertion failed: {0}", __VA_ARGS__)
 #define MONK_ASSERT_NO_MSG(condition) MONK_ASSERT_IMPL(condition, "Assertion '{0}' failed at {1}:{2}", MONK_STRINGIFY_MACRO(condition), std::filesystem::path(__FILE__).filename().string(), __LINE__)
 
