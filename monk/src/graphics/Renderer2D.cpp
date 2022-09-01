@@ -5,7 +5,7 @@
 
 #include <string>
 
-namespace monk::gfx
+namespace monk
 {
 	Renderer2D::Renderer2D()
 		: m_ProjectionMatrix(math::mat4(1.0f))

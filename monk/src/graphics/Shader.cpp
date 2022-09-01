@@ -5,7 +5,7 @@
 
 #define INVALID ((uint32_t) -1)
 
-namespace monk::gfx
+namespace monk
 {
 	Shader::Shader(const std::string& vertexSource, const std::string& fragmentSource)
 	{

@@ -4,7 +4,7 @@
 #include <vector>
 #include <initializer_list>
 
-namespace monk::gfx
+namespace monk
 {
 	class BufferLayout
 	{

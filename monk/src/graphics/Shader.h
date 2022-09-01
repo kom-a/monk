@@ -5,7 +5,7 @@
 
 #include "math/Mat4.h"
 
-namespace monk::gfx
+namespace monk
 {
 	class Shader
 	{

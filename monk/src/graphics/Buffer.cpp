@@ -4,7 +4,7 @@
 
 #include "core/Log.h"
 
-namespace monk::gfx
+namespace monk
 {
 	// Buffer Layout ///////////////////////////////////////////////////
 

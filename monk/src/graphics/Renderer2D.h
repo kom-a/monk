@@ -4,7 +4,7 @@
 #include "graphics/Buffer.h"
 #include "graphics/Shader.h"
 
-namespace monk::gfx
+namespace monk
 {
 	class Renderer2D
 	{
