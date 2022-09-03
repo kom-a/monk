@@ -19,6 +19,8 @@ namespace monk
 		int WindowsCount;
 
 		GuiWindow* CurrentWindow;
+		GuiWindow* HotWindow;
+		int HotWindowZOrder;
 
 		uint32_t HotWindowID;
 		uint32_t ActiveWindowID;
@@ -179,8 +181,11 @@ namespace monk
 		GuiState.TailWindow = nullptr;
 		GuiState.WindowsCount = 0;
 		GuiState.CurrentWindow = nullptr;
+		GuiState.HotWindow = nullptr;
+		GuiState.HotWindowZOrder = -1;
 		GuiState.ActiveWindowID = 0;
 		GuiState.HotWindowID = 0;
+		GuiState.HotWindowZOrder = -1;
 		GuiState.MovingWindowID = 0;
 		GuiState.ResizingWindowID = 0;
 		GuiState.LastMouse = Input::GetMousePosition();
@@ -212,6 +217,8 @@ namespace monk
 	void Gui::NewFrame(const math::mat4& projection)
 	{
 		GuiState.HotWindowID = 0;
+		GuiState.HotWindow = nullptr;
+		GuiState.HotWindowZOrder = -1;
 		s_Renderer->Begin(projection);
 	}
 
@@ -235,7 +242,7 @@ namespace monk
 			DrawWindow(current);
 			current = current->Next;
 		}
-		
+
 		s_Renderer->End();
 		GuiState.ClearWindowList();
 		GuiState.LastMouse = Input::GetMousePosition();
@@ -256,14 +263,23 @@ namespace monk
 		
 		if (window->IsHot() && !GuiState.ResizingWindowID)
 		{
-			GuiState.HotWindowID = window->ID;
-			if (Input::IsMouseButtonDown(Mouse::ButtonLeft))
+			if (!GuiState.HotWindow || window->ZOrder > GuiState.HotWindowZOrder)
 			{
-				GuiState.ActiveWindowID = window->ID;
-				GuiState.MovingWindowID = window->ID;
-				window->ZOrder = (uint32_t)-1;
-				GuiState.ResizingWindowID = 0;
+				if (GuiState.HotWindow && GuiState.HotWindow->ZOrder == (uint32_t)-1)
+					GuiState.HotWindow->ZOrder = GuiState.HotWindowZOrder;
+
+				GuiState.HotWindowID = window->ID;
+				GuiState.HotWindow = window;
+				GuiState.HotWindowZOrder = window->ZOrder;
+				if (Input::IsMouseButtonDown(Mouse::ButtonLeft))
+				{
+					GuiState.ActiveWindowID = window->ID;
+					GuiState.MovingWindowID = window->ID;
+					window->ZOrder = (uint32_t)-1;
+					GuiState.ResizingWindowID = 0;
+				}
 			}
+
 		}
 
 		if (window->IsResizeHot())
