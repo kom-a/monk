@@ -12,6 +12,7 @@ namespace monk
 		Name(name),
 		Position(math::vec2(100, 100)),
 		Size(math::vec2(150, 50)),
+		ZOrder(0),
 		Prev(nullptr),
 		Next(nullptr)
 	{
@@ -51,8 +52,10 @@ namespace monk
 	GuiWindowCacheData GuiWindow::GetCacheData() const
 	{
 		GuiWindowCacheData data = {
+			Name,
 			Position,
-			Size
+			Size,
+			ZOrder
 		};
 
 		return data;

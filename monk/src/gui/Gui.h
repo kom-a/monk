@@ -2,6 +2,7 @@
 
 #include <string>
 #include <unordered_map>
+#include <memory>
 
 #include "gui/GuiWindow.h"
 
@@ -58,5 +59,6 @@ namespace monk
 		static math::vec2 s_LastMouse;
 		static GuiStyle s_GuiStyle;
 		static std::unordered_map<uint32_t, GuiWindowCacheData> s_WindowCache;
+		static std::unique_ptr<Renderer2D> s_Renderer;
 	};
 }

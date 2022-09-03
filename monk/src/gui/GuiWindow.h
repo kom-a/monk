@@ -8,8 +8,10 @@ namespace monk
 {
 	struct GuiWindowCacheData
 	{
+		std::string DebugName;
 		math::vec2 Position;
 		math::vec2 Size;
+		uint32_t ZOrder;
 	};
 
 	struct GuiWindow
@@ -20,6 +22,7 @@ namespace monk
 		math::vec2 Position;
 		math::vec2 Size;
 		math::vec2 CursorPosition;
+		uint32_t ZOrder;
 
 		GuiWindow* Next;
 		GuiWindow* Prev;

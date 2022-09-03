@@ -79,16 +79,16 @@ void Application::Run()
 
 		Gui::NewFrame(math::Ortho(0.0f, (float)m_Window->GetWidth(), (float)m_Window->GetHeight(), 0.0f, -1.0f, 1.0f));
 
-		Gui::Begin("My new window");
-
+		Gui::Begin("Window 1");
 		Gui::End();
 
 		Gui::Begin("Window 2");
-
 		Gui::End();
 
 		Gui::Begin("Window 3");
+		Gui::End();
 
+		Gui::Begin("Window 4");
 		Gui::End();
 
 		Gui::EndFrame();
