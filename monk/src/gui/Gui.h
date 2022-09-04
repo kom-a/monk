@@ -13,30 +13,43 @@
 
 namespace monk
 {
+	namespace GuiColor
+	{
+		enum
+		{
+			None = 0,
+
+			Header,
+			HotHeader,
+			ActiveHeader,
+
+			Window,
+			HotWindow,
+			ActiveWindow,
+
+			WindowBorder,
+
+			WindowCloseButton,
+
+			WindowResizeCorner,
+			HotWindowResizeCorner,
+			ActiveWindowResizeCorner,
+
+			Count
+		};
+	};
+
 	struct GuiStyle
 	{
 		math::vec2 Padding;
-
 		float HeaderHeight;
-		math::vec4 HeaderColor;
-		math::vec4 HotHeaderColor;
-		math::vec4 ActiveHeaderColor;
+
+		math::vec4 Colors[GuiColor::Count];
 
 		math::vec2 MinWindowSize;
-		math::vec4 WindowBackgroundColor;
-		math::vec4 HotWindowBackgroundColor;
-		math::vec4 ActiveWindowBackgroundColor;
 		math::vec2 WindowBorderSize;
-		math::vec4 WindowBorderColor;
-		
-		math::vec4 ButtonColor;
-		math::vec4 HotButtonColor;
-		math::vec4 ActiveButtonColor;
 
 		math::vec2 WindowResizeCornerSize;
-		math::vec4 WindowResizeCornerColor;
-		math::vec4 HotWindowResizeCornerColor;
-		math::vec4 ActiveWindowResizeCornerColor;
 	};
 
 	class Gui
@@ -52,7 +65,8 @@ namespace monk
 		static void End();
 
 	private:
-		static GuiStyle DefaultStyle();
+		static void DefaultStyle();
+		static void DefaultColorTheme();
 		static void RestoreWindow(GuiWindow* window);
 		static void BeginWindow(GuiWindow* window);
 		static bool IsWindowHot(GuiWindow* window);

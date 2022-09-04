@@ -180,8 +180,7 @@ namespace monk
 	{
 		s_Renderer = std::make_unique<Renderer2D>();
 
-		GuiStyle& style = Gui::GetStyle();
-		style = DefaultStyle();
+		Gui::DefaultStyle();
 
 		GuiState.Reset();
 		GuiState.LastMouse = Input::GetMousePosition();
@@ -260,30 +259,41 @@ namespace monk
 	// Private
 	//////////////////////////////////////////////////////////////////////////
 
-	GuiStyle Gui::DefaultStyle()
+	void Gui::DefaultStyle()
 	{
-		GuiStyle style;
+		GuiStyle& style = Gui::GetStyle();
 
 		style.Padding = math::vec2(5.0f, 5.0f);
-		style.HeaderHeight = 16.0f;
-		style.HeaderColor = math::vec4(0.2f, 0.2f, 0.2f, 1.0f);
-		style.HotHeaderColor = math::vec4(0.2f, 0.2f, 0.2f, 1.0f);
-		style.ActiveHeaderColor = math::vec4(0.1f, 0.1f, 0.2f, 1.0f);
+		style.HeaderHeight = 20.0f;
 		style.MinWindowSize = math::vec2(100, 25);
-		style.WindowBackgroundColor = math::vec4(0.3f, 0.3f, 0.3f, 1.0f);
-		style.HotWindowBackgroundColor = math::vec4(0.35f, 0.35f, 0.35f, 1.0f);
-		style.ActiveWindowBackgroundColor = math::vec4(0.3f, 0.3f, 0.3f, 1.0f);
 		style.WindowBorderSize = math::vec2(3.0f);
-		style.WindowBorderColor = math::vec4(0.0f, 0.0f, 0.0f, 1.0f);
-		style.ButtonColor = math::vec4(0.2f, 0.2f, 0.6f, 1.0f);
-		style.HotButtonColor = math::vec4(0.3f, 0.3f, 0.6f, 1.0f);
-		style.ActiveButtonColor = math::vec4(0.1f, 0.1f, 0.4f, 1.0f);
 		style.WindowResizeCornerSize = math::vec2(14.0f);
-		style.WindowResizeCornerColor = math::vec4(0.1f, 0.2f, 0.3f, 1.0f);
-		style.HotWindowResizeCornerColor = math::vec4(0.3f, 0.7f, 0.2f, 1.0f);
-		style.ActiveWindowResizeCornerColor = math::vec4(0.2f, 0.4f, 0.1f, 1.0f);
 
-		return style;
+		Gui::DefaultColorTheme();
+	}
+
+	void Gui::DefaultColorTheme()
+	{
+		GuiStyle& style = Gui::GetStyle();
+		auto& colors = style.Colors;
+
+		colors[GuiColor::None] = math::vec4(0.0f);
+		
+		colors[GuiColor::Header] = math::vec4(0.2f, 0.2f, 0.2f, 1.0f);
+		colors[GuiColor::HotHeader] = math::vec4(0.2f, 0.2f, 0.2f, 1.0f);
+		colors[GuiColor::ActiveHeader] = math::vec4(0.1f, 0.1f, 0.2f, 1.0f);
+		
+		colors[GuiColor::Window] = math::vec4(0.3f, 0.3f, 0.3f, 1.0f);
+		colors[GuiColor::HotWindow] = math::vec4(0.35f, 0.35f, 0.35f, 1.0f);
+		colors[GuiColor::ActiveWindow] = math::vec4(0.3f, 0.3f, 0.3f, 1.0f);
+
+		colors[GuiColor::WindowBorder] = math::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+		
+		colors[GuiColor::WindowCloseButton] = math::vec4(0.8f, 0.8f, 0.6f, 1.0f);
+
+		colors[GuiColor::WindowResizeCorner] = math::vec4(0.1f, 0.2f, 0.3f, 1.0f);
+		colors[GuiColor::HotWindowResizeCorner] = math::vec4(0.3f, 0.7f, 0.2f, 1.0f);
+		colors[GuiColor::ActiveWindowResizeCorner] = math::vec4(0.2f, 0.4f, 0.1f, 1.0f);
 	}
 
 	void Gui::RestoreWindow(GuiWindow* window)
@@ -312,9 +322,15 @@ namespace monk
 				window->ZOrder = (uint32_t)-1;
 
 				if (window->IsResizeHot())
+				{
 					GuiState.ResizingWindowID = window->ID;
+					GuiState.MovingWindowID = 0;
+				}
 				else
+				{
 					GuiState.MovingWindowID = window->ID;
+					GuiState.ResizingWindowID = 0;
+				}
 			}
 		}
 	}
@@ -341,30 +357,30 @@ namespace monk
 		math::vec2 borderPosition = window->Position - style.WindowBorderSize;
 		math::vec2 borderSize = window->Size + math::vec2(0, style.HeaderHeight) + style.WindowBorderSize * 2;
 		math::vec2 resizeCornerPosition = windowBodyPosition + windowBodySize - style.WindowResizeCornerSize;
-		math::vec2 closeButtonSize = math::vec2(style.HeaderHeight * 0.8 * 2, style.HeaderHeight * 0.8);
-		math::vec2 closeButtonPosition = headerPosition + math::vec2(headerSize.x - closeButtonSize.x - style.HeaderHeight * 0.1, style.HeaderHeight * 0.1);
+		math::vec2 closeButtonSize = window->GetCloseButton().Size;
+		math::vec2 closeButtonPosition = window->GetCloseButton().Position;
 
 		math::vec4 headerColor;
 		math::vec4 windowColor;
 
 		if (window->ID == GuiState.ActiveWindowID)
 		{
-			headerColor = style.ActiveHeaderColor;
-			windowColor = style.ActiveWindowBackgroundColor;
+			headerColor = style.Colors[GuiColor::ActiveHeader];
+			windowColor = style.Colors[GuiColor::ActiveWindow];
 		}
 		else if (window->ID == GuiState.HotWindowID)
 		{
-			headerColor = style.HotHeaderColor;
-			windowColor = style.HotWindowBackgroundColor;
+			headerColor = style.Colors[GuiColor::HotHeader];
+			windowColor = style.Colors[GuiColor::HotWindow];
 		}
 		else
 		{
-			headerColor = style.HeaderColor;
-			windowColor = style.WindowBackgroundColor;
+			headerColor = style.Colors[GuiColor::Header];
+			windowColor = style.Colors[GuiColor::Window];
 		}
 
 		// Border
-		s_Renderer->DrawRect(borderPosition, borderSize, style.WindowBorderColor);
+		s_Renderer->DrawRect(borderPosition, borderSize, style.Colors[GuiColor::WindowBorder]);
 
 		// Header
 		s_Renderer->DrawRect(headerPosition, headerSize, headerColor);
@@ -373,10 +389,10 @@ namespace monk
 		s_Renderer->DrawRect(windowBodyPosition, windowBodySize, windowColor);
 
 		// Window resize corner
-		s_Renderer->DrawRect(resizeCornerPosition, style.WindowResizeCornerSize, style.WindowResizeCornerColor);
+		s_Renderer->DrawRect(resizeCornerPosition, style.WindowResizeCornerSize, style.Colors[GuiColor::WindowResizeCorner]);
 
 		// Window close button
-		s_Renderer->DrawRect(closeButtonPosition, closeButtonSize, math::vec4(0.8f, 0.4f, 0.4f, 1.0f));
+		s_Renderer->DrawRect(closeButtonPosition, closeButtonSize, style.Colors[GuiColor::WindowCloseButton]);
 	}
 
 }

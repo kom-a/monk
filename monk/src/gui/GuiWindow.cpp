@@ -25,7 +25,7 @@ namespace monk
 		float x = Input::GetMouseX();
 		float y = Input::GetMouseY();
 
-		GuiStyle& style = Gui::GetStyle();
+		const GuiStyle& style = Gui::GetStyle();
 
 		return (x >= Position.x && x <= Position.x + Size.x) &&
 			(y >= Position.y && y <= style.HeaderHeight + Position.y + Size.y);
@@ -33,7 +33,7 @@ namespace monk
 
 	bool GuiWindow::IsResizeHot() const
 	{
-		GuiStyle& style = Gui::GetStyle();
+		const GuiStyle& style = Gui::GetStyle();
 
 		math::vec2 windowBodyPosition = Position + math::vec2(0.0f, style.HeaderHeight);
 		math::vec2 resizeCornerPosition = windowBodyPosition + Size - style.WindowResizeCornerSize;
@@ -49,6 +49,14 @@ namespace monk
 		return mouseX >= x1 && mouseX <= x2 && mouseY >= y1 && mouseY <= y2;
 	}
 
+	bool GuiWindow::IsCloseButtonHot() const
+	{
+		const GuiStyle& style = Gui::GetStyle();
+
+		GuiRect closeRect = GetCloseButton();
+		return closeRect.IsInside(Input::GetMousePosition());
+	}
+
 	GuiWindowCacheData GuiWindow::GetCacheData() const
 	{
 		GuiWindowCacheData data = {
@@ -59,5 +67,17 @@ namespace monk
 		};
 
 		return data;
+	}
+
+	GuiRect GuiWindow::GetCloseButton() const
+	{
+		const GuiStyle& style = Gui::GetStyle();
+		math::vec2 headerSize = math::vec2(Size.x, style.HeaderHeight);
+
+		GuiRect close;
+		close.Size = math::vec2(style.HeaderHeight * 0.8 * 2, style.HeaderHeight * 0.8);
+		close.Position = Position + math::vec2(headerSize.x - close.Size.x - style.HeaderHeight * 0.1, style.HeaderHeight * 0.1);
+
+		return close;
 	}
 }

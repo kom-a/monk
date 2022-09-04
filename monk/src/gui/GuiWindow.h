@@ -14,6 +14,25 @@ namespace monk
 		uint32_t ZOrder;
 	};
 
+	struct GuiRect
+	{
+		math::vec2 Position;
+		math::vec2 Size;
+
+		bool IsInside(const math::vec2 point) const
+		{
+			const float& x = point.x;
+			const float& y = point.y;
+
+			float x1 = Position.x;
+			float x2 = Position.x + Size.x;
+			float y1 = Position.y;
+			float y2 = Position.y + Size.y;
+
+			return (x >= x1 && x <= x2) && (y >= y1 && y <= y2);
+		}
+	};
+
 	struct GuiWindow
 	{
 		std::string Name;
@@ -28,10 +47,12 @@ namespace monk
 		GuiWindow* Prev;
 
 		GuiWindow(const std::string& name);
-
+		
 		bool IsHot() const;
 		bool IsResizeHot() const;
+		bool IsCloseButtonHot() const;
 
 		GuiWindowCacheData GetCacheData() const;
+		GuiRect GetCloseButton() const;
 	};
 }
