@@ -90,18 +90,18 @@ namespace monk::math
 		return value;
 	}
 
-	math::vec2 Clamp(const math::vec2& vector, const math::vec2& min, const math::vec2& max)
+	vec2 Clamp(const vec2& vector, const vec2& min, const vec2& max)
 	{
-		math::vec2 result;
+		vec2 result;
 		result.x = Clamp(vector.x, min.x, max.x);
 		result.y = Clamp(vector.y, min.y, max.y);
 
 		return result;
 	}
 
-	math::vec3 Clamp(const math::vec3& vector, const math::vec3& min, const math::vec3& max)
+	vec3 Clamp(const vec3& vector, const vec3& min, const vec3& max)
 	{
-		math::vec3 result;
+		vec3 result;
 		result.x = Clamp(vector.x, min.x, max.x);
 		result.y = Clamp(vector.y, min.y, max.y);
 		result.z = Clamp(vector.z, min.z, max.z);
@@ -109,9 +109,9 @@ namespace monk::math
 		return result;
 	}
 
-	math::vec4 Clamp(const math::vec4& vector, const math::vec4& min, const math::vec4& max)
+	vec4 Clamp(const vec4& vector, const vec4& min, const vec4& max)
 	{
-		math::vec4 result;
+		vec4 result;
 		result.x = Clamp(vector.x, min.x, max.x);
 		result.y = Clamp(vector.y, min.y, max.y);
 		result.z = Clamp(vector.z, min.z, max.z);
