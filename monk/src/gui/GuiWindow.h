@@ -53,6 +53,8 @@ namespace monk
 		bool IsCloseButtonHot() const;
 
 		GuiWindowCacheData GetCacheData() const;
-		GuiRect GetCloseButton() const;
+		GuiRect GetResizeCornerRect() const;
+		GuiRect GetCloseButtonRect() const;
+		
 	};
 }

@@ -35,25 +35,16 @@ namespace monk
 	{
 		const GuiStyle& style = Gui::GetStyle();
 
-		math::vec2 windowBodyPosition = Position + math::vec2(0.0f, style.HeaderHeight);
-		math::vec2 resizeCornerPosition = windowBodyPosition + Size - style.WindowResizeCornerSize;
+		GuiRect resize = GetResizeCornerRect();
 
-		float mouseX = Input::GetMouseX();
-		float mouseY = Input::GetMouseY();
-
-		float x1 = resizeCornerPosition.x;
-		float x2 = resizeCornerPosition.x + style.WindowResizeCornerSize.x;
-		float y1 = resizeCornerPosition.y;
-		float y2 = resizeCornerPosition.y + style.WindowResizeCornerSize.y;
-
-		return mouseX >= x1 && mouseX <= x2 && mouseY >= y1 && mouseY <= y2;
+		return resize.IsInside(Input::GetMousePosition());
 	}
 
 	bool GuiWindow::IsCloseButtonHot() const
 	{
 		const GuiStyle& style = Gui::GetStyle();
 
-		GuiRect closeRect = GetCloseButton();
+		GuiRect closeRect = GetCloseButtonRect();
 		return closeRect.IsInside(Input::GetMousePosition());
 	}
 
@@ -69,7 +60,20 @@ namespace monk
 		return data;
 	}
 
-	GuiRect GuiWindow::GetCloseButton() const
+	GuiRect GuiWindow::GetResizeCornerRect() const
+	{
+		const GuiStyle& style = Gui::GetStyle();
+
+		math::vec2 windowBodyPosition = math::vec2(Position.x, Position.y + style.HeaderHeight);
+
+		GuiRect resize;
+		resize.Size = style.WindowResizeCornerSize;
+		resize.Position = windowBodyPosition + Size - resize.Size;
+
+		return resize;
+	}
+
+	GuiRect GuiWindow::GetCloseButtonRect() const
 	{
 		const GuiStyle& style = Gui::GetStyle();
 		math::vec2 headerSize = math::vec2(Size.x, style.HeaderHeight);

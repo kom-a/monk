@@ -289,7 +289,7 @@ namespace monk
 
 		colors[GuiColor::WindowBorder] = math::vec4(0.0f, 0.0f, 0.0f, 1.0f);
 		
-		colors[GuiColor::WindowCloseButton] = math::vec4(0.8f, 0.8f, 0.6f, 1.0f);
+		colors[GuiColor::WindowCloseButton] = math::vec4(0.8f, 0.6f, 0.6f, 1.0f);
 
 		colors[GuiColor::WindowResizeCorner] = math::vec4(0.1f, 0.2f, 0.3f, 1.0f);
 		colors[GuiColor::HotWindowResizeCorner] = math::vec4(0.3f, 0.7f, 0.2f, 1.0f);
@@ -356,9 +356,9 @@ namespace monk
 		const math::vec2& windowBodySize = window->Size;
 		math::vec2 borderPosition = window->Position - style.WindowBorderSize;
 		math::vec2 borderSize = window->Size + math::vec2(0, style.HeaderHeight) + style.WindowBorderSize * 2;
-		math::vec2 resizeCornerPosition = windowBodyPosition + windowBodySize - style.WindowResizeCornerSize;
-		math::vec2 closeButtonSize = window->GetCloseButton().Size;
-		math::vec2 closeButtonPosition = window->GetCloseButton().Position;
+		math::vec2 resizeCornerPosition = window->GetResizeCornerRect().Position;
+		math::vec2 closeButtonSize = window->GetCloseButtonRect().Size;
+		math::vec2 closeButtonPosition = window->GetCloseButtonRect().Position;
 
 		math::vec4 headerColor;
 		math::vec4 windowColor;
