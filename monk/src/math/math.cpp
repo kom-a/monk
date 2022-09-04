@@ -80,4 +80,44 @@ namespace monk::math
 		return result;
 	}
 
+	float Clamp(float value, float min, float max)
+	{
+		if (value < min)
+			return min;
+		else if (value > max)
+			return max;
+
+		return value;
+	}
+
+	math::vec2 Clamp(const math::vec2& vector, const math::vec2& min, const math::vec2& max)
+	{
+		math::vec2 result;
+		result.x = Clamp(vector.x, min.x, max.x);
+		result.y = Clamp(vector.y, min.y, max.y);
+
+		return result;
+	}
+
+	math::vec3 Clamp(const math::vec3& vector, const math::vec3& min, const math::vec3& max)
+	{
+		math::vec3 result;
+		result.x = Clamp(vector.x, min.x, max.x);
+		result.y = Clamp(vector.y, min.y, max.y);
+		result.z = Clamp(vector.z, min.z, max.z);
+
+		return result;
+	}
+
+	math::vec4 Clamp(const math::vec4& vector, const math::vec4& min, const math::vec4& max)
+	{
+		math::vec4 result;
+		result.x = Clamp(vector.x, min.x, max.x);
+		result.y = Clamp(vector.y, min.y, max.y);
+		result.z = Clamp(vector.z, min.z, max.z);
+		result.w = Clamp(vector.w, min.w, max.w);
+
+		return result;
+	}
+
 }

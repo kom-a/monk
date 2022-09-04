@@ -15,4 +15,9 @@ namespace monk::math
 
 	mat4 Ortho(float left, float right, float bottom, float top, float near, float far);
 	mat4 Perspective(float fov, float aspect, float near, float far);
+
+	float Clamp(float value, float min, float max);
+	vec2 Clamp(const math::vec2& vector, const math::vec2& min, const math::vec2& max);
+	vec3 Clamp(const math::vec3& vector, const math::vec3& min, const math::vec3& max);
+	vec4 Clamp(const math::vec4& vector, const math::vec4& min, const math::vec4& max);
 }
