@@ -22,6 +22,7 @@ namespace monk
 		math::vec4 HotHeaderColor;
 		math::vec4 ActiveHeaderColor;
 
+		math::vec2 MinWindowSize;
 		math::vec4 WindowBackgroundColor;
 		math::vec4 HotWindowBackgroundColor;
 		math::vec4 ActiveWindowBackgroundColor;
@@ -51,7 +52,10 @@ namespace monk
 		static void End();
 
 	private:
+		static GuiStyle DefaultStyle();
 		static void RestoreWindow(GuiWindow* window);
+		static void BeginWindow(GuiWindow* window);
+		static bool IsWindowHot(GuiWindow* window);
 
 		static void DrawWindow(const GuiWindow* window);
 

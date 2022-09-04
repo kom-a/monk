@@ -30,6 +30,21 @@ namespace monk
 
 		math::vec2 LastMouse;
 
+		void Reset()
+		{
+			HeadWindow = nullptr;
+			TailWindow = nullptr;
+			WindowsCount = 0;
+			CurrentWindow = nullptr;
+			HotWindow = nullptr;
+			HotWindowZOrder = -1;
+			ActiveWindowID = 0;
+			HotWindowID = 0;
+			HotWindowZOrder = -1;
+			MovingWindowID = 0;
+			ResizingWindowID = 0;
+		}
+
 		void AddWindowToList(GuiWindow* window)
 		{
 			if (!HeadWindow)
@@ -159,16 +174,6 @@ namespace monk
 				window->Next = nullptr;
 			}
 		}
-
-		void IncrementZOrderSince(GuiWindow* window)
-		{
-			while (window && window->ZOrder != (uint32_t)-1)
-			{
-				window->ZOrder++;
-				window = window->Next;
-			}
-		}
-
 	} GuiState;
 
 	void Gui::Init()
@@ -176,37 +181,10 @@ namespace monk
 		s_Renderer = std::make_unique<Renderer2D>();
 
 		GuiStyle& style = Gui::GetStyle();
+		style = DefaultStyle();
 
-		GuiState.HeadWindow = nullptr;
-		GuiState.TailWindow = nullptr;
-		GuiState.WindowsCount = 0;
-		GuiState.CurrentWindow = nullptr;
-		GuiState.HotWindow = nullptr;
-		GuiState.HotWindowZOrder = -1;
-		GuiState.ActiveWindowID = 0;
-		GuiState.HotWindowID = 0;
-		GuiState.HotWindowZOrder = -1;
-		GuiState.MovingWindowID = 0;
-		GuiState.ResizingWindowID = 0;
+		GuiState.Reset();
 		GuiState.LastMouse = Input::GetMousePosition();
-
-		style.Padding = math::vec2(5.0f, 5.0f);
-		style.HeaderHeight = 16.0f;
-		style.HeaderColor = math::vec4(0.2f, 0.2f, 0.2f, 1.0f);
-		style.HotHeaderColor = math::vec4(0.2f, 0.2f, 0.2f, 1.0f);
-		style.ActiveHeaderColor = math::vec4(0.1f, 0.1f, 0.2f, 1.0f);
-		style.WindowBackgroundColor = math::vec4(0.3f, 0.3f, 0.3f, 1.0f);
-		style.HotWindowBackgroundColor = math::vec4(0.35f, 0.35f, 0.35f, 1.0f);
-		style.ActiveWindowBackgroundColor = math::vec4(0.3f, 0.3f, 0.3f, 1.0f);
-		style.WindowBorderSize = math::vec2(3.0f);
-		style.WindowBorderColor = math::vec4(0.0f, 0.0f, 0.0f, 1.0f);
-		style.ButtonColor = math::vec4(0.2f, 0.2f, 0.6f, 1.0f);
-		style.HotButtonColor = math::vec4(0.3f, 0.3f, 0.6f, 1.0f);
-		style.ActiveButtonColor = math::vec4(0.1f, 0.1f, 0.4f, 1.0f);
-		style.WindowResizeCornerSize = math::vec2(14.0f);
-		style.WindowResizeCornerColor = math::vec4(0.1f, 0.2f, 0.3f, 1.0f);
-		style.HotWindowResizeCornerColor = math::vec4(0.3f, 0.7f, 0.2f, 1.0f);
-		style.ActiveWindowResizeCornerColor = math::vec4(0.2f, 0.4f, 0.1f, 1.0f);
 	}
 
 	GuiStyle& Gui::GetStyle()
@@ -233,7 +211,11 @@ namespace monk
 			current->ZOrder = ZOrder++;
 
 			if (current->ID == GuiState.ResizingWindowID)
+			{
+				GuiStyle& style = Gui::GetStyle();
 				current->Size += Input::GetMousePosition() - GuiState.LastMouse;
+				current->Size = math::Clamp(current->Size, style.MinWindowSize, current->Size);
+			}
 			else if (current->ID == GuiState.MovingWindowID)
 				current->Position += Input::GetMousePosition() - GuiState.LastMouse;
 
@@ -246,7 +228,7 @@ namespace monk
 		s_Renderer->End();
 		GuiState.ClearWindowList();
 		GuiState.LastMouse = Input::GetMousePosition();
-		
+
 		if (!Input::IsMouseButtonPressed(Mouse::ButtonLeft))
 		{
 			GuiState.MovingWindowID = 0;
@@ -256,40 +238,12 @@ namespace monk
 
 	void Gui::Begin(const std::string& name)
 	{
+		MONK_ASSERT(!GuiState.CurrentWindow, "Can not 'Begin' new window inside another one. Call 'End' before starting new window.");
+
 		GuiWindow* window = new GuiWindow(name);
 		Gui::RestoreWindow(window);
 
-		GuiStyle& style = Gui::GetStyle();
-		
-		if (window->IsHot() && !GuiState.ResizingWindowID)
-		{
-			if (!GuiState.HotWindow || window->ZOrder > GuiState.HotWindowZOrder)
-			{
-				if (GuiState.HotWindow && GuiState.HotWindow->ZOrder == (uint32_t)-1)
-					GuiState.HotWindow->ZOrder = GuiState.HotWindowZOrder;
-
-				GuiState.HotWindowID = window->ID;
-				GuiState.HotWindow = window;
-				GuiState.HotWindowZOrder = window->ZOrder;
-				if (Input::IsMouseButtonDown(Mouse::ButtonLeft))
-				{
-					GuiState.ActiveWindowID = window->ID;
-					GuiState.MovingWindowID = window->ID;
-					window->ZOrder = (uint32_t)-1;
-					GuiState.ResizingWindowID = 0;
-				}
-			}
-
-		}
-
-		if (window->IsResizeHot())
-		{
-			if (Input::IsMouseButtonDown(Mouse::ButtonLeft))
-			{
-				GuiState.ResizingWindowID = window->ID;
-				GuiState.MovingWindowID = 0;
-			}
-		}
+		Gui::BeginWindow(window);
 
 		GuiState.AddWindowToList(window);
 		GuiState.CurrentWindow = window;
@@ -302,6 +256,36 @@ namespace monk
 		GuiState.CurrentWindow = nullptr;
 	}
 
+	//////////////////////////////////////////////////////////////////////////
+	// Private
+	//////////////////////////////////////////////////////////////////////////
+
+	GuiStyle Gui::DefaultStyle()
+	{
+		GuiStyle style;
+
+		style.Padding = math::vec2(5.0f, 5.0f);
+		style.HeaderHeight = 16.0f;
+		style.HeaderColor = math::vec4(0.2f, 0.2f, 0.2f, 1.0f);
+		style.HotHeaderColor = math::vec4(0.2f, 0.2f, 0.2f, 1.0f);
+		style.ActiveHeaderColor = math::vec4(0.1f, 0.1f, 0.2f, 1.0f);
+		style.MinWindowSize = math::vec2(100, 25);
+		style.WindowBackgroundColor = math::vec4(0.3f, 0.3f, 0.3f, 1.0f);
+		style.HotWindowBackgroundColor = math::vec4(0.35f, 0.35f, 0.35f, 1.0f);
+		style.ActiveWindowBackgroundColor = math::vec4(0.3f, 0.3f, 0.3f, 1.0f);
+		style.WindowBorderSize = math::vec2(3.0f);
+		style.WindowBorderColor = math::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+		style.ButtonColor = math::vec4(0.2f, 0.2f, 0.6f, 1.0f);
+		style.HotButtonColor = math::vec4(0.3f, 0.3f, 0.6f, 1.0f);
+		style.ActiveButtonColor = math::vec4(0.1f, 0.1f, 0.4f, 1.0f);
+		style.WindowResizeCornerSize = math::vec2(14.0f);
+		style.WindowResizeCornerColor = math::vec4(0.1f, 0.2f, 0.3f, 1.0f);
+		style.HotWindowResizeCornerColor = math::vec4(0.3f, 0.7f, 0.2f, 1.0f);
+		style.ActiveWindowResizeCornerColor = math::vec4(0.2f, 0.4f, 0.1f, 1.0f);
+
+		return style;
+	}
+
 	void Gui::RestoreWindow(GuiWindow* window)
 	{
 		if (s_WindowCache.find(window->ID) != s_WindowCache.end())
@@ -312,6 +296,38 @@ namespace monk
 			window->Size = cache.Size;
 			window->ZOrder = cache.ZOrder;
 		}
+	}
+
+	void Gui::BeginWindow(GuiWindow* window)
+	{
+		if (Gui::IsWindowHot(window))
+		{
+			GuiState.HotWindowID = window->ID;
+			GuiState.HotWindow = window;
+			GuiState.HotWindowZOrder = window->ZOrder;
+
+			if (Input::IsMouseButtonDown(Mouse::ButtonLeft))
+			{
+				GuiState.ActiveWindowID = window->ID;
+				window->ZOrder = (uint32_t)-1;
+
+				if (window->IsResizeHot())
+					GuiState.ResizingWindowID = window->ID;
+				else
+					GuiState.MovingWindowID = window->ID;
+			}
+		}
+	}
+
+	bool Gui::IsWindowHot(GuiWindow* window)
+	{
+		if (!window->IsHot() || GuiState.ResizingWindowID)
+			return false;
+
+		if (GuiState.HotWindow && window->ZOrder < GuiState.HotWindowZOrder)
+			return false;
+
+		return true;
 	}
 
 	void Gui::DrawWindow(const GuiWindow* window)
@@ -327,7 +343,7 @@ namespace monk
 		math::vec2 resizeCornerPosition = windowBodyPosition + windowBodySize - style.WindowResizeCornerSize;
 		math::vec2 closeButtonSize = math::vec2(style.HeaderHeight * 0.8 * 2, style.HeaderHeight * 0.8);
 		math::vec2 closeButtonPosition = headerPosition + math::vec2(headerSize.x - closeButtonSize.x - style.HeaderHeight * 0.1, style.HeaderHeight * 0.1);
-		
+
 		math::vec4 headerColor;
 		math::vec4 windowColor;
 
