@@ -383,6 +383,9 @@ namespace monk
 		const math::vec2 headerSize = math::vec2(window->Size.x, style.HeaderHeight);
 		GuiRect collapseButtonRect = window->GetCollapseButtonRect();
 		GuiRect closeButtonRect = window->GetCloseButtonRect();
+		GuiRect border;
+		border.Size = headerSize + style.WindowBorderSize * 2;
+		border.Position = window->Position - style.WindowBorderSize;
 
 		math::vec4 headerColor;
 		
@@ -402,7 +405,7 @@ namespace monk
 			headerColor = style.Colors[GuiColor::Header];
 		}
 
-		// TODO: Draw header shadow
+		s_Renderer->DrawRect(border.Position, border.Size, style.Colors[GuiColor::WindowBorder]);
 		s_Renderer->DrawRect(window->Position, headerSize, headerColor);
 		s_Renderer->DrawRect(collapseButtonRect.Position, collapseButtonRect.Size, collapseButtonColor);
 		s_Renderer->DrawRect(closeButtonRect.Position, closeButtonRect.Size, closeButtonColor);
@@ -416,8 +419,8 @@ namespace monk
 		math::vec2 headerSize = math::vec2(window->Size.x, style.HeaderHeight);
 		math::vec2 windowBodyPosition = math::vec2(window->Position.x, window->Position.y + style.HeaderHeight);
 		const math::vec2& windowBodySize = window->Size;
-		math::vec2 borderPosition = window->Position - style.WindowBorderSize;
-		math::vec2 borderSize = window->Size + math::vec2(0, style.HeaderHeight) + style.WindowBorderSize * 2;
+		math::vec2 borderPosition = window->Position + math::vec2(0, style.HeaderHeight) - style.WindowBorderSize;
+		math::vec2 borderSize = window->Size + style.WindowBorderSize * 2;
 		math::vec2 resizeCornerPosition = window->GetResizeCornerRect().Position;
 		math::vec2 closeButtonSize = window->GetCloseButtonRect().Size;
 		math::vec2 closeButtonPosition = window->GetCloseButtonRect().Position;
@@ -442,7 +445,7 @@ namespace monk
 		}
 
 		// Border
-		// s_Renderer->DrawRect(borderPosition, borderSize, style.Colors[GuiColor::WindowBorder]);
+		s_Renderer->DrawRect(borderPosition, borderSize, style.Colors[GuiColor::WindowBorder]);
 
 		// Window body
 		s_Renderer->DrawRect(windowBodyPosition, windowBodySize, windowColor);
