@@ -29,6 +29,10 @@ namespace monk
 
 			WindowBorder,
 
+			HotWindowCollapseButton,
+			WindowCollapseButton,
+
+			HotWindowCloseButton,
 			WindowCloseButton,
 
 			WindowResizeCorner,
@@ -43,6 +47,7 @@ namespace monk
 	{
 		math::vec2 Padding;
 		float HeaderHeight;
+		float HeaderPadding;
 
 		math::vec4 Colors[GuiColor::Count];
 
@@ -72,7 +77,9 @@ namespace monk
 		static bool IsWindowHot(GuiWindow* window);
 
 		static void DrawWindow(const GuiWindow* window);
-
+		static void DrawWindowHeader(const GuiWindow* window);
+		static void DrawWindowBody(const GuiWindow* window);
+		
 	private:
 		static math::vec2 s_LastMouse;
 		static GuiStyle s_GuiStyle;

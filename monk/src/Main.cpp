@@ -32,7 +32,7 @@ private:
 
 Application::Application()
 {
-	m_Window = new Window(1280, 720, "Monk");
+	m_Window = new Window(1280 / 2, 720 / 2, "Monk");
 	m_Window->SetEventCallback(BIND_FUNCTION(Application::OnEvent));
 	m_Window->SwapInterval(1);
 

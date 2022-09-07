@@ -13,6 +13,8 @@ namespace monk
 		Position(math::vec2(100, 100)),
 		Size(math::vec2(150, 50)),
 		ZOrder(0),
+		Collapsed(false),
+		Closed(false),
 		Prev(nullptr),
 		Next(nullptr)
 	{
@@ -20,27 +22,51 @@ namespace monk
 		ID = static_cast<uint32_t>(hasher(Name));
 	}
 
+	void GuiWindow::Restore(const GuiWindowCacheData& cacheData)
+	{
+		Position = cacheData.Position;
+		Size = cacheData.Size;
+		ZOrder = cacheData.ZOrder;
+		Collapsed = cacheData.Collapsed;
+		Closed = cacheData.Closed;
+	}
+
 	bool GuiWindow::IsHot() const
 	{
-		float x = Input::GetMouseX();
-		float y = Input::GetMouseY();
-
 		const GuiStyle& style = Gui::GetStyle();
 
-		return (x >= Position.x && x <= Position.x + Size.x) &&
-			(y >= Position.y && y <= style.HeaderHeight + Position.y + Size.y);
+		GuiRect headerRect;
+		headerRect.Position = Position;
+		headerRect.Size = math::vec2(Size.x, style.HeaderHeight);
+
+		GuiRect windowRect;
+		windowRect.Position = Position;
+		windowRect.Size = Size + math::vec2(0.0f, headerRect.Size.y);
+
+		bool hot;
+		if (Collapsed)
+			hot = headerRect.IsInside(Input::GetMousePosition());
+		else
+			hot = windowRect.IsInside(Input::GetMousePosition());
+
+		return hot;
 	}
 
 	bool GuiWindow::IsResizeHot() const
 	{
-		const GuiStyle& style = Gui::GetStyle();
-
 		GuiRect resize = GetResizeCornerRect();
 
 		return resize.IsInside(Input::GetMousePosition());
 	}
 
-	bool GuiWindow::IsCloseButtonHot() const
+	bool GuiWindow::IsCollapseHot() const
+	{
+		GuiRect collapse = GetCollapseButtonRect();
+
+		return collapse.IsInside(Input::GetMousePosition());
+	}
+
+	bool GuiWindow::IsCloseHot() const
 	{
 		const GuiStyle& style = Gui::GetStyle();
 
@@ -54,7 +80,9 @@ namespace monk
 			Name,
 			Position,
 			Size,
-			ZOrder
+			ZOrder,
+			Collapsed,
+			Closed
 		};
 
 		return data;
@@ -73,14 +101,29 @@ namespace monk
 		return resize;
 	}
 
+	GuiRect GuiWindow::GetCollapseButtonRect() const
+	{
+		const GuiStyle& style = Gui::GetStyle();
+		
+		GuiRect closeButtonRect = GetCloseButtonRect();
+		GuiRect collapse;
+		collapse.Size = closeButtonRect.Size;
+		collapse.Position = closeButtonRect.Position;
+		collapse.Position.x -= collapse.Size.x + style.HeaderPadding;
+
+		return collapse;
+	}
+
 	GuiRect GuiWindow::GetCloseButtonRect() const
 	{
 		const GuiStyle& style = Gui::GetStyle();
 		math::vec2 headerSize = math::vec2(Size.x, style.HeaderHeight);
+		const float closeButtonHeightPercentOfHeaderHeight = 0.6; // close button occupy 60% of headerHeight
+		const float& percent = closeButtonHeightPercentOfHeaderHeight;
 
 		GuiRect close;
-		close.Size = math::vec2(style.HeaderHeight * 0.8 * 2, style.HeaderHeight * 0.8);
-		close.Position = Position + math::vec2(headerSize.x - close.Size.x - style.HeaderHeight * 0.1, style.HeaderHeight * 0.1);
+		close.Size = math::vec2(style.HeaderHeight * percent * 2, style.HeaderHeight * percent);
+		close.Position = Position + math::vec2(headerSize.x - close.Size.x - style.HeaderHeight * (1.0f - percent) / 2, style.HeaderHeight * (1.0f - percent) / 2);
 
 		return close;
 	}

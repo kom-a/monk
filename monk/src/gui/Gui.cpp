@@ -28,6 +28,9 @@ namespace monk
 		uint32_t MovingWindowID;
 		uint32_t ResizingWindowID;
 
+		uint32_t CollapsedWindowID;
+		uint32_t ClosedWindowID;
+
 		math::vec2 LastMouse;
 
 		void Reset()
@@ -43,6 +46,8 @@ namespace monk
 			HotWindowZOrder = -1;
 			MovingWindowID = 0;
 			ResizingWindowID = 0;
+			CollapsedWindowID = 0;
+			ClosedWindowID = 0;
 		}
 
 		void AddWindowToList(GuiWindow* window)
@@ -196,6 +201,8 @@ namespace monk
 		GuiState.HotWindowID = 0;
 		GuiState.HotWindow = nullptr;
 		GuiState.HotWindowZOrder = -1;
+		GuiState.CollapsedWindowID = 0;
+		GuiState.ClosedWindowID = 0;
 		s_Renderer->Begin(projection);
 	}
 
@@ -218,8 +225,14 @@ namespace monk
 			else if (current->ID == GuiState.MovingWindowID)
 				current->Position += Input::GetMousePosition() - GuiState.LastMouse;
 
+			if (current->ID == GuiState.CollapsedWindowID)
+				current->Collapsed = !current->Collapsed;
+			if (current->ID == GuiState.ClosedWindowID)
+				current->Closed = true;
+
 			s_WindowCache[current->ID] = current->GetCacheData();
 
+			
 			DrawWindow(current);
 			current = current->Next;
 		}
@@ -241,11 +254,14 @@ namespace monk
 
 		GuiWindow* window = new GuiWindow(name);
 		Gui::RestoreWindow(window);
+		GuiState.CurrentWindow = window;
+
+		if (window->Closed)
+			return;
 
 		Gui::BeginWindow(window);
 
 		GuiState.AddWindowToList(window);
-		GuiState.CurrentWindow = window;
 	}
 
 	void Gui::End()
@@ -265,6 +281,7 @@ namespace monk
 
 		style.Padding = math::vec2(5.0f, 5.0f);
 		style.HeaderHeight = 20.0f;
+		style.HeaderPadding = 6.0f;
 		style.MinWindowSize = math::vec2(100, 25);
 		style.WindowBorderSize = math::vec2(3.0f);
 		style.WindowResizeCornerSize = math::vec2(14.0f);
@@ -289,6 +306,10 @@ namespace monk
 
 		colors[GuiColor::WindowBorder] = math::vec4(0.0f, 0.0f, 0.0f, 1.0f);
 		
+		colors[GuiColor::HotWindowCollapseButton] = math::vec4(0.8f, 0.8f, 0.8f, 1.0f);
+		colors[GuiColor::WindowCollapseButton] = math::vec4(0.6f, 0.6f, 0.6f, 1.0f);
+
+		colors[GuiColor::HotWindowCloseButton] = math::vec4(0.85f, 0.65f, 0.65f, 1.0f);
 		colors[GuiColor::WindowCloseButton] = math::vec4(0.8f, 0.6f, 0.6f, 1.0f);
 
 		colors[GuiColor::WindowResizeCorner] = math::vec4(0.1f, 0.2f, 0.3f, 1.0f);
@@ -301,10 +322,7 @@ namespace monk
 		if (s_WindowCache.find(window->ID) != s_WindowCache.end())
 		{
 			const GuiWindowCacheData& cache = s_WindowCache.at(window->ID);
-
-			window->Position = cache.Position;
-			window->Size = cache.Size;
-			window->ZOrder = cache.ZOrder;
+			window->Restore(cache);
 		}
 	}
 
@@ -331,6 +349,11 @@ namespace monk
 					GuiState.MovingWindowID = window->ID;
 					GuiState.ResizingWindowID = 0;
 				}
+
+				if (window->IsCollapseHot())
+					GuiState.CollapsedWindowID = window->ID;
+				if (window->IsCloseHot())
+					GuiState.ClosedWindowID = window->ID;
 			}
 		}
 	}
@@ -347,6 +370,45 @@ namespace monk
 	}
 
 	void Gui::DrawWindow(const GuiWindow* window)
+	{
+		DrawWindowHeader(window);
+		
+		if(!window->Collapsed)
+			DrawWindowBody(window);
+	}
+
+	void Gui::DrawWindowHeader(const GuiWindow* window)
+	{
+		GuiStyle& style = Gui::GetStyle();
+		const math::vec2 headerSize = math::vec2(window->Size.x, style.HeaderHeight);
+		GuiRect collapseButtonRect = window->GetCollapseButtonRect();
+		GuiRect closeButtonRect = window->GetCloseButtonRect();
+
+		math::vec4 headerColor;
+		
+		math::vec4 collapseButtonColor = window->IsCollapseHot() ? style.Colors[GuiColor::HotWindowCollapseButton] : style.Colors[GuiColor::WindowCollapseButton];
+		math::vec4 closeButtonColor = window->IsCloseHot() ? style.Colors[GuiColor::HotWindowCloseButton] : style.Colors[GuiColor::WindowCloseButton];
+
+		if (window->ID == GuiState.ActiveWindowID)
+		{
+			headerColor = style.Colors[GuiColor::ActiveHeader];
+		}
+		else if (window->ID == GuiState.HotWindowID)
+		{
+			headerColor = style.Colors[GuiColor::HotHeader];
+		}
+		else
+		{
+			headerColor = style.Colors[GuiColor::Header];
+		}
+
+		// TODO: Draw header shadow
+		s_Renderer->DrawRect(window->Position, headerSize, headerColor);
+		s_Renderer->DrawRect(collapseButtonRect.Position, collapseButtonRect.Size, collapseButtonColor);
+		s_Renderer->DrawRect(closeButtonRect.Position, closeButtonRect.Size, closeButtonColor);
+	}
+
+	void Gui::DrawWindowBody(const GuiWindow* window)
 	{
 		GuiStyle& style = Gui::GetStyle();
 
@@ -380,19 +442,13 @@ namespace monk
 		}
 
 		// Border
-		s_Renderer->DrawRect(borderPosition, borderSize, style.Colors[GuiColor::WindowBorder]);
-
-		// Header
-		s_Renderer->DrawRect(headerPosition, headerSize, headerColor);
+		// s_Renderer->DrawRect(borderPosition, borderSize, style.Colors[GuiColor::WindowBorder]);
 
 		// Window body
 		s_Renderer->DrawRect(windowBodyPosition, windowBodySize, windowColor);
 
 		// Window resize corner
 		s_Renderer->DrawRect(resizeCornerPosition, style.WindowResizeCornerSize, style.Colors[GuiColor::WindowResizeCorner]);
-
-		// Window close button
-		s_Renderer->DrawRect(closeButtonPosition, closeButtonSize, style.Colors[GuiColor::WindowCloseButton]);
 	}
 
 }
