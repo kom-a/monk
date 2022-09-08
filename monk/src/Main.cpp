@@ -60,7 +60,7 @@ void Application::Run()
 
 	auto lastTime = std::chrono::system_clock::now();
 
-	bool open = false;
+	bool open = true;
 
 	while (!m_Window->Closed())
 	{
@@ -82,6 +82,9 @@ void Application::Run()
 		if (Input::IsKeyDown(Key::S))
 			open = true;
 
+		if (Input::IsKeyDown(Key::T))
+			open = !open;
+
 		Gui::NewFrame(math::Ortho(0.0f, (float)m_Window->GetWidth(), (float)m_Window->GetHeight(), 0.0f, -1.0f, 1.0f));
 
 		if (open)
@@ -90,7 +93,6 @@ void Application::Run()
 			Gui::End();
 		}
 		
-
 		Gui::EndFrame();
 
 		m_Window->Update();

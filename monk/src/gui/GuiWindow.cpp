@@ -102,12 +102,13 @@ namespace monk
 	GuiRect GuiWindow::GetCollapseButtonRect() const
 	{
 		const GuiStyle& style = Gui::GetStyle();
-		
-		GuiRect closeButtonRect = GetCloseButtonRect();
+		math::vec2 headerSize = math::vec2(Size.x, style.HeaderHeight);
+		const float buttonHeightPercentOfHeaderHeight = 0.6; // close button occupy 60% of headerHeight
+		const float& percent = buttonHeightPercentOfHeaderHeight;
+
 		GuiRect collapse;
-		collapse.Size = closeButtonRect.Size;
-		collapse.Position = closeButtonRect.Position;
-		collapse.Position.x -= collapse.Size.x + style.HeaderPadding;
+		collapse.Size = math::vec2(style.HeaderHeight * percent);
+		collapse.Position = Position + math::vec2(style.HeaderPadding, style.HeaderHeight * (1.0f - percent) / 2);
 
 		return collapse;
 	}
@@ -116,8 +117,8 @@ namespace monk
 	{
 		const GuiStyle& style = Gui::GetStyle();
 		math::vec2 headerSize = math::vec2(Size.x, style.HeaderHeight);
-		const float closeButtonHeightPercentOfHeaderHeight = 0.6; // close button occupy 60% of headerHeight
-		const float& percent = closeButtonHeightPercentOfHeaderHeight;
+		const float buttonHeightPercentOfHeaderHeight = 0.6; // close button occupy 60% of headerHeight
+		const float& percent = buttonHeightPercentOfHeaderHeight;
 
 		GuiRect close;
 		close.Size = math::vec2(style.HeaderHeight * percent * 2, style.HeaderHeight * percent);
