@@ -227,8 +227,8 @@ namespace monk
 
 			if (current->ID == GuiState.CollapsedWindowID)
 				current->Collapsed = !current->Collapsed;
-			if (current->ID == GuiState.ClosedWindowID)
-				current->Closed = true;
+			if (current->Open && current->ID == GuiState.ClosedWindowID)
+				*current->Open = false;
 
 			s_WindowCache[current->ID] = current->GetCacheData();
 
@@ -248,17 +248,15 @@ namespace monk
 		}
 	}
 
-	void Gui::Begin(const std::string& name)
+	void Gui::Begin(const std::string& name, bool* open)
 	{
 		MONK_ASSERT(!GuiState.CurrentWindow, "Can not 'Begin' new window inside another one. Call 'End' before starting new window.");
 
-		GuiWindow* window = new GuiWindow(name);
+		GuiWindow* window = new GuiWindow(name, open);
 		Gui::RestoreWindow(window);
+
 		GuiState.CurrentWindow = window;
-
-		if (window->Closed)
-			return;
-
+		
 		Gui::BeginWindow(window);
 
 		GuiState.AddWindowToList(window);
@@ -317,13 +315,17 @@ namespace monk
 		colors[GuiColor::ActiveWindowResizeCorner] = math::vec4(0.2f, 0.4f, 0.1f, 1.0f);
 	}
 
-	void Gui::RestoreWindow(GuiWindow* window)
+	bool Gui::RestoreWindow(GuiWindow* window)
 	{
 		if (s_WindowCache.find(window->ID) != s_WindowCache.end())
 		{
 			const GuiWindowCacheData& cache = s_WindowCache.at(window->ID);
 			window->Restore(cache);
+
+			return true;
 		}
+
+		return false;
 	}
 
 	void Gui::BeginWindow(GuiWindow* window)
@@ -408,7 +410,9 @@ namespace monk
 		s_Renderer->DrawRect(border.Position, border.Size, style.Colors[GuiColor::WindowBorder]);
 		s_Renderer->DrawRect(window->Position, headerSize, headerColor);
 		s_Renderer->DrawRect(collapseButtonRect.Position, collapseButtonRect.Size, collapseButtonColor);
-		s_Renderer->DrawRect(closeButtonRect.Position, closeButtonRect.Size, closeButtonColor);
+		
+		if(window->Open)
+			s_Renderer->DrawRect(closeButtonRect.Position, closeButtonRect.Size, closeButtonColor);
 	}
 
 	void Gui::DrawWindowBody(const GuiWindow* window)

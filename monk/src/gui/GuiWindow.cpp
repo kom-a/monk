@@ -7,14 +7,14 @@
 
 namespace monk
 {
-	GuiWindow::GuiWindow(const std::string& name)
+	GuiWindow::GuiWindow(const std::string& name, bool* open)
 		:
 		Name(name),
 		Position(math::vec2(100, 100)),
 		Size(math::vec2(150, 50)),
 		ZOrder(0),
 		Collapsed(false),
-		Closed(false),
+		Open(open),
 		Prev(nullptr),
 		Next(nullptr)
 	{
@@ -28,7 +28,6 @@ namespace monk
 		Size = cacheData.Size;
 		ZOrder = cacheData.ZOrder;
 		Collapsed = cacheData.Collapsed;
-		Closed = cacheData.Closed;
 	}
 
 	bool GuiWindow::IsHot() const
@@ -81,8 +80,7 @@ namespace monk
 			Position,
 			Size,
 			ZOrder,
-			Collapsed,
-			Closed
+			Collapsed
 		};
 
 		return data;

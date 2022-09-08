@@ -13,7 +13,6 @@ namespace monk
 		math::vec2 Size;
 		uint32_t ZOrder;
 		bool Collapsed;
-		bool Closed;
 	};
 
 	struct GuiRect
@@ -45,15 +44,15 @@ namespace monk
 		math::vec2 CursorPosition;
 		uint32_t ZOrder;
 		bool Collapsed;
-		bool Closed;
+		bool* Open;
 
 		GuiWindow* Next;
 		GuiWindow* Prev;
 
-		GuiWindow(const std::string& name);
+		GuiWindow(const std::string& name, bool* open);
 		
 		void Restore(const GuiWindowCacheData& cacheData);
-
+		
 		bool IsHot() const;
 		bool IsResizeHot() const;
 		bool IsCollapseHot() const;
@@ -63,6 +62,5 @@ namespace monk
 		GuiRect GetResizeCornerRect() const;
 		GuiRect GetCollapseButtonRect() const;
 		GuiRect GetCloseButtonRect() const;
-		
 	};
 }

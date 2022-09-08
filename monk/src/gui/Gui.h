@@ -66,13 +66,13 @@ namespace monk
 		static void NewFrame(const math::mat4& projection);
 		static void EndFrame();
 
-		static void Begin(const std::string& name);
+		static void Begin(const std::string& name, bool* open = nullptr);
 		static void End();
 
 	private:
 		static void DefaultStyle();
 		static void DefaultColorTheme();
-		static void RestoreWindow(GuiWindow* window);
+		static bool RestoreWindow(GuiWindow* window);
 		static void BeginWindow(GuiWindow* window);
 		static bool IsWindowHot(GuiWindow* window);
 
