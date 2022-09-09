@@ -53,14 +53,14 @@ namespace monk
 
 	bool GuiWindow::IsResizeHot() const
 	{
-		GuiRect resize = GetResizeCornerRect();
+		GuiRect resize = GetResizeCorner();
 
 		return resize.IsInside(Input::GetMousePosition());
 	}
 
 	bool GuiWindow::IsCollapseHot() const
 	{
-		GuiRect collapse = GetCollapseButtonRect();
+		GuiRect collapse = GetCollapseButton();
 
 		return collapse.IsInside(Input::GetMousePosition());
 	}
@@ -69,7 +69,7 @@ namespace monk
 	{
 		const GuiStyle& style = Gui::GetStyle();
 
-		GuiRect closeRect = GetCloseButtonRect();
+		GuiCircle closeRect = GetCloseButton();
 		return closeRect.IsInside(Input::GetMousePosition());
 	}
 
@@ -86,7 +86,7 @@ namespace monk
 		return data;
 	}
 
-	GuiRect GuiWindow::GetResizeCornerRect() const
+	GuiRect GuiWindow::GetResizeCorner() const
 	{
 		const GuiStyle& style = Gui::GetStyle();
 
@@ -99,7 +99,7 @@ namespace monk
 		return resize;
 	}
 
-	GuiRect GuiWindow::GetCollapseButtonRect() const
+	GuiRect GuiWindow::GetCollapseButton() const
 	{
 		const GuiStyle& style = Gui::GetStyle();
 		math::vec2 headerSize = math::vec2(Size.x, style.HeaderHeight);
@@ -113,16 +113,18 @@ namespace monk
 		return collapse;
 	}
 
-	GuiRect GuiWindow::GetCloseButtonRect() const
+	GuiCircle GuiWindow::GetCloseButton() const
 	{
 		const GuiStyle& style = Gui::GetStyle();
 		math::vec2 headerSize = math::vec2(Size.x, style.HeaderHeight);
-		const float buttonHeightPercentOfHeaderHeight = 0.6; // close button occupy 60% of headerHeight
+		const float buttonHeightPercentOfHeaderHeight = 0.8; // close button occupy 80% of headerHeight
 		const float& percent = buttonHeightPercentOfHeaderHeight;
 
-		GuiRect close;
-		close.Size = math::vec2(style.HeaderHeight * percent * 2, style.HeaderHeight * percent);
-		close.Position = Position + math::vec2(headerSize.x - close.Size.x - style.HeaderHeight * (1.0f - percent) / 2, style.HeaderHeight * (1.0f - percent) / 2);
+		GuiCircle close;
+		close.Radius = style.HeaderHeight * percent / 2.0f;
+		
+		close.Center.x = Position.x + Size.x - style.HeaderPadding - close.Radius;
+		close.Center.y = Position.y + style.HeaderHeight / 2.0f;
 
 		return close;
 	}

@@ -46,7 +46,7 @@ Application::Application()
 		LOG_INFO("	version: {0}", glGetString(GL_VERSION));
 	}
 
-	glClearColor(0.7f, 0.8f, 0.9f, 1.0f);
+	glClearColor(0.45f, 0.1f, 0.8f, 1.0f);
 }
 
 Application::~Application()
@@ -60,7 +60,9 @@ void Application::Run()
 
 	auto lastTime = std::chrono::system_clock::now();
 
-	bool open = true;
+	bool open1 = true;
+	bool open2 = true;
+	bool open3 = true;
 
 	while (!m_Window->Closed())
 	{
@@ -70,7 +72,7 @@ void Application::Run()
 
 		float delta = deltaTime / 1000.0f;
 
-		//LOG_TRACE("FPS: {0}, deltaTime: {1}ms", 1000.0f / delta, delta);
+		// LOG_TRACE("FPS: {0}, deltaTime: {1}ms", 1000.0f / delta, delta);
 
 		glClear(GL_COLOR_BUFFER_BIT);
 
@@ -79,17 +81,30 @@ void Application::Run()
 		if (Input::IsKeyPressed(Key::Escape))
 			m_Window->Close();
 
-		if (Input::IsKeyDown(Key::S))
-			open = true;
-
-		if (Input::IsKeyDown(Key::T))
-			open = !open;
-
+		if (Input::IsKeyDown(Key::D1))
+			open1 = true;
+		if (Input::IsKeyDown(Key::D2))
+			open2 = true;
+		if (Input::IsKeyDown(Key::D3))
+			open3 = true;
+		
 		Gui::NewFrame(math::Ortho(0.0f, (float)m_Window->GetWidth(), (float)m_Window->GetHeight(), 0.0f, -1.0f, 1.0f));
 
-		if (open)
+		if (open1)
 		{
-			Gui::Begin("Window 1", &open);
+			Gui::Begin("Window 1", &open1);
+			Gui::End();
+		}
+
+		if (open2)
+		{
+			Gui::Begin("Window 2", &open2);
+			Gui::End();
+		}
+
+		if (open3)
+		{
+			Gui::Begin("Window 3", &open3);
 			Gui::End();
 		}
 		
@@ -108,7 +123,7 @@ void Application::OnEvent(Event& e)
 bool Application::OnWindowResize(WindowResizeEvent& e)
 {
 	glViewport(0, 0, e.GetWidth(), e.GetHeight());
-
+	
 	return true;
 }
 

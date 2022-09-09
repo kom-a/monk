@@ -120,4 +120,13 @@ namespace monk::math
 		return result;
 	}
 
+	float Min(float a, float b)
+	{
+		return a < b ? a : b;
+	}
+
+	float Max(float a, float b)
+	{
+		return a > b ? a : b;
+	}
 }

@@ -20,4 +20,7 @@ namespace monk::math
 	vec2 Clamp(const vec2& vector, const vec2& min, const vec2& max);
 	vec3 Clamp(const vec3& vector, const vec3& min, const vec3& max);
 	vec4 Clamp(const vec4& vector, const vec4& min, const vec4& max);
+
+	float Min(float a, float b);
+	float Max(float a, float b);
 }

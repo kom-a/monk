@@ -16,7 +16,12 @@ namespace monk
 		void End();
 
 		void DrawRect(const math::vec2& position, const math::vec2& size, const math::vec4& color);
+		void DrawRoundRect(const math::vec2& position, const math::vec2& size, const math::vec4& color, math::vec4 round = math::vec4(1.0f));
+		void DrawCircle(const math::vec2& center, float radius, const math::vec4& color, uint32_t segments = 24);
+		
 		void FillRect(const math::vec2& position, const math::vec2& size, const math::vec4& color);
+		void FillRoundRect(const math::vec2& position, const math::vec2& size, const math::vec4& color, math::vec4 round = math::vec4(1.0f));
+		void FillCircle(const math::vec2& center, float radius, const math::vec4& color, uint32_t segments = 24);
 
 	private:
 		unsigned m_VAO;

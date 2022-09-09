@@ -34,6 +34,17 @@ namespace monk
 		}
 	};
 
+	struct GuiCircle
+	{
+		math::vec2 Center;
+		float Radius;
+
+		bool IsInside(const math::vec2& point) const 
+		{
+			return (Center - point).length2() <= Radius * 2;
+		}
+	};
+
 	struct GuiWindow
 	{
 		std::string Name;
@@ -59,8 +70,8 @@ namespace monk
 		bool IsCloseHot() const;
 
 		GuiWindowCacheData GetCacheData() const;
-		GuiRect GetResizeCornerRect() const;
-		GuiRect GetCollapseButtonRect() const;
-		GuiRect GetCloseButtonRect() const;
+		GuiRect GetResizeCorner() const;
+		GuiRect GetCollapseButton() const;
+		GuiCircle GetCloseButton() const;
 	};
 }
