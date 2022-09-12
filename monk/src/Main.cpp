@@ -34,7 +34,7 @@ Application::Application()
 {
 	m_Window = new Window(1280 / 2, 720 / 2, "Monk");
 	m_Window->SetEventCallback(BIND_FUNCTION(Application::OnEvent));
-	m_Window->SwapInterval(1);
+	m_Window->SwapInterval(0);
 
 	if (!utils::OpenGLLoader::LoadOpenGL(utils::OpenGLVersion::OPENGL_3_3))
 		DIE("Failed to load OpenGL functions");
@@ -72,7 +72,7 @@ void Application::Run()
 
 		float delta = deltaTime / 1000.0f;
 
-		// LOG_TRACE("FPS: {0}, deltaTime: {1}ms", 1000.0f / delta, delta);
+		LOG_TRACE("FPS: {0}, deltaTime: {1}ms", 1000.0f / delta, delta);
 
 		glClear(GL_COLOR_BUFFER_BIT);
 
@@ -92,19 +92,13 @@ void Application::Run()
 
 		if (open1)
 		{
-			Gui::Begin("Window 1", &open1);
+			Gui::Begin("Window1", &open1);
 			Gui::End();
 		}
-
+		
 		if (open2)
 		{
-			Gui::Begin("Window 2", &open2);
-			Gui::End();
-		}
-
-		if (open3)
-		{
-			Gui::Begin("Window 3", &open3);
+			Gui::Begin("Window2", &open2);
 			Gui::End();
 		}
 		

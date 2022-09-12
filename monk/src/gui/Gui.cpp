@@ -294,9 +294,9 @@ namespace monk
 
 		colors[GuiColor::None] = math::vec4(0.0f);
 		
-		colors[GuiColor::Header] = math::vec4(0.8f, 0.5f, 0.1f, 1.0f);
-		colors[GuiColor::HotHeader] = math::vec4(0.8f, 0.5f, 0.1f, 1.0f);
-		colors[GuiColor::ActiveHeader] = math::vec4(0.7f, 0.4f, 0.1f, 1.0f);
+		colors[GuiColor::Header] = math::vec4(0.2f, 0.2f, 0.2f, 1.0f);
+		colors[GuiColor::HotHeader] = math::vec4(0.25f, 0.25f, 0.25f, 1.0f);
+		colors[GuiColor::ActiveHeader] = math::vec4(0.4f, 0.4f, 0.35f, 1.0f);
 		
 		colors[GuiColor::Window] = math::vec4(0.3f, 0.3f, 0.3f, 1.0f);
 		colors[GuiColor::HotWindow] = math::vec4(0.32f, 0.32f, 0.32f, 1.0f);
@@ -304,11 +304,11 @@ namespace monk
 
 		colors[GuiColor::WindowBorder] = math::vec4(0.0f, 0.0f, 0.0f, 1.0f);
 		
-		colors[GuiColor::HotWindowCollapseButton] = math::vec4(0.8f, 0.8f, 0.8f, 1.0f);
-		colors[GuiColor::WindowCollapseButton] = math::vec4(0.6f, 0.6f, 0.6f, 1.0f);
+		colors[GuiColor::HotWindowCollapseButton] = math::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+		colors[GuiColor::WindowCollapseButton] = math::vec4(0.8f, 0.8f, 0.8f, 1.0f);
 
 		colors[GuiColor::HotWindowCloseButton] = math::vec4(0.85f, 0.65f, 0.65f, 1.0f);
-		colors[GuiColor::WindowCloseButton] = math::vec4(0.4f, 0.4f, 0.5f, 1.0f);
+		colors[GuiColor::WindowCloseButton] = math::vec4(0.9f, 0.3f, 0.3f, 1.0f);
 
 		colors[GuiColor::WindowResizeCorner] = math::vec4(0.1f, 0.2f, 0.3f, 1.0f);
 		colors[GuiColor::HotWindowResizeCorner] = math::vec4(0.3f, 0.7f, 0.2f, 1.0f);
@@ -409,7 +409,7 @@ namespace monk
 
 		s_Renderer->FillRoundRect(border.Position, border.Size, style.Colors[GuiColor::WindowBorder], math::vec4(1.0f, 1.0f, 0.0f, 0.0f));
 		s_Renderer->FillRoundRect(window->Position, headerSize, headerColor, math::vec4(1.0f, 1.0f, 0.0f, 0.0f));
-		s_Renderer->FillRoundRect(collapseButtonRect.Position, collapseButtonRect.Size, collapseButtonColor);
+		s_Renderer->FillRect(collapseButtonRect.Position, collapseButtonRect.Size, collapseButtonColor);
 		
 		if(window->Open)
 			s_Renderer->FillCircle(closeButtonCircle.Center, closeButtonCircle.Radius, closeButtonColor);
@@ -447,13 +447,13 @@ namespace monk
 		}
 
 		// Border
-		s_Renderer->FillRoundRect(borderPosition, borderSize, style.Colors[GuiColor::WindowBorder], math::vec4(0.0f, 0.0f, 1.0f, 1.0f));
+		s_Renderer->FillRect(borderPosition, borderSize, style.Colors[GuiColor::WindowBorder]);
 
 		// Window body
-		s_Renderer->FillRoundRect(windowBodyPosition, windowBodySize, windowColor, math::vec4(0.0f, 0.0f, 1.0f, 1.0f));
+		s_Renderer->FillRect(windowBodyPosition, windowBodySize, windowColor);
 
 		// Window resize corner
-		s_Renderer->FillRoundRect(resizeCornerPosition, style.WindowResizeCornerSize, style.Colors[GuiColor::WindowResizeCorner]);
+		s_Renderer->FillRect(resizeCornerPosition, style.WindowResizeCornerSize, style.Colors[GuiColor::WindowResizeCorner]);
 	}
 
 }
