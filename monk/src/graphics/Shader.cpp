@@ -78,6 +78,17 @@ namespace monk
 		}
 	}
 
+
+	void Shader::SetInt(const std::string& name, int value)
+	{
+		glUseProgram(m_ShaderID);
+		int location = glGetUniformLocation(m_ShaderID, name.c_str());
+		if (location != -1)
+			glUniform1i(location, value);
+		else
+			LOG_WARN("Failed to set uniform: {0}", name);
+	}
+
 	void Shader::SetMatrix4(const std::string& name, const math::mat4& matrix)
 	{
 		glUseProgram(m_ShaderID);
