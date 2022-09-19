@@ -16,6 +16,7 @@ namespace monk
 		void Bind() const;
 		void Unbind() const;
 
+		void SetInt(const std::string& name, int value);
 		void SetMatrix4(const std::string& name, const math::mat4& matrix);
 
 	private:
