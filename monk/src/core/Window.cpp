@@ -136,8 +136,11 @@ namespace monk
 		else
 			LOG_INFO("Window successfully created");
 
-		if (!CreateOpenGLContext())
+		// Hard code OpenGL 3.3 for now (TODO: Make OpenGL version customizable)
+		if (!CreateOpenGLContext(3, 3))
 			DIE("Could not create OpenGL context");
+		else
+			LOG_INFO("OpenGL context successfully created");
 
 		m_SwapIntervalFn = (PFNWGLSWAPINTERVALEXTPROC)wglGetProcAddress("wglSwapIntervalEXT");
 
@@ -148,6 +151,10 @@ namespace monk
 
 	Window::~Window()
 	{
+		HDC windowDC = GetDC(m_WindowHandle);
+		wglMakeCurrent(windowDC, NULL);
+		wglDeleteContext(m_OpenGLRenderingContext);
+
 		UnregisterClass(m_WindowData.Title.c_str(), GetModuleHandle(NULL));
 		DestroyWindow(m_WindowHandle);
 	}
@@ -172,10 +179,8 @@ namespace monk
 	{
 		WNDCLASSEX wc = { };
 
-		int windowStyle = CS_OWNDC | CS_HREDRAW | CS_VREDRAW;
-
 		wc.cbSize = sizeof(wc);
-		wc.style = windowStyle;
+		wc.style = CS_OWNDC | CS_HREDRAW | CS_VREDRAW;
 		wc.lpfnWndProc = WindowProc;
 		wc.hInstance = GetModuleHandle(NULL);
 		wc.hCursor = LoadCursor(NULL, IDC_ARROW);
@@ -210,26 +215,155 @@ namespace monk
 		return m_WindowHandle != NULL;
 	}
 
-	bool Window::CreateOpenGLContext()
+	bool Window::CreateOpenGLContext(int major, int minor)
 	{
-		HDC windowDC = GetDC(m_WindowHandle);
+		if (!InitOpenGLContext())
+		{
+			LOG_ERROR("Failed to init dummy OpenGL context");
+			return false;
+		}
+
+		int pixelFormatAttribs[] = {
+			WGL_DRAW_TO_WINDOW_ARB,     GL_TRUE,
+			WGL_SUPPORT_OPENGL_ARB,     GL_TRUE,
+			WGL_DOUBLE_BUFFER_ARB,      GL_TRUE,
+			WGL_ACCELERATION_ARB,       WGL_FULL_ACCELERATION_ARB,
+			WGL_PIXEL_TYPE_ARB,         WGL_TYPE_RGBA_ARB,
+			WGL_COLOR_BITS_ARB,         32,
+			WGL_DEPTH_BITS_ARB,         24,
+			WGL_STENCIL_BITS_ARB,       8,
+			0
+		};
+
+		HDC dc =  GetDC(m_WindowHandle);
+
+		int pixel_format;
+		UINT num_formats;
+		wglChoosePixelFormatARB(dc, pixelFormatAttribs, 0, 1, &pixel_format, &num_formats);
+		if (!num_formats)
+			DIE("Failed to set the OpenGL pixel format.");
+
+		PIXELFORMATDESCRIPTOR pfd;
+		DescribePixelFormat(dc, pixel_format, sizeof(pfd), &pfd);
+		if (!SetPixelFormat(dc, pixel_format, &pfd))
+			DIE("Failed to set the OpenGL pixel format.");
+
+		// Specify that we want to create an OpenGL 3.3 core profile context
+		int gl_attribs[] = {
+			WGL_CONTEXT_MAJOR_VERSION_ARB, major,
+			WGL_CONTEXT_MINOR_VERSION_ARB, minor,
+			WGL_CONTEXT_PROFILE_MASK_ARB,  WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
+			0,
+		};
+
+		HGLRC glContext = wglCreateContextAttribsARB(dc, 0, gl_attribs);
+		if (!glContext)
+			DIE("Failed to create OpenGL context.");
+
+		if (!wglMakeCurrent(dc, glContext))
+			DIE("Failed to activate OpenGL rendering context.");
+
+		return true;
+	}
+
+	bool Window::InitOpenGLContext()
+	{
+		HWND dummyWindow = CreateDummyWindow();
+		HDC dummyDC = GetDC(dummyWindow);
 		
-		PIXELFORMATDESCRIPTOR desiredPixelFormat = { };
-		desiredPixelFormat.nSize = sizeof(PIXELFORMATDESCRIPTOR);
-		desiredPixelFormat.nVersion = 1;
-		desiredPixelFormat.iPixelType = PFD_TYPE_RGBA;
-		desiredPixelFormat.dwFlags = PFD_SUPPORT_OPENGL | PFD_DRAW_TO_WINDOW | PFD_DOUBLEBUFFER;
-		desiredPixelFormat.cColorBits = 24;
-		desiredPixelFormat.cAlphaBits = 8;
-		desiredPixelFormat.iLayerType = PFD_MAIN_PLANE;
+		HGLRC dummyContext = wglCreateContext(dummyDC);
 
-		int suggestedPixelFormatIndex = ChoosePixelFormat(windowDC, &desiredPixelFormat);
-		PIXELFORMATDESCRIPTOR suggestedPixelFormat;
-		DescribePixelFormat(windowDC, suggestedPixelFormatIndex, sizeof(suggestedPixelFormat), &suggestedPixelFormat);
-		SetPixelFormat(windowDC, suggestedPixelFormatIndex, &suggestedPixelFormat);
+		if (!dummyContext)
+		{
+			LOG_ERROR("Failed to create a dummy OpenGL rendering context.");
+			wglMakeCurrent(dummyDC, 0);
+			wglDeleteContext(dummyContext);
+			ReleaseDC(dummyWindow, dummyDC);
+			DestroyWindow(dummyWindow);
+			return false;
+		}
+		
+		if (!wglMakeCurrent(dummyDC, dummyContext))
+		{
+			LOG_ERROR("Failed to activate dummy OpenGL rendering context.");
+			wglMakeCurrent(dummyDC, 0);
+			wglDeleteContext(dummyContext);
+			ReleaseDC(dummyWindow, dummyDC);
+			DestroyWindow(dummyWindow);
+			return false;
+		}
+	
+		LoadOpenGLExtensions();
+		
+		wglMakeCurrent(dummyDC, 0);
+		wglDeleteContext(dummyContext);
+		ReleaseDC(dummyWindow, dummyDC);
+		DestroyWindow(dummyWindow);
 
-		HGLRC openGLRC = wglCreateContext(windowDC);		
-		return wglMakeCurrent(windowDC, openGLRC);
+		return true;
+	}
+
+	HWND Window::CreateDummyWindow()
+	{
+		WNDCLASSA wc = { };
+
+		wc.style = CS_OWNDC | CS_HREDRAW | CS_VREDRAW;
+		wc.lpfnWndProc = DefWindowProcA;
+		wc.hInstance = GetModuleHandle(0);
+		wc.lpszClassName = "MONK_WGL_DUMMY_WINDOW";
+
+		if (!RegisterClassA(&wc))
+			LOG_ERROR("Failed to register dummy OpenGL window");
+		else
+			LOG_INFO("Dummy OpenGL context successfully created");
+
+		HWND window = CreateWindowExA(
+			0,
+			wc.lpszClassName,
+			"Dummy OpenGL Window",
+			0,
+			CW_USEDEFAULT,
+			CW_USEDEFAULT,
+			CW_USEDEFAULT,
+			CW_USEDEFAULT,
+			0,
+			0,
+			wc.hInstance,
+			0);
+
+		if (!window)
+			LOG_ERROR("Failed to create dummy OpenGL window");
+		else
+			LOG_INFO("Dummy OpenGL window successfully created");
+
+		HDC dc = GetDC(window);
+
+		PIXELFORMATDESCRIPTOR pfd = { 0 };
+		pfd.nSize = sizeof(pfd);
+		pfd.nVersion = 1;
+		pfd.iPixelType = PFD_TYPE_RGBA;
+		pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
+		pfd.cColorBits = 32;
+		pfd.cAlphaBits = 8;
+		pfd.iLayerType = PFD_MAIN_PLANE;
+		pfd.cDepthBits = 24;
+		pfd.cStencilBits = 8;
+
+		int pixelFormat = ChoosePixelFormat(dc, &pfd);
+
+		if (!pixelFormat)
+			LOG_ERROR("Failed to find a suitable pixel format.");
+
+		if (!SetPixelFormat(dc, pixelFormat, &pfd))
+			LOG_ERROR("Failed to set the pixel format.");
+
+		return window;
+	}
+
+	void Window::LoadOpenGLExtensions()
+	{
+		wglCreateContextAttribsARB = (PFNWGLCREATECONTEXTATTRIBSARBPROC)utils::OpenGLLoader::LoadFunction("wglCreateContextAttribsARB");
+		wglChoosePixelFormatARB = (PFNWGLCHOOSEPIXELFOTMATARBPROC)wglGetProcAddress("wglChoosePixelFormatARB");
 	}
 
 	Window* Window::GetWindowByHandle(const HWND& handle)
