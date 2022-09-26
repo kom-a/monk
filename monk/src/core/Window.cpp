@@ -248,15 +248,14 @@ namespace monk
 		if (!SetPixelFormat(dc, pixel_format, &pfd))
 			DIE("Failed to set the OpenGL pixel format.");
 
-		// Specify that we want to create an OpenGL 3.3 core profile context
-		int gl_attribs[] = {
+		int glAttribs[] = {
 			WGL_CONTEXT_MAJOR_VERSION_ARB, major,
 			WGL_CONTEXT_MINOR_VERSION_ARB, minor,
 			WGL_CONTEXT_PROFILE_MASK_ARB,  WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
 			0,
 		};
 
-		HGLRC glContext = wglCreateContextAttribsARB(dc, 0, gl_attribs);
+		HGLRC glContext = wglCreateContextAttribsARB(dc, 0, glAttribs);
 		if (!glContext)
 			DIE("Failed to create OpenGL context.");
 
