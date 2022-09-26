@@ -93,9 +93,7 @@ void Application::Run()
 		
 		m_Renderer->Begin(math::Ortho(0.0f, (float)m_Window->GetWidth(), (float)m_Window->GetHeight(), 0.0f, -1.0f, 1.0f));
 
-		for (int y = -64; y < m_Window->GetHeight() + 64; y += 60)
-			for (int x = 0; x < m_Window->GetWidth(); x += 60 * 2.5)
-				m_Renderer->Text(math::vec2(x, y), "Monk");
+		m_Renderer->FillCircle(Input::GetMousePosition(), 25.0f, math::vec4(1.0f));
 
 		m_Renderer->End();
 
