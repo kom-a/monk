@@ -4,8 +4,12 @@ namespace monk::math
 {
 	struct vec2
 	{
-		float x, y;
-
+		union
+		{
+			struct { float x, y; };
+			struct { float s, t; };
+		};
+		
 		vec2();
 		vec2(float scalar);
 		vec2(float x, float y);

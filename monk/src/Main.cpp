@@ -28,11 +28,12 @@ private:
 
 private:
 	Window* m_Window;
+	Renderer2D* m_Renderer;
 };
 
 Application::Application()
 {
-	m_Window = new Window(1280 / 2, 720 / 2, "Monk");
+	m_Window = new Window(1280, 720, "Monk");
 	m_Window->SetEventCallback(BIND_FUNCTION(Application::OnEvent));
 	m_Window->SwapInterval(0);
 
@@ -45,6 +46,8 @@ Application::Application()
 		LOG_INFO("	renderer: {0}", glGetString(GL_RENDERER));
 		LOG_INFO("	version: {0}", glGetString(GL_VERSION));
 	}
+
+	m_Renderer = new Renderer2D();
 
 	glClearColor(0.45f, 0.1f, 0.8f, 1.0f);
 }
@@ -88,6 +91,14 @@ void Application::Run()
 		if (Input::IsKeyDown(Key::D3))
 			open3 = true;
 		
+		m_Renderer->Begin(math::Ortho(0.0f, (float)m_Window->GetWidth(), (float)m_Window->GetHeight(), 0.0f, -1.0f, 1.0f));
+
+		for (int y = -64; y < m_Window->GetHeight() + 64; y += 60)
+			for (int x = 0; x < m_Window->GetWidth(); x += 60 * 2.5)
+				m_Renderer->Text(math::vec2(x, y), "Monk");
+
+		m_Renderer->End();
+
 		Gui::NewFrame(math::Ortho(0.0f, (float)m_Window->GetWidth(), (float)m_Window->GetHeight(), 0.0f, -1.0f, 1.0f));
 
 		if (open1)

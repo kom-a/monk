@@ -23,6 +23,10 @@ project "monk"
       "./monk/src",
    }
 
+   links {
+      "opengl32"
+   }
+
    filter "configurations:Debug"
       defines { "DEBUG" }
       symbols "On"

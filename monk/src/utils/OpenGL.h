@@ -865,6 +865,23 @@ extern "C"
 #define GL_INT_2_10_10_10_REV 0x8D9F
 #pragma endregion
 
+#pragma region OpenGL extensions defines
+#define WGL_DRAW_TO_WINDOW_ARB                    0x2001
+#define WGL_ACCELERATION_ARB                      0x2003
+#define WGL_SUPPORT_OPENGL_ARB                    0x2010
+#define WGL_DOUBLE_BUFFER_ARB                     0x2011
+#define WGL_PIXEL_TYPE_ARB                        0x2013
+#define WGL_COLOR_BITS_ARB                        0x2014
+#define WGL_DEPTH_BITS_ARB                        0x2022
+#define WGL_STENCIL_BITS_ARB                      0x2023
+#define WGL_FULL_ACCELERATION_ARB                 0x2027
+#define WGL_TYPE_RGBA_ARB                         0x202B
+#define WGL_CONTEXT_MAJOR_VERSION_ARB             0x2091
+#define WGL_CONTEXT_MINOR_VERSION_ARB             0x2092
+#define WGL_CONTEXT_PROFILE_MASK_ARB              0x9126
+#define WGL_CONTEXT_CORE_PROFILE_BIT_ARB          0x00000001
+#pragma endregion
+
 #pragma region OpenGL 1.0 functions
 typedef void(__stdcall* PFNGLCULLFACEPROC)(GLenum mode);
 extern PFNGLCULLFACEPROC _glCullFace;
@@ -2023,6 +2040,15 @@ extern PFNGLSECONDARYCOLORP3UIVPROC _glSecondaryColorP3uiv;
 #define glSecondaryColorP3uiv _glSecondaryColorP3uiv
 #pragma endregion
 
+#pragma region WGL extensions
+typedef HGLRC(WINAPI* PFNWGLCREATECONTEXTATTRIBSARBPROC)(HDC hdc, HGLRC hShareContext, const int* attribList);
+extern PFNWGLCREATECONTEXTATTRIBSARBPROC _wglCreateContextAttribsARB;
+#define wglCreateContextAttribsARB _wglCreateContextAttribsARB
+typedef BOOL(WINAPI* PFNWGLCHOOSEPIXELFOTMATARBPROC)(HDC hdc, const int* piAttribIList, const FLOAT* pfAttribFList, UINT nMaxFormats, int* piFormats, UINT* nNumFormats);
+extern PFNWGLCHOOSEPIXELFOTMATARBPROC _wglChoosePixelFormatARB;
+#define wglChoosePixelFormatARB _wglChoosePixelFormatARB
+#pragma endregion
+
 #ifdef __cplusplus
 }
 #endif // extern "C"
@@ -2056,6 +2082,7 @@ namespace monk::utils
 		~OpenGLLoader() = default;
 
 	private:
+		friend class Window;
 		static void* LoadFunction(const char* name);
 
 		static void LoadOpenGL_1_0();

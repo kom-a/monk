@@ -33,6 +33,26 @@ namespace monk
 		glUseProgram(0);
 	}
 
+	void Shader::SetInt(const std::string& name, int value)
+	{
+		glUseProgram(m_ShaderID);
+		int location = glGetUniformLocation(m_ShaderID, name.c_str());
+		if (location != -1)
+			glUniform1i(location, value);
+		else
+			LOG_WARN("Failed to set uniform: {0}", name);
+	}
+	
+	void Shader::SetMatrix4(const std::string& name, const math::mat4& matrix)
+	{
+		glUseProgram(m_ShaderID);
+		int location = glGetUniformLocation(m_ShaderID, name.c_str());
+		if (location != -1)
+			glUniformMatrix4fv(location, 1, GL_TRUE, &matrix[0][0]);
+		else
+			LOG_WARN("Failed to set uniform: {0}", name);
+	}
+
 	uint32_t Shader::CompileShader(const std::string& shaderSource, uint32_t type)
 	{
 		uint32_t shader = glCreateShader(type);
@@ -77,27 +97,4 @@ namespace monk
 			} break;
 		}
 	}
-
-
-	void Shader::SetInt(const std::string& name, int value)
-	{
-		glUseProgram(m_ShaderID);
-		int location = glGetUniformLocation(m_ShaderID, name.c_str());
-		if (location != -1)
-			glUniform1i(location, value);
-		else
-			LOG_WARN("Failed to set uniform: {0}", name);
-	}
-
-	void Shader::SetMatrix4(const std::string& name, const math::mat4& matrix)
-	{
-		glUseProgram(m_ShaderID);
-		int location = glGetUniformLocation(m_ShaderID, name.c_str());
-		if (location != -1)
-			glUniformMatrix4fv(location, 1, GL_TRUE, &matrix[0][0]);
-		else
-			LOG_WARN("Failed to set uniform: {0}", name);
-
-	}
-
 }

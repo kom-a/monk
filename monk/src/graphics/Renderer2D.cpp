@@ -12,7 +12,6 @@
 namespace monk
 {
 	Renderer2D::Renderer2D()
-		: m_ProjectionMatrix(math::mat4(1.0f))
 	{
 		glGenVertexArrays(1, &m_VAO);
 		glBindVertexArray(m_VAO);
@@ -36,6 +35,13 @@ namespace monk
 		std::string fragmentSrc = utils::FileManager::ReadFile("res/fragmentShader.glsl");
 
 		m_Shader = new Shader(vertexSrc, fragmentSrc);
+
+		vertexSrc = utils::FileManager::ReadFile("res/fontVertexShader.glsl");
+		fragmentSrc = utils::FileManager::ReadFile("res/fontFragmentShader.glsl");
+
+		m_FontShader = new Shader(vertexSrc, fragmentSrc);
+
+		m_Font = new Font("c:/windows/fonts/times.ttf");
 	}
 
 	Renderer2D::~Renderer2D()
@@ -43,6 +49,8 @@ namespace monk
 		delete m_VertexBuffer;
 		delete m_IndexBuffer;
 		delete m_Shader;
+		delete m_FontShader;
+		delete m_Font;
 		glDeleteVertexArrays(1, &m_VAO);
 	}
 
@@ -54,6 +62,45 @@ namespace monk
 	void Renderer2D::End()
 	{
 
+	}
+
+	void Renderer2D::Text(math::vec2 position, const std::string& text)
+	{
+		for (char c : text)
+		{
+			Glyph g = m_Font->GetGlyph(c, &position.x, &position.y);
+
+			float data[] = {
+				g.x0, g.y0, g.s0, g.t0,	// Top left
+				g.x1, g.y0, g.s1, g.t0, // Top right
+				g.x0, g.y1, g.s0, g.t1, // Bottom left
+
+				g.x1, g.y0, g.s1, g.t0, // Top right
+				g.x0, g.y1, g.s0, g.t1, // Bottom left
+				g.x1, g.y1, g.s1, g.t1, // Bottom right
+			};
+
+			BufferLayout layout = {
+				{ 0, BufferLayout::AttribType::Float2 },
+				{ 1, BufferLayout::AttribType::Float2 },
+			};
+
+			glBindVertexArray(m_VAO);
+
+			VertexBuffer buffer(data, sizeof(data), layout);
+			
+			buffer.Bind();
+			m_Font->Bind();
+			m_FontShader->Bind();
+			m_FontShader->SetMatrix4("u_Projection", m_ProjectionMatrix);
+			m_FontShader->SetInt("sampler", 0);
+
+			glEnable(GL_BLEND);
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+			glDrawArrays(GL_TRIANGLES, 0, sizeof(data));
+
+			glBindVertexArray(0);
+		}
 	}
 
 	void Renderer2D::FillRect(const math::vec2& position, const math::vec2& size, const math::vec4& color)
@@ -84,32 +131,6 @@ namespace monk
 		glBindVertexArray(0);
 	}
 
-	//void Renderer2D::FillRoundRect(const math::vec2& position, const math::vec2& size, const math::vec4& color, float round /*= 1.0f*/)
-	//{
-	//	std::vector<float> data;
-	//	std::vector<uint32_t> indices;
-	//	round = math::Clamp(round, 0.0f, 1.0f);
-	//	float radius = math::Min(size.x, size.y) * 0.25;
-
-	//	const float coef = 20.0f; // TODO: Make this customizable
-	//	radius = math::Min(radius, coef * round);
-
-	//	// From top-left clockwise
-	//	FillCircle(position + radius, radius, color);
-	//	FillCircle(position + math::vec2(size.x, 0.0f) + math::vec2(-radius, radius), radius, color);
-	//	FillCircle(position + size - radius, radius, color);
-	//	FillCircle(position + math::vec2(0.0f, size.y) + math::vec2(radius, -radius), radius, color);
-
-	//	// From top clockwise
-	//	FillRect(position + math::vec2(radius, 0.0f), math::vec2(size.x - radius * 2, radius), color);
-	//	FillRect(position + math::vec2(size.x - radius, radius), math::vec2(radius, size.y - radius * 2), color);
-	//	FillRect(position + math::vec2(radius, size.y - radius), math::vec2(size.x - radius * 2, radius), color);
-	//	FillRect(position + math::vec2(0.0f, radius), math::vec2(radius, size.y - radius * 2), color);
-
-	//	// Center
-	//	FillRect(position + math::vec2(radius), size - radius * 2, color);
-	//}
-
 	void Renderer2D::FillRoundRect(const math::vec2& position, const math::vec2& size, const math::vec4& color, math::vec4 round /*= math::vec4(1.0f)*/)
 	{
 		std::vector<float> data;
@@ -136,7 +157,7 @@ namespace monk
 		FillRect(position + math::vec2(0.0f, radius[0]), math::vec2(math::Max(radius[0], radius[3]), size.y - radius[0] - radius[3]), color);
 
 		// Center
-		FillRect(position + math::vec2(radius[0]), size - radius[0] - radius[2], color); // NOTE: This doesn't work if neighbor radiuses are not equal to each other
+		FillRect(position + math::vec2(radius[0]), size - radius[0] - radius[2], color); // NOTE: This doesn't work if neighbor radii are not equal to each other
 	}
 
 	void Renderer2D::FillCircle(const math::vec2& center, float radius, const math::vec4& color, uint32_t segments /*= 24*/)

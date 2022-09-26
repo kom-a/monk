@@ -280,6 +280,7 @@ namespace monk
 		style.Padding = math::vec2(5.0f, 5.0f);
 		style.HeaderHeight = 20.0f;
 		style.HeaderPadding = 6.0f;
+		style.HeaderContentSize = 0.8f;
 		style.MinWindowSize = math::vec2(100, 25);
 		style.WindowBorderSize = math::vec2(3.0f);
 		style.WindowResizeCornerSize = math::vec2(14.0f);

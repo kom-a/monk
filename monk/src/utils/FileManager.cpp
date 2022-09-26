@@ -1,8 +1,11 @@
 #include "utils/FileManager.h"
 
-#include <assert.h>
-
 #include "core/Log.h"
+#include "core/Assert.h"
+
+#include <assert.h>
+#include <fstream>
+
 
 namespace monk::utils
 {
@@ -27,5 +30,27 @@ namespace monk::utils
 		delete[] data;
 
 		return source;
+	}
+
+	std::vector<uint8_t> FileManager::ReadBytes(const std::string& filename)
+	{
+		std::ifstream ifs(filename, std::ios::binary | std::ios::ate);
+
+		MONK_ASSERT(ifs, "Failed to open file");
+
+		auto end = ifs.tellg();
+		ifs.seekg(0, std::ios::beg);
+
+		auto size = std::size_t(end - ifs.tellg());
+
+		if (size == 0)
+			return {};
+
+		std::vector<uint8_t> buffer(size);
+
+		if (!ifs.read((char*)buffer.data(), buffer.size()))
+			MONK_ASSERT(false, "Failed to read file");
+
+		return buffer;
 	}
 }

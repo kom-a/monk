@@ -39,7 +39,10 @@ namespace monk
 		friend LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 		bool CreateWin32Window();
-		bool CreateOpenGLContext();
+		bool CreateOpenGLContext(int major, int minor);
+		bool InitOpenGLContext();
+		HWND CreateDummyWindow();
+		void LoadOpenGLExtensions();
 
 	private:
 		static Window* GetWindowByHandle(const HWND& handle);
@@ -48,6 +51,7 @@ namespace monk
 		static std::unordered_map<HWND, Window*> m_WindowTable;
 
 		HWND m_WindowHandle;
+		HGLRC m_OpenGLRenderingContext;
 		
 		struct WindowData
 		{

@@ -412,6 +412,11 @@ PFNGLSECONDARYCOLORP3UIPROC _glSecondaryColorP3ui = nullptr;
 PFNGLSECONDARYCOLORP3UIVPROC _glSecondaryColorP3uiv = nullptr;
 #pragma endregion
 
+#pragma region WGL extensions
+PFNWGLCREATECONTEXTATTRIBSARBPROC _wglCreateContextAttribsARB = nullptr;
+PFNWGLCHOOSEPIXELFOTMATARBPROC _wglChoosePixelFormatARB = nullptr;
+#pragma endregion
+
 namespace monk::utils
 {
 
