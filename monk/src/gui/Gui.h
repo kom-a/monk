@@ -38,7 +38,7 @@ namespace monk
 			WindowResizeCorner,
 			HotWindowResizeCorner,
 			ActiveWindowResizeCorner,
-
+			
 			Count
 		};
 	};
@@ -48,6 +48,7 @@ namespace monk
 		math::vec2 Padding;
 		float HeaderHeight;
 		float HeaderPadding;
+		float HeaderContentSize; // Text, buttons... occupation in percentage (0.5 - content occupy 50% of HeaderHeight)
 
 		math::vec4 Colors[GuiColor::Count];
 
