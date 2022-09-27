@@ -223,9 +223,9 @@ namespace monk
 	}
 }
 
-#define LOG_TRACE(...) Log::GetInstance().Trace(__VA_ARGS__)
-#define LOG_INFO(...) Log::GetInstance().Info(__VA_ARGS__)
-#define LOG_WARN(...) Log::GetInstance().Warn(__VA_ARGS__)
-#define LOG_ERROR(...) Log::GetInstance().Error(__VA_ARGS__)
-#define LOG_CRITICAL(...) Log::GetInstance().Critical(__VA_ARGS__)
-#define DIE(...) Log::GetInstance().Die(__VA_ARGS__)
+#define LOG_TRACE(...) ::monk::Log::GetInstance().Trace(__VA_ARGS__)
+#define LOG_INFO(...) ::monk::Log::GetInstance().Info(__VA_ARGS__)
+#define LOG_WARN(...) ::monk::Log::GetInstance().Warn(__VA_ARGS__)
+#define LOG_ERROR(...) ::monk::Log::GetInstance().Error(__VA_ARGS__)
+#define LOG_CRITICAL(...) ::monk::Log::GetInstance().Critical(__VA_ARGS__)
+#define DIE(...) ::monk::Log::GetInstance().Die(__VA_ARGS__)
