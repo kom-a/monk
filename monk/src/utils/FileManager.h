@@ -5,10 +5,18 @@
 
 namespace monk::utils
 {
+	struct FileData
+	{
+		uint8_t* Data;
+		size_t Size;
+
+		void Free();
+	};
+
 	class FileManager
 	{
 	public:
 		static std::string ReadFile(const char* filepath);
-		static std::vector<uint8_t> ReadBytes(const std::string& filename);
+		static FileData ReadBytes(const std::string& filename);
 	};
 }

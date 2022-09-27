@@ -32,25 +32,30 @@ namespace monk::utils
 		return source;
 	}
 
-	std::vector<uint8_t> FileManager::ReadBytes(const std::string& filename)
+	FileData FileManager::ReadBytes(const std::string& filename)
 	{
 		std::ifstream ifs(filename, std::ios::binary | std::ios::ate);
-
 		MONK_ASSERT(ifs, "Failed to open file");
+
+		FileData fileData = { 0 };
 
 		auto end = ifs.tellg();
 		ifs.seekg(0, std::ios::beg);
+		fileData.Size = std::size_t(end - ifs.tellg());
 
-		auto size = std::size_t(end - ifs.tellg());
+		if (fileData.Size == 0)
+			return { nullptr, 0 };
 
-		if (size == 0)
-			return {};
+		fileData.Data = new uint8_t[fileData.Size];
 
-		std::vector<uint8_t> buffer(size);
-
-		if (!ifs.read((char*)buffer.data(), buffer.size()))
+		if (!ifs.read((char*)fileData.Data, fileData.Size))
 			MONK_ASSERT(false, "Failed to read file");
 
-		return buffer;
+		return fileData;
+	}
+
+	void FileData::Free()
+	{
+		delete[] Data;
 	}
 }
