@@ -38,10 +38,6 @@ namespace monk
 
 		vertexSrc = utils::FileManager::ReadFile("res/fontVertexShader.glsl");
 		fragmentSrc = utils::FileManager::ReadFile("res/fontFragmentShader.glsl");
-
-		m_FontShader = new Shader(vertexSrc, fragmentSrc);
-
-		m_Font = new Font("c:/windows/fonts/times.ttf");
 	}
 
 	Renderer2D::~Renderer2D()
@@ -49,8 +45,6 @@ namespace monk
 		delete m_VertexBuffer;
 		delete m_IndexBuffer;
 		delete m_Shader;
-		delete m_FontShader;
-		delete m_Font;
 		glDeleteVertexArrays(1, &m_VAO);
 	}
 
@@ -62,45 +56,6 @@ namespace monk
 	void Renderer2D::End()
 	{
 
-	}
-
-	void Renderer2D::Text(math::vec2 position, const std::string& text)
-	{
-		for (char c : text)
-		{
-			Glyph g = m_Font->GetGlyph(c, &position.x, &position.y);
-
-			float data[] = {
-				g.x0, g.y0, g.s0, g.t0,	// Top left
-				g.x1, g.y0, g.s1, g.t0, // Top right
-				g.x0, g.y1, g.s0, g.t1, // Bottom left
-
-				g.x1, g.y0, g.s1, g.t0, // Top right
-				g.x0, g.y1, g.s0, g.t1, // Bottom left
-				g.x1, g.y1, g.s1, g.t1, // Bottom right
-			};
-
-			BufferLayout layout = {
-				{ 0, BufferLayout::AttribType::Float2 },
-				{ 1, BufferLayout::AttribType::Float2 },
-			};
-
-			glBindVertexArray(m_VAO);
-
-			VertexBuffer buffer(data, sizeof(data), layout);
-			
-			buffer.Bind();
-			m_Font->Bind();
-			m_FontShader->Bind();
-			m_FontShader->SetMatrix4("u_Projection", m_ProjectionMatrix);
-			m_FontShader->SetInt("sampler", 0);
-
-			glEnable(GL_BLEND);
-			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-			glDrawArrays(GL_TRIANGLES, 0, sizeof(data));
-
-			glBindVertexArray(0);
-		}
 	}
 
 	void Renderer2D::FillRect(const math::vec2& position, const math::vec2& size, const math::vec4& color)
