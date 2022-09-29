@@ -24,11 +24,27 @@ namespace monk
 		uint8_t type, padding;
 	};
 
+	struct FontChar
+	{
+		uint8_t* Data;
+		int Width;
+		int Height;
+		int XOffset;
+		int YOffset;
+		float Advance;
+
+		void Free();
+	};
+
 	class Truetype
 	{
 	public:
 		Truetype(const uint8_t* data);
 		~Truetype() = default;
+
+	public:
+		FontChar GetCodepointSDF(float scale, int codepoint, int padding, uint8_t onedge, float pixelDistScale);
+		float ScaleForPixelHeight(float height);
 
 	public:
 		bool Init();
@@ -37,10 +53,10 @@ namespace monk
 		int GetGlyfOffset(int glyphIndex);
 		bool GetGlyphBox(int glyphIndex, BoundaryBox* box);
 		BoundaryBox GetGlyphBitmapBoxSubpixel(int glyph, float scale_x, float scale_y);
-		uint8_t* GetCodepointSDF(float scale, int codepoint, int padding, uint8_t onedge, float pixelDistScale, int* width, int* height, int* xOff, int* yOff);
 		int GetGlyphShape(int glyph, GlyphVertex** pvertices);
 		int CloseShape(GlyphVertex* vertices, int numVertices, int wasOff, int startOff,
 			int32_t sx, int32_t sy, int32_t scx, int32_t scy, int32_t cx, int32_t cy);
+		int GetCodepointHMetrics(int codepoint);
 
 	private:
 		const uint8_t* m_Data;

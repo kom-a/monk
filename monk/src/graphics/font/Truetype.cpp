@@ -43,6 +43,184 @@ namespace monk
 		v->cy = (int16_t)cy;
 	}
 
+	float Cuberoot(float x)
+	{
+		if (x < 0)
+			return -std::powf(-x, 1.0f / 3.0f);
+		else
+			return  std::powf( x, 1.0f / 3.0f);
+	}
+
+	// x^3 + a*x^2 + b*x + c = 0
+	int SolveCubic(float a, float b, float c, float* r)
+	{
+		float s = -a / 3;
+		float p = b - a * a / 3;
+		float q = a * (2 * a * a - 9 * b) / 27 + c;
+		float p3 = p * p * p;
+		float d = q * q + 4 * p3 / 27;
+		if (d >= 0) {
+			float z = std::sqrtf(d);
+			float u = (-q + z) / 2;
+			float v = (-q - z) / 2;
+			u = Cuberoot(u);
+			v = Cuberoot(v);
+			r[0] = s + u + v;
+			return 1;
+		}
+		else {
+			float u = std::sqrtf(-p / 3);
+			float v = std::acosf(-std::sqrtf(-27 / p3) * q / 2) / 3;
+			float m = std::cosf(v);
+			float n = std::cosf(v - 3.141592 / 2) * 1.732050808f;
+			r[0] = s + u * 2 * m;
+			r[1] = s - u * (m + n);
+			r[2] = s - u * (m - n);
+
+			return 3;
+		}
+	}
+
+	int Equal2f(float* a, float* b)
+	{
+		return (a[0] == b[0] && a[1] == b[1]);
+	}
+
+	int RayIntersectBezier(float orig[2], float ray[2], float q0[2], float q1[2], float q2[2], float hits[2][2])
+	{
+		float q0perp = q0[1] * ray[0] - q0[0] * ray[1];
+		float q1perp = q1[1] * ray[0] - q1[0] * ray[1];
+		float q2perp = q2[1] * ray[0] - q2[0] * ray[1];
+		float roperp = orig[1] * ray[0] - orig[0] * ray[1];
+
+		float a = q0perp - 2 * q1perp + q2perp;
+		float b = q1perp - q0perp;
+		float c = q0perp - roperp;
+
+		float s0 = 0., s1 = 0.;
+		int num_s = 0;
+
+		if (a != 0.0) {
+			float discr = b * b - a * c;
+			if (discr > 0.0) {
+				float rcpna = -1 / a;
+				float d = std::sqrtf(discr);
+				s0 = (b + d) * rcpna;
+				s1 = (b - d) * rcpna;
+				if (s0 >= 0.0 && s0 <= 1.0)
+					num_s = 1;
+				if (d > 0.0 && s1 >= 0.0 && s1 <= 1.0) {
+					if (num_s == 0) s0 = s1;
+					++num_s;
+				}
+			}
+		}
+		else {
+			// 2*b*s + c = 0
+			// s = -c / (2*b)
+			s0 = c / (-2 * b);
+			if (s0 >= 0.0 && s0 <= 1.0)
+				num_s = 1;
+		}
+
+		if (num_s == 0)
+			return 0;
+		else {
+			float rcp_len2 = 1 / (ray[0] * ray[0] + ray[1] * ray[1]);
+			float rayn_x = ray[0] * rcp_len2, rayn_y = ray[1] * rcp_len2;
+
+			float q0d = q0[0] * rayn_x + q0[1] * rayn_y;
+			float q1d = q1[0] * rayn_x + q1[1] * rayn_y;
+			float q2d = q2[0] * rayn_x + q2[1] * rayn_y;
+			float rod = orig[0] * rayn_x + orig[1] * rayn_y;
+
+			float q10d = q1d - q0d;
+			float q20d = q2d - q0d;
+			float q0rd = q0d - rod;
+
+			hits[0][0] = q0rd + s0 * (2.0f - 2.0f * s0) * q10d + s0 * s0 * q20d;
+			hits[0][1] = a * s0 + b;
+
+			if (num_s > 1) {
+				hits[1][0] = q0rd + s1 * (2.0f - 2.0f * s1) * q10d + s1 * s1 * q20d;
+				hits[1][1] = a * s1 + b;
+				return 2;
+			}
+			else {
+				return 1;
+			}
+		}
+	}
+
+	int ComputeCrossingsX(float x, float y, int nverts, GlyphVertex* verts)
+	{
+		int i;
+		float orig[2], ray[2] = { 1, 0 };
+		float y_frac;
+		int winding = 0;
+
+		// make sure y never passes through a vertex of the shape
+		y_frac = std::fmodf(y, 1.0f);
+		if (y_frac < 0.01f)
+			y += 0.01f;
+		else if (y_frac > 0.99f)
+			y -= 0.01f;
+
+		orig[0] = x;
+		orig[1] = y;
+
+		// test a ray from (-infinity,y) to (x,y)
+		for (i = 0; i < nverts; ++i) {
+			if (verts[i].type == Vline) {
+				int x0 = (int)verts[i - 1].x, y0 = (int)verts[i - 1].y;
+				int x1 = (int)verts[i].x, y1 = (int)verts[i].y;
+				if (y > std::min(y0, y1) && y < std::max(y0, y1) && x > std::min(x0, x1)) {
+					float x_inter = (y - y0) / (y1 - y0) * (x1 - x0) + x0;
+					if (x_inter < x)
+						winding += (y0 < y1) ? 1 : -1;
+				}
+			}
+			if (verts[i].type == Vcurve) {
+				int x0 = (int)verts[i - 1].x, y0 = (int)verts[i - 1].y;
+				int x1 = (int)verts[i].cx, y1 = (int)verts[i].cy;
+				int x2 = (int)verts[i].x, y2 = (int)verts[i].y;
+				int ax = std::min(x0, std::min(x1, x2)), ay = std::min(y0, std::min(y1, y2));
+				int by = std::max(y0, std::max(y1, y2));
+				if (y > ay && y < by && x > ax) {
+					float q0[2], q1[2], q2[2];
+					float hits[2][2];
+					q0[0] = (float)x0;
+					q0[1] = (float)y0;
+					q1[0] = (float)x1;
+					q1[1] = (float)y1;
+					q2[0] = (float)x2;
+					q2[1] = (float)y2;
+					if (Equal2f(q0, q1) || Equal2f(q1, q2)) {
+						x0 = (int)verts[i - 1].x;
+						y0 = (int)verts[i - 1].y;
+						x1 = (int)verts[i].x;
+						y1 = (int)verts[i].y;
+						if (y > std::min(y0, y1) && y < std::max(y0, y1) && x > std::min(x0, x1)) {
+							float x_inter = (y - y0) / (y1 - y0) * (x1 - x0) + x0;
+							if (x_inter < x)
+								winding += (y0 < y1) ? 1 : -1;
+						}
+					}
+					else {
+						int num_hits = RayIntersectBezier(orig, ray, q0, q1, q2, hits);
+						if (num_hits >= 1)
+							if (hits[0][0] < 0)
+								winding += (hits[0][1] < 0 ? -1 : 1);
+						if (num_hits >= 2)
+							if (hits[1][0] < 0)
+								winding += (hits[1][1] < 0 ? -1 : 1);
+					}
+				}
+			}
+		}
+		return winding;
+	}
+
 	//////////////////////////////////////////////////////////////////////////
 	// Truetype implementation
 	//////////////////////////////////////////////////////////////////////////
@@ -65,6 +243,202 @@ namespace monk
 		}
 
 		return 0;
+	}
+
+	FontChar Truetype::GetCodepointSDF(float scale, int codepoint, int padding, uint8_t onedge, float pixelDistScale)
+	{
+		int glyph = FindGlyphIndex(codepoint);
+		FontChar result = { nullptr };
+
+		if (scale == 0)
+			return { nullptr };
+
+		BoundaryBox box = GetGlyphBitmapBoxSubpixel(glyph, scale, scale);
+
+		if (box.x0 == box.x1 || box.y0 == box.y1)
+			return { nullptr };
+
+		box.x0 -= padding;
+		box.y0 -= padding;
+		box.x1 += padding;
+		box.y1 += padding;
+
+		int w = (box.x1 - box.x0);
+		int h = (box.y1 - box.y0);
+
+		result.Width = w;
+		result.Height = h;
+		result.XOffset = box.x0;
+		result.YOffset = box.y0;
+
+		float scaleX = scale;
+		float scaleY = -scale;
+
+		{
+			int x, y, i, j;
+			float* precompute;
+			GlyphVertex* verts;
+			int num_verts = GetGlyphShape(glyph, &verts);
+			uint8_t* data = (unsigned char*)malloc(w * h);
+			precompute = (float*)malloc(num_verts * sizeof(float));
+
+			for (i = 0, j = num_verts - 1; i < num_verts; j = i++) {
+				if (verts[i].type == Vline) {
+					float x0 = verts[i].x * scaleX, y0 = verts[i].y * scaleY;
+					float x1 = verts[j].x * scaleX, y1 = verts[j].y * scaleY;
+					float dist = std::sqrtf((x1 - x0) * (x1 - x0) + (y1 - y0) * (y1 - y0));
+					precompute[i] = (dist == 0) ? 0.0f : 1.0f / dist;
+				}
+				else if (verts[i].type == Vcurve) {
+					float x2 = verts[j].x * scaleX, y2 = verts[j].y * scaleY;
+					float x1 = verts[i].cx * scaleX, y1 = verts[i].cy * scaleY;
+					float x0 = verts[i].x * scaleX, y0 = verts[i].y * scaleY;
+					float bx = x0 - 2 * x1 + x2, by = y0 - 2 * y1 + y2;
+					float len2 = bx * bx + by * by;
+					if (len2 != 0.0f)
+						precompute[i] = 1.0f / (bx * bx + by * by);
+					else
+						precompute[i] = 0.0f;
+				}
+				else
+					precompute[i] = 0.0f;
+			}
+
+			for (y = box.y0; y < box.y1; ++y) {
+				for (x = box.x0; x < box.x1; ++x) {
+					float val;
+					float min_dist = 999999.0f;
+					float sx = (float)x + 0.5f;
+					float sy = (float)y + 0.5f;
+					float x_gspace = (sx / scaleX);
+					float y_gspace = (sy / scaleY);
+
+					int winding = ComputeCrossingsX(x_gspace, y_gspace, num_verts, verts); // @OPTIMIZE: this could just be a rasterization, but needs to be line vs. non-tesselated curves so a new path
+
+					for (i = 0; i < num_verts; ++i) {
+						float x0 = verts[i].x * scaleX, y0 = verts[i].y * scaleY;
+
+						if (verts[i].type == Vline && precompute[i] != 0.0f) {
+							float x1 = verts[i - 1].x * scaleX, y1 = verts[i - 1].y * scaleY;
+
+							float dist, dist2 = (x0 - sx) * (x0 - sx) + (y0 - sy) * (y0 - sy);
+							if (dist2 < min_dist * min_dist)
+								min_dist = std::sqrtf(dist2);
+
+							// coarse culling against bbox
+							//if (sx > STBTT_min(x0,x1)-min_dist && sx < STBTT_max(x0,x1)+min_dist &&
+							//    sy > STBTT_min(y0,y1)-min_dist && sy < STBTT_max(y0,y1)+min_dist)
+							dist = std::fabsf((x1 - x0) * (y0 - sy) - (y1 - y0) * (x0 - sx)) * precompute[i];
+							MONK_ASSERT(i != 0);
+							if (dist < min_dist) {
+								// check position along line
+								// x' = x0 + t*(x1-x0), y' = y0 + t*(y1-y0)
+								// minimize (x'-sx)*(x'-sx)+(y'-sy)*(y'-sy)
+								float dx = x1 - x0, dy = y1 - y0;
+								float px = x0 - sx, py = y0 - sy;
+								// minimize (px+t*dx)^2 + (py+t*dy)^2 = px*px + 2*px*dx*t + t^2*dx*dx + py*py + 2*py*dy*t + t^2*dy*dy
+								// derivative: 2*px*dx + 2*py*dy + (2*dx*dx+2*dy*dy)*t, set to 0 and solve
+								float t = -(px * dx + py * dy) / (dx * dx + dy * dy);
+								if (t >= 0.0f && t <= 1.0f)
+									min_dist = dist;
+							}
+						}
+						else if (verts[i].type == Vcurve) {
+							float x2 = verts[i - 1].x * scaleX, y2 = verts[i - 1].y * scaleY;
+							float x1 = verts[i].cx * scaleX, y1 = verts[i].cy * scaleY;
+							float box_x0 = std::fminf(std::fminf(x0, x1), x2);
+							float box_y0 = std::fminf(std::fminf(y0, y1), y2);
+							float box_x1 = std::fmaxf(std::fmaxf(x0, x1), x2);
+							float box_y1 = std::fmaxf(std::fmaxf(y0, y1), y2);
+							// coarse culling against bbox to avoid computing cubic unnecessarily
+							if (sx > box_x0 - min_dist && sx < box_x1 + min_dist && sy > box_y0 - min_dist && sy < box_y1 + min_dist) {
+								int num = 0;
+								float ax = x1 - x0, ay = y1 - y0;
+								float bx = x0 - 2 * x1 + x2, by = y0 - 2 * y1 + y2;
+								float mx = x0 - sx, my = y0 - sy;
+								float res[3] = { 0.f,0.f,0.f };
+								float px, py, t, it, dist2;
+								float a_inv = precompute[i];
+								if (a_inv == 0.0) { // if a_inv is 0, it's 2nd degree so use quadratic formula
+									float a = 3 * (ax * bx + ay * by);
+									float b = 2 * (ax * ax + ay * ay) + (mx * bx + my * by);
+									float c = mx * ax + my * ay;
+									if (a == 0.0) { // if a is 0, it's linear
+										if (b != 0.0) {
+											res[num++] = -c / b;
+										}
+									}
+									else {
+										float discriminant = b * b - 4 * a * c;
+										if (discriminant < 0)
+											num = 0;
+										else {
+											float root = std::sqrtf(discriminant);
+											res[0] = (-b - root) / (2 * a);
+											res[1] = (-b + root) / (2 * a);
+											num = 2; // don't bother distinguishing 1-solution case, as code below will still work
+										}
+									}
+								}
+								else {
+									float b = 3 * (ax * bx + ay * by) * a_inv; // could precompute this as it doesn't depend on sample point
+									float c = (2 * (ax * ax + ay * ay) + (mx * bx + my * by)) * a_inv;
+									float d = (mx * ax + my * ay) * a_inv;
+									num = SolveCubic(b, c, d, res);
+								}
+								dist2 = (x0 - sx) * (x0 - sx) + (y0 - sy) * (y0 - sy);
+								if (dist2 < min_dist * min_dist)
+									min_dist = std::sqrtf(dist2);
+
+								if (num >= 1 && res[0] >= 0.0f && res[0] <= 1.0f) {
+									t = res[0], it = 1.0f - t;
+									px = it * it * x0 + 2 * t * it * x1 + t * t * x2;
+									py = it * it * y0 + 2 * t * it * y1 + t * t * y2;
+									dist2 = (px - sx) * (px - sx) + (py - sy) * (py - sy);
+									if (dist2 < min_dist * min_dist)
+										min_dist = std::sqrtf(dist2);
+								}
+								if (num >= 2 && res[1] >= 0.0f && res[1] <= 1.0f) {
+									t = res[1], it = 1.0f - t;
+									px = it * it * x0 + 2 * t * it * x1 + t * t * x2;
+									py = it * it * y0 + 2 * t * it * y1 + t * t * y2;
+									dist2 = (px - sx) * (px - sx) + (py - sy) * (py - sy);
+									if (dist2 < min_dist * min_dist)
+										min_dist = std::sqrtf(dist2);
+								}
+								if (num >= 3 && res[2] >= 0.0f && res[2] <= 1.0f) {
+									t = res[2], it = 1.0f - t;
+									px = it * it * x0 + 2 * t * it * x1 + t * t * x2;
+									py = it * it * y0 + 2 * t * it * y1 + t * t * y2;
+									dist2 = (px - sx) * (px - sx) + (py - sy) * (py - sy);
+									if (dist2 < min_dist * min_dist)
+										min_dist = std::sqrtf(dist2);
+								}
+							}
+						}
+					}
+					if (winding == 0)
+						min_dist = -min_dist;  // if outside the shape, value is negative
+					val = onedge + pixelDistScale * min_dist;
+					if (val < 0)
+						val = 0;
+					else if (val > 255)
+						val = 255;
+					data[(y - box.y0) * w + (x - box.x0)] = (unsigned char)val;
+				}
+			}
+			free(precompute);
+			free(verts);
+			result.Data = data;
+		}
+		result.Advance = GetCodepointHMetrics(codepoint);
+		return result;
+	}
+
+	float Truetype::ScaleForPixelHeight(float height)
+	{
+		int fheight = ToLittleEndian16(m_Data + m_Tables.Hhea + 4) - ToLittleEndian16(m_Data + m_Tables.Hhea + 6);
+		return (float)height / fheight;
 	}
 
 	int Truetype::FindGlyphIndex(int codepoint)
@@ -179,36 +553,6 @@ namespace monk
 		return result;
 	}
 
-	uint8_t* Truetype::GetCodepointSDF(float scale, int codepoint, int padding, uint8_t onedge, float pixelDistScale, int* width, int* height, int* xOff, int* yOff)
-	{
-		int glyph = FindGlyphIndex(codepoint);
-
-		BoundaryBox box = GetGlyphBitmapBoxSubpixel(glyph, scale, scale);
-
-		if (box.x0 == box.x1 || box.y0 == box.y0)
-			return nullptr;
-
-		box.x0 -= padding;
-		box.y0 -= padding;
-		box.x1 += padding;
-		box.y1 += padding;
-
-		int w = (box.x1 - box.x0);
-		int h = (box.y1 - box.y0);
-
-		if (width) 
-			*width = w;
-		if (height) 
-			*height = h;
-		if (xOff) 
-			*xOff = box.x0;
-		if (yOff) 
-			*yOff = box.y0;
-
-		float scaleX = scale;
-		float scaleY = -scale;
-	}
-
 	int Truetype::GetGlyphShape(int glyph, GlyphVertex** pvertices)
 	{
 		int16_t numberOfContours;
@@ -236,7 +580,6 @@ namespace monk
 			n = 1 + ToLittleEndian16U(endPtsOfContours + numberOfContours * 2 - 2);
 
 			m = n + 2 * numberOfContours;  // a loose bound on how many vertices we might need
-			// vertices = (GlyphVertex*)STBTT_malloc(m * sizeof(vertices[0]), info->userdata);
 			vertices = (GlyphVertex*)malloc(m * sizeof(vertices[0]));
 			if (vertices == 0)
 				return 0;
@@ -461,6 +804,20 @@ namespace monk
 		return numVertices;
 	}
 
+	int Truetype::GetCodepointHMetrics(int codepoint)
+	{
+		int glyph = FindGlyphIndex(codepoint);
+		int advanceWidth = 0;
+
+		uint16_t numOfLongHorMetrics = ToLittleEndian16U(m_Data + m_Tables.Hhea + 34);
+		if (glyph < numOfLongHorMetrics)
+			advanceWidth = ToLittleEndian16(m_Data + m_Tables.Hmtx + 4 * glyph);
+		else
+			advanceWidth = ToLittleEndian16(m_Data + m_Tables.Hmtx + 4 * (numOfLongHorMetrics - 1));
+
+		return advanceWidth;
+	}
+
 	bool Truetype::Init()
 	{
 		m_Tables.Cmap = FindTable("cmap");
@@ -509,5 +866,10 @@ namespace monk
 		
 		m_IndexToLocFormat = ToLittleEndian16U(m_Data + m_Tables.Head + 50);
 		return true;
+	}
+
+	void FontChar::Free()
+	{
+		delete[] Data;
 	}
 }
