@@ -36,8 +36,12 @@ namespace monk
 
 		m_Shader = new Shader(vertexSrc, fragmentSrc);
 
-		vertexSrc = utils::FileManager::ReadFile("res/fontVertexShader.glsl");
-		fragmentSrc = utils::FileManager::ReadFile("res/fontFragmentShader.glsl");
+		vertexSrc = utils::FileManager::ReadFile("res/textureVertex.glsl");
+		fragmentSrc = utils::FileManager::ReadFile("res/textureFragment.glsl");
+
+		textureShader = new Shader(vertexSrc, fragmentSrc);
+
+		m_Font = new Font("C:/Users/koma/Desktop/CascadiaMono.ttf");
 	}
 
 	Renderer2D::~Renderer2D()
@@ -45,6 +49,7 @@ namespace monk
 		delete m_VertexBuffer;
 		delete m_IndexBuffer;
 		delete m_Shader;
+		delete m_Font;
 		glDeleteVertexArrays(1, &m_VAO);
 	}
 
@@ -56,6 +61,62 @@ namespace monk
 	void Renderer2D::End()
 	{
 
+	}
+
+	void Renderer2D::Text(math::vec2 position, const std::string& text, int fontSize)
+	{
+		for (const char& c : text)
+		{
+			FontData charData =  m_Font->GetCharData(c);
+
+			uint32_t textureIndexData[] = {
+				0, 1, 2, 0, 2, 3
+			};
+
+			BufferLayout textureLayout = {
+				{ 0, BufferLayout::AttribType::Float2 },
+				{ 1, BufferLayout::AttribType::Float2 },
+			};
+
+			float w = charData.Char.Width;
+			float h = charData.Char.Height;
+
+			float scale = fontSize / charData.SdfSize;
+			w *= scale;
+			h *= scale;
+
+			if (c == ' ')
+			{
+				position.x += charData.Char.Advance * scale;
+				continue;
+			}
+
+			float x = position.x + charData.Char.XOffset;
+			float y = position.y + charData.Char.YOffset * scale;
+
+			float textureData[] = {
+				x, y, 0.0f, 0.0f,
+				x + w, y, 1.0f, 0.0f,
+				x + w, y + h, 1.0f, 1.0f,
+				x, y + h, 0.0f, 1.0f
+			};
+
+			glBindVertexArray(m_VAO);
+			VertexBuffer textureBuffer(textureData, sizeof(textureData), textureLayout);
+			IndexBuffer textureIndex(textureIndexData, 6);
+
+			glBindTexture(GL_TEXTURE_2D, charData.TextureID);
+			textureBuffer.Bind();
+			textureIndex.Bind();
+			textureShader->SetMatrix4("u_Projection", m_ProjectionMatrix);
+			textureShader->Bind();
+
+			glDrawElements(GL_TRIANGLES, textureIndex.Count(), GL_UNSIGNED_INT, nullptr);
+
+			position.x += charData.Char.Advance * scale;
+
+			glBindVertexArray(0);
+		}
 	}
 
 	void Renderer2D::FillRect(const math::vec2& position, const math::vec2& size, const math::vec4& color)

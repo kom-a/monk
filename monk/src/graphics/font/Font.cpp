@@ -2,61 +2,55 @@
 
 #include "utils/OpenGL.h"
 #include "utils/FileManager.h"
+#include "core/Log.h"
 
-#define STB_TRUETYPE_IMPLEMENTATION
-#include "graphics/font/stb_truetype.h"
+//#define STB_TRUETYPE_IMPLEMENTATION
+//#include "graphics/font/stb_truetype.h"
 
 #include <filesystem>
 
 namespace monk
 {
+	
 	Font::Font(const std::string& filename)
 	{
-		auto ttf = utils::FileManager::ReadBytes(filename);
-		uint8_t* bitmap = new uint8_t[512 * 512];
-		uint8_t* bitmap4 = new uint8_t[512 * 512 * 4];
+		utils::FileData ttf = utils::FileManager::ReadBytes(filename);
+		Truetype tt(ttf.Data);
 
-		stbtt_BakeFontBitmap(ttf.data(), 0, 64.0, bitmap, 512, 512, 32, 96, m_Cdata);
+		for (int ch = 32; ch < 127; ++ch) {
+			float scale = tt.ScaleForPixelHeight(m_SdfSize);
+			FontChar fc = tt.GetCodepointSDF(scale, ch, m_Padding, m_Onedge, m_PixelDistScale);
+			m_FontChars[ch].Char = fc;
 
-		for (int i = 0; i < 512 * 512; i++)
-		{
-			bitmap4[i * 4 + 0] = 255;
-			bitmap4[i * 4 + 1] = 255;
-			bitmap4[i * 4 + 2] = 255;
-			bitmap4[i * 4 + 3] = bitmap[i];
+			uint32_t texture;
+			glGenTextures(1, &texture);
+			glBindTexture(GL_TEXTURE_2D, texture);
+			// set the texture wrapping/filtering options (on the currently bound texture object)
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+			// Load and generate the texture
+			if (fc.Data)
+			{
+				glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+				glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, fc.Width, fc.Height, 0, GL_RED, GL_UNSIGNED_BYTE, fc.Data);
+				glGenerateMipmap(GL_TEXTURE_2D);
+			}
+			else
+				LOG_ERROR("Failed to load font texture for char: {0}", ch);
+
+			m_FontChars[ch].TextureID = texture;
+			m_FontChars[ch].SdfSize = m_SdfSize;
 		}
 
-		glGenTextures(1, &m_Texture);
-		glBindTexture(GL_TEXTURE_2D, m_Texture);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 512, 512, 0, GL_RGBA, GL_UNSIGNED_BYTE, bitmap4);
-		glGenerateMipmap(GL_TEXTURE_2D);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-
-		delete[] bitmap;
-		delete[] bitmap4;
+		ttf.Free();
 	}
 
 	Font::~Font()
 	{
-		glDeleteTextures(1, &m_Texture);
+		// TODO: delete generated textures
 	}
 
-	void Font::Bind() const
-	{
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, m_Texture);
-	}
-
-	void Font::Unbind() const
-	{
-		glBindTexture(GL_TEXTURE_2D, 0);
-	}
-
-	Glyph Font::GetGlyph(char c, float* x, float* y) const
-	{
-		stbtt_aligned_quad q;
-		stbtt_GetBakedQuad(m_Cdata, 512, 512, c - 32, x, y, &q, 1);
-
-		return *(Glyph*)&q;
-	}
 }

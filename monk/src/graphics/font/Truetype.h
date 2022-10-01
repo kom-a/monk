@@ -46,7 +46,7 @@ namespace monk
 		FontChar GetCodepointSDF(float scale, int codepoint, int padding, uint8_t onedge, float pixelDistScale);
 		float ScaleForPixelHeight(float height);
 
-	public:
+	private:
 		bool Init();
 		uint32_t FindTable(const std::string& tag) const;
 		int FindGlyphIndex(int codepoint);

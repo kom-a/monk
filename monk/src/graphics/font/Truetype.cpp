@@ -255,8 +255,8 @@ namespace monk
 
 		BoundaryBox box = GetGlyphBitmapBoxSubpixel(glyph, scale, scale);
 
-		if (box.x0 == box.x1 || box.y0 == box.y1)
-			return { nullptr };
+		/*if (box.x0 == box.x1 || box.y0 == box.y1)
+			return { nullptr };*/
 
 		box.x0 -= padding;
 		box.y0 -= padding;
@@ -431,7 +431,7 @@ namespace monk
 			free(verts);
 			result.Data = data;
 		}
-		result.Advance = GetCodepointHMetrics(codepoint);
+		result.Advance = GetCodepointHMetrics(codepoint) * scale;
 		return result;
 	}
 
@@ -837,7 +837,7 @@ namespace monk
 			LOG_ERROR("Failed to parse ttf");
 			return false;
 		}
-
+		
 		int maxpTable = FindTable("maxp");
 		if (maxpTable)
 			m_NumGlyphs = ToLittleEndian16U(m_Data + maxpTable + 4);
