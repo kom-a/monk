@@ -255,8 +255,9 @@ namespace monk
 
 		BoundaryBox box = GetGlyphBitmapBoxSubpixel(glyph, scale, scale);
 
-		/*if (box.x0 == box.x1 || box.y0 == box.y1)
-			return { nullptr };*/
+		if (box.x0 == box.x1 || box.y0 == box.y1)
+			if(codepoint != ' ')
+				return { nullptr };
 
 		box.x0 -= padding;
 		box.y0 -= padding;
