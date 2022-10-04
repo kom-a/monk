@@ -24,7 +24,7 @@ namespace monk
 		uint8_t type, padding;
 	};
 
-	struct FontChar
+	struct SdfChar
 	{
 		uint8_t* Data;
 		int Width;
@@ -43,7 +43,7 @@ namespace monk
 		~Truetype() = default;
 
 	public:
-		FontChar GetCodepointSDF(float scale, int codepoint, int padding, uint8_t onedge, float pixelDistScale);
+		SdfChar GetCodepointSDF(float scale, int codepoint, int padding, uint8_t onedge, float pixelDistScale);
 		float ScaleForPixelHeight(float height);
 
 	private:

@@ -62,56 +62,7 @@ void Application::Run()
 
 	auto lastTime = std::chrono::system_clock::now();
 
-	bool open1 = true;
-	bool open2 = true;
-	bool open3 = true;
-
-	//float sdf_size = 128.0f;          // the larger this is, the better large font sizes look
-	//float pixel_dist_scale = sdf_size;  // trades off precision w/ ability to handle *smaller* sizes
-	//int onedge_value = 128;
-	//int padding = 3; // not used in shader
-	
-	//utils::FileData ttf = utils::FileManager::ReadBytes("C:/Users/koma/Desktop/CascadiaMono.ttf");
-	//Truetype tt(ttf.Data);
-	//float scale = tt.ScaleForPixelHeight(sdf_size);
-	//FontChar K = tt.GetCodepointSDF(scale, 'K', padding, onedge_value, pixel_dist_scale);
-
-	//unsigned int texture;
-	//glGenTextures(1, &texture);
-	//glBindTexture(GL_TEXTURE_2D, texture);
-	//// set the texture wrapping/filtering options (on the currently bound texture object)
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	//// load and generate the texture
-
-	//uint8_t* data = new uint8_t[K.Width * K.Height * 4];
-
-	//for (int i = 0; i < K.Width * K.Height; i++)
-	//{
-	//	data[i * 4 + 0] = K.Data[i];
-	//	data[i * 4 + 1] = K.Data[i];
-	//	data[i * 4 + 2] = K.Data[i];
-	//	data[i * 4 + 3] = K.Data[i];
-	//}
-
-	//if (data)
-	//{
-	//	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-	//	glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, K.Width, K.Height, 0, GL_RED, GL_UNSIGNED_BYTE, K.Data);
-	//	glGenerateMipmap(GL_TEXTURE_2D);
-	//}
-	//else
-	//{
-	//	std::cout << "Failed to load texture" << std::endl;
-	//}
-
-	//uint32_t vao;
-	//glGenVertexArrays(1, &vao);
-	//
-	//Shader textureShader(utils::FileManager::ReadFile("res/textureVertex.glsl"), utils::FileManager::ReadFile("res/textureFragment.glsl"));
-	float fontSize = 64.0f;
+	Font* myFont = new Font("C:/Users/koma/Desktop/CascadiaMono.ttf");
 
 	while (!m_Window->Closed())
 	{
@@ -130,23 +81,13 @@ void Application::Run()
 		if (Input::IsKeyPressed(Key::Escape))
 			m_Window->Close();
 
-		if (Input::IsKeyDown(Key::D1))
-			open1 = true;
-		if (Input::IsKeyDown(Key::D2))
-			open2 = true;
-		if (Input::IsKeyDown(Key::D3))
-			open3 = true;
-
-		if (Input::IsKeyPressed(Key::W))
-			fontSize += delta * 0.1;
-		if (Input::IsKeyPressed(Key::S))
-			fontSize -= delta * 0.1;
-
-		fontSize = math::Clamp(fontSize, 12.0f, 256.0f);
-
 		Gui::NewFrame(math::Ortho(0.0f, (float)m_Window->GetWidth(), (float)m_Window->GetHeight(), 0.0f, -1.0f, 1.0f));
 
 		Gui::Begin("Window");
+
+		Gui::End();
+
+		Gui::Begin("Window2");
 
 		Gui::End();
 
@@ -154,16 +95,10 @@ void Application::Run()
 		
 		m_Renderer->Begin(math::Ortho(0.0f, (float)m_Window->GetWidth(), (float)m_Window->GetHeight(), 0.0f, -1.0f, 1.0f));
 
-		// m_Renderer->FillRect({ 100.0f, 100.0f }, { (float)K.Width, (float)K.Height }, { 1.0f, 0.0f, 0.0f, 1.0f });
+		m_Renderer->Text(math::vec2(0.0f, 32.0f), "FPS: " + std::to_string(1000.0f / delta), 32, math::vec4(1.0f, 0.0f, 0.0f, 1.0f));
+		m_Renderer->Text(math::vec2(500.0f, 320.0f), "Hello Monk!", 64);
 
-		double time = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime.time_since_epoch()).count();
-		
-		//m_Renderer->FillRect(Input::GetMousePosition() - math::vec2(0.0f, fontSize), math::vec2(600, fontSize), math::vec4(0.5f, 0.05f, 0.5f, 1.0f));
-		m_Renderer->Text(Input::GetMousePosition(), "Window", fontSize);
-
-		// m_Renderer->FillRect(math::vec2(200, 100), math::vec2(64, 64), math::vec4(1.0f));
-
-		glBindVertexArray(0);
+		m_Renderer->DrawTexture(Input::GetMousePosition(), { 500, 500 }, myFont->GetAtlasTextureID());
 
 		m_Renderer->End();
 

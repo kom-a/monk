@@ -245,10 +245,10 @@ namespace monk
 		return 0;
 	}
 
-	FontChar Truetype::GetCodepointSDF(float scale, int codepoint, int padding, uint8_t onedge, float pixelDistScale)
+	SdfChar Truetype::GetCodepointSDF(float scale, int codepoint, int padding, uint8_t onedge, float pixelDistScale)
 	{
 		int glyph = FindGlyphIndex(codepoint);
-		FontChar result = { nullptr };
+		SdfChar result = { nullptr };
 
 		if (scale == 0)
 			return { nullptr };
@@ -869,7 +869,7 @@ namespace monk
 		return true;
 	}
 
-	void FontChar::Free()
+	void SdfChar::Free()
 	{
 		delete[] Data;
 	}
