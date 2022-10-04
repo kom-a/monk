@@ -11,14 +11,16 @@
 
 namespace monk
 {
+	float Font::s_SdfSize = 64;
 	
 	Font::Font(const std::string& filename)
 	{
 		utils::FileData ttf = utils::FileManager::ReadBytes(filename);
 		Truetype tt(ttf.Data);
 
-		for (int ch = 32; ch < 127; ++ch) {
-			float scale = tt.ScaleForPixelHeight(m_SdfSize);
+		for (int ch = 32; ch < 127; ++ch) 
+		{
+			float scale = tt.ScaleForPixelHeight(s_SdfSize);
 			FontChar fc = tt.GetCodepointSDF(scale, ch, m_Padding, m_Onedge, m_PixelDistScale);
 			m_FontChars[ch].Char = fc;
 
@@ -28,7 +30,7 @@ namespace monk
 			// set the texture wrapping/filtering options (on the currently bound texture object)
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 			// Load and generate the texture
@@ -42,7 +44,6 @@ namespace monk
 				LOG_ERROR("Failed to load font texture for char: {0}", ch);
 
 			m_FontChars[ch].TextureID = texture;
-			m_FontChars[ch].SdfSize = m_SdfSize;
 		}
 
 		ttf.Free();
