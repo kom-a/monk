@@ -62,7 +62,7 @@ void Application::Run()
 
 	Font* myFont = new Font("C:/Users/koma/Desktop/CascadiaMono.ttf");
 
-	float fontSize = 32;
+	bool guiWindowOpen = true;
 
 	while (!m_Window->Closed())
 	{
@@ -81,16 +81,14 @@ void Application::Run()
 		if (Input::IsKeyPressed(Key::Escape))
 			m_Window->Close();
 
-		if (Input::IsKeyPressed(Key::W))
-			fontSize += delta;
-		if (Input::IsKeyPressed(Key::S))
-			fontSize -= delta;
-
 		Gui::NewFrame(math::Ortho(0.0f, (float)m_Window->GetWidth(), (float)m_Window->GetHeight(), 0.0f, -1.0f, 1.0f));
 
-		Gui::Begin("Window");
+		if (guiWindowOpen)
+		{
+			Gui::Begin("Hello world", &guiWindowOpen);
 
-		Gui::End();
+			Gui::End();
+		}
 
 		Gui::Begin("Window2");
 
@@ -101,9 +99,6 @@ void Application::Run()
 		m_Renderer->Begin(math::Ortho(0.0f, (float)m_Window->GetWidth(), (float)m_Window->GetHeight(), 0.0f, -1.0f, 1.0f));
 
 		m_Renderer->Text(math::vec2(0.0f, 32.0f), "FPS: " + std::to_string(1000.0f / delta), 32, math::vec4(1.0f, 0.0f, 0.0f, 1.0f));
-		m_Renderer->Text(math::vec2(500.0f, 320.0f), "Hello Monk!", fontSize);
-
-		m_Renderer->DrawTexture(Input::GetMousePosition(), { 500, 500 }, myFont->GetAtlasTextureID());
 
 		m_Renderer->End();
 

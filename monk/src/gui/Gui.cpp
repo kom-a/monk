@@ -281,6 +281,7 @@ namespace monk
 		style.HeaderHeight = 20.0f;
 		style.HeaderPadding = 6.0f;
 		style.HeaderContentSize = 0.8f;
+		style.FontSize = style.HeaderHeight;
 		style.MinWindowSize = math::vec2(100, 25);
 		style.WindowBorderSize = math::vec2(3.0f);
 		style.WindowResizeCornerSize = math::vec2(14.0f);
@@ -303,6 +304,7 @@ namespace monk
 		colors[GuiColor::HotWindow] = math::vec4(0.32f, 0.32f, 0.32f, 1.0f);
 		colors[GuiColor::ActiveWindow] = math::vec4(0.3f, 0.3f, 0.3f, 1.0f);
 
+		colors[GuiColor::WindowTitle] = math::vec4(1.0f, 1.0f, 1.0f, 1.0f);
 		colors[GuiColor::WindowBorder] = math::vec4(0.0f, 0.0f, 0.0f, 1.0f);
 		
 		colors[GuiColor::HotWindowCollapseButton] = math::vec4(1.0f, 1.0f, 1.0f, 1.0f);
@@ -389,6 +391,7 @@ namespace monk
 		GuiRect border;
 		border.Size = headerSize + style.WindowBorderSize * 2;
 		border.Position = window->Position - style.WindowBorderSize;
+		math::vec2 titlePosition = collapseButtonRect.Position + collapseButtonRect.Size + math::vec2(style.HeaderPadding * 2, 0.0f);
 
 		math::vec4 headerColor;
 		
@@ -411,6 +414,7 @@ namespace monk
 		s_Renderer->FillRoundRect(border.Position, border.Size, style.Colors[GuiColor::WindowBorder], math::vec4(1.0f, 1.0f, 0.0f, 0.0f));
 		s_Renderer->FillRoundRect(window->Position, headerSize, headerColor, math::vec4(1.0f, 1.0f, 0.0f, 0.0f));
 		s_Renderer->FillRect(collapseButtonRect.Position, collapseButtonRect.Size, collapseButtonColor);
+		s_Renderer->Text(titlePosition, window->Name, style.FontSize, style.Colors[GuiColor::WindowTitle]);
 		
 		if(window->Open)
 			s_Renderer->FillCircle(closeButtonCircle.Center, closeButtonCircle.Radius, closeButtonColor);
