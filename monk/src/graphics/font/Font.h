@@ -51,6 +51,5 @@ namespace monk
 		const int m_Padding = 3;
 
 		static float s_SdfSize;
-
 	};
 }

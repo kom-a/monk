@@ -11,7 +11,7 @@
 
 namespace monk
 {
-	float Font::s_SdfSize = 32;
+	float Font::s_SdfSize = 64;
 	
 	Font::Font(const std::string& filename)
 	{
