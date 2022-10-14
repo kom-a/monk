@@ -1,5 +1,3 @@
-#if 1
-
 #include <iostream>
 #include <functional>
 #include <string>
