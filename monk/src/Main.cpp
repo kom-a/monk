@@ -1,16 +1,15 @@
+#if 1
+
 #include <iostream>
 #include <functional>
 #include <string>
 #include <chrono>
 
 #include "Monk.h"
-#include "utils/FileManager.h"
-#include "core/Assert.h"
 
 #include <windows.h>
 
 #define BIND_FUNCTION(fn) std::bind(&fn, this, std::placeholders::_1)
-
 
 using namespace monk;
 
@@ -35,7 +34,7 @@ Application::Application()
 {
 	m_Window = new Window(1280, 720, "Monk");
 	m_Window->SetEventCallback(BIND_FUNCTION(Application::OnEvent));
-	m_Window->SwapInterval(0);
+	m_Window->SwapInterval(1);
 
 	if (!utils::OpenGLLoader::LoadOpenGL(utils::OpenGLVersion::OPENGL_3_3))
 		DIE("Failed to load OpenGL functions");
@@ -63,9 +62,9 @@ void Application::Run()
 
 	auto lastTime = std::chrono::system_clock::now();
 
-	bool open1 = true;
-	bool open2 = true;
-	bool open3 = true;
+	Font* myFont = new Font("C:/Users/koma/Desktop/CascadiaMono.ttf");
+
+	float fontSize = 32;
 
 	while (!m_Window->Closed())
 	{
@@ -75,7 +74,7 @@ void Application::Run()
 
 		float delta = deltaTime / 1000.0f;
 
-		LOG_TRACE("FPS: {0}, deltaTime: {1}ms", 1000.0f / delta, delta);
+		//LOG_TRACE("FPS: {0}, deltaTime: {1}ms", 1000.0f / delta, delta);
 
 		glClear(GL_COLOR_BUFFER_BIT);
 
@@ -84,34 +83,31 @@ void Application::Run()
 		if (Input::IsKeyPressed(Key::Escape))
 			m_Window->Close();
 
-		if (Input::IsKeyDown(Key::D1))
-			open1 = true;
-		if (Input::IsKeyDown(Key::D2))
-			open2 = true;
-		if (Input::IsKeyDown(Key::D3))
-			open3 = true;
-		
-		m_Renderer->Begin(math::Ortho(0.0f, (float)m_Window->GetWidth(), (float)m_Window->GetHeight(), 0.0f, -1.0f, 1.0f));
-
-		m_Renderer->FillCircle(Input::GetMousePosition(), 25.0f, math::vec4(1.0f));
-
-		m_Renderer->End();
+		if (Input::IsKeyPressed(Key::W))
+			fontSize += delta;
+		if (Input::IsKeyPressed(Key::S))
+			fontSize -= delta;
 
 		Gui::NewFrame(math::Ortho(0.0f, (float)m_Window->GetWidth(), (float)m_Window->GetHeight(), 0.0f, -1.0f, 1.0f));
 
-		if (open1)
-		{
-			Gui::Begin("Window1", &open1);
-			Gui::End();
-		}
-		
-		if (open2)
-		{
-			Gui::Begin("Window2", &open2);
-			Gui::End();
-		}
-		
+		Gui::Begin("Window");
+
+		Gui::End();
+
+		Gui::Begin("Window2");
+
+		Gui::End();
+
 		Gui::EndFrame();
+		
+		m_Renderer->Begin(math::Ortho(0.0f, (float)m_Window->GetWidth(), (float)m_Window->GetHeight(), 0.0f, -1.0f, 1.0f));
+
+		m_Renderer->Text(math::vec2(0.0f, 32.0f), "FPS: " + std::to_string(1000.0f / delta), 32, math::vec4(1.0f, 0.0f, 0.0f, 1.0f));
+		m_Renderer->Text(math::vec2(500.0f, 320.0f), "Hello Monk!", fontSize);
+
+		m_Renderer->DrawTexture(Input::GetMousePosition(), { 500, 500 }, myFont->GetAtlasTextureID());
+
+		m_Renderer->End();
 
 		m_Window->Update();
 		Input::Update();

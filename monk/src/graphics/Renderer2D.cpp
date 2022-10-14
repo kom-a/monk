@@ -31,13 +31,23 @@ namespace monk
 
 		glBindVertexArray(0);
 
-		std::string vertexSrc = utils::FileManager::ReadFile("res/vertexShader.glsl");
-		std::string fragmentSrc = utils::FileManager::ReadFile("res/fragmentShader.glsl");
+		std::string vertexSrc = utils::FileManager::ReadFile("res/VertexShader.glsl");
+		std::string fragmentSrc = utils::FileManager::ReadFile("res/FragmentShader.glsl");
 
 		m_Shader = new Shader(vertexSrc, fragmentSrc);
 
-		vertexSrc = utils::FileManager::ReadFile("res/fontVertexShader.glsl");
-		fragmentSrc = utils::FileManager::ReadFile("res/fontFragmentShader.glsl");
+		vertexSrc = utils::FileManager::ReadFile("res/FontVertex.glsl");
+		fragmentSrc = utils::FileManager::ReadFile("res/FontFragment.glsl");
+
+		m_FontShader = new Shader(vertexSrc, fragmentSrc);
+
+		vertexSrc = utils::FileManager::ReadFile("res/TextureVertex.glsl");
+		fragmentSrc = utils::FileManager::ReadFile("res/TextureFragment.glsl");
+
+		m_TextureShader = new Shader(vertexSrc, fragmentSrc);
+
+		// TODO: Use predefined byte array (or predefined texture) instead of loading font form a file
+		m_Font = new Font("C:/Users/koma/Desktop/CascadiaMono.ttf");
 	}
 
 	Renderer2D::~Renderer2D()
@@ -45,6 +55,8 @@ namespace monk
 		delete m_VertexBuffer;
 		delete m_IndexBuffer;
 		delete m_Shader;
+		delete m_Font;
+		delete m_FontShader;
 		glDeleteVertexArrays(1, &m_VAO);
 	}
 
@@ -56,6 +68,66 @@ namespace monk
 	void Renderer2D::End()
 	{
 
+	}
+
+	void Renderer2D::Text(math::vec2 position, const std::string& text, int fontSize, const math::vec4& color)
+	{
+		for (const char& c : text)
+		{
+			FontChar charData =  m_Font->GetChar(c);
+
+			uint32_t textureIndexData[] = {
+				0, 1, 2, 0, 2, 3
+			};
+
+			BufferLayout textureLayout = {
+				{ 0, BufferLayout::AttribType::Float2 },
+				{ 1, BufferLayout::AttribType::Float2 },
+			};
+
+			float w = charData.Width;
+			float h = charData.Height;
+
+			float scale = fontSize / Font::GetSdfSize();
+			w *= scale;
+			h *= scale;
+
+			if (c == ' ')
+			{
+				position.x += charData.Advance * scale;
+				continue;
+			}
+
+			float x = position.x + charData.XOffset;
+			float y = position.y + charData.YOffset * scale;
+
+			const auto& p0 = charData.P0;
+			const auto& p1 = charData.P1;
+
+			// TODO: use colors
+			float textureData[] = {
+				x, y,			p0.x, p0.y,
+				x + w, y,		p1.x, p0.y,
+				x + w, y + h,	p1.x, p1.y,
+				x, y + h,		p0.x, p1.y,
+			};
+
+			glBindVertexArray(m_VAO);
+			VertexBuffer textureBuffer(textureData, sizeof(textureData), textureLayout);
+			IndexBuffer textureIndex(textureIndexData, 6);
+
+			glBindTexture(GL_TEXTURE_2D, m_Font->GetAtlasTextureID());
+			textureBuffer.Bind();
+			textureIndex.Bind();
+			m_FontShader->SetMatrix4("u_Projection", m_ProjectionMatrix);
+			m_FontShader->Bind();
+
+			glDrawElements(GL_TRIANGLES, textureIndex.Count(), GL_UNSIGNED_INT, nullptr);
+
+			position.x += charData.Advance * scale;
+
+			glBindVertexArray(0);
+		}
 	}
 
 	void Renderer2D::FillRect(const math::vec2& position, const math::vec2& size, const math::vec4& color)
@@ -174,6 +246,41 @@ namespace monk
 		m_Shader->SetMatrix4("u_Projection", m_ProjectionMatrix);
 
 		glDrawElements(GL_TRIANGLES, indexBuffer.Count(), GL_UNSIGNED_INT, nullptr);
+
+		glBindVertexArray(0);
+	}
+
+	void Renderer2D::DrawTexture(const math::vec2& position, const math::vec2& size, uint32_t textureID)
+	{
+		float left = position.x;
+		float right = position.x + size.x;
+		float top = position.y;
+		float bottom = position.y + size.y;
+
+		float data[] = {
+			left,	top,	0.0f, 0.0f,
+			right,	top,	1.0f, 0.0f,
+			right,	bottom, 1.0f, 1.0f,
+			left,	bottom, 0.0f, 1.0f,
+		};
+
+		BufferLayout layout = {
+			{ 0, BufferLayout::AttribType::Float2 },
+			{ 1, BufferLayout::AttribType::Float2 },
+		};
+
+		VertexBuffer buffer(data, sizeof(data), layout);
+
+		glBindVertexArray(m_VAO);
+
+		buffer.Bind();
+		buffer.SetData(data, sizeof(data));
+		m_IndexBuffer->Bind();
+
+		m_TextureShader->Bind();
+		m_TextureShader->SetMatrix4("u_Projection", m_ProjectionMatrix);
+
+		glDrawElements(GL_TRIANGLES, m_IndexBuffer->Count(), GL_UNSIGNED_INT, nullptr);
 
 		glBindVertexArray(0);
 	}

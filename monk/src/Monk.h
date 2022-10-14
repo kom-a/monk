@@ -4,6 +4,7 @@
 #include "core/Log.h"
 
 #include "utils/OpenGL.h"
+#include "utils/FileManager.h"
 
 #include "math/Math.h"
 
@@ -19,5 +20,7 @@
 #include "graphics/Shader.h"
 #include "graphics/Buffer.h"
 #include "graphics/Renderer2D.h"
+
+#include "graphics/font/Truetype.h"
 
 #include "gui/Gui.h"
