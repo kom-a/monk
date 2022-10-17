@@ -85,7 +85,9 @@ void Application::Run()
 
 		if (guiWindowOpen)
 		{
-			Gui::Begin("Hello world", &guiWindowOpen);
+			Gui::Begin("Settings", &guiWindowOpen);
+
+			Gui::Button("Monk button");
 
 			Gui::End();
 		}

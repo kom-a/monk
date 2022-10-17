@@ -39,6 +39,8 @@ namespace monk
 			WindowResizeCorner,
 			HotWindowResizeCorner,
 			ActiveWindowResizeCorner,
+
+			Button,
 			
 			Count
 		};
@@ -71,6 +73,8 @@ namespace monk
 
 		static void Begin(const std::string& name, bool* open = nullptr);
 		static void End();
+
+		static void Button(const std::string& text, const math::vec2& size = math::vec2(100, 20));
 
 	private:
 		static void DefaultStyle();

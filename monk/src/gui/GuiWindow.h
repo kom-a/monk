@@ -72,6 +72,6 @@ namespace monk
 		GuiWindowCacheData GetCacheData() const;
 		GuiRect GetResizeCorner() const;
 		GuiRect GetCollapseButton() const;
-		GuiCircle GetCloseButton() const;
+		GuiRect GetCloseButton() const;
 	};
 }

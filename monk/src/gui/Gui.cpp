@@ -269,6 +269,19 @@ namespace monk
 		GuiState.CurrentWindow = nullptr;
 	}
 
+	void Gui::Button(const std::string& text, const math::vec2& size)
+	{
+		MONK_ASSERT(GuiState.CurrentWindow, "No current window. Use 'Begin' before calling 'Button'");
+
+		const auto& style = GetStyle();
+
+		math::vec2 position = GuiState.CurrentWindow->Position + GuiState.CurrentWindow->CursorPosition + math::vec2(0.0f, style.Padding.y);
+
+		s_Renderer->FillRect(position, size, style.Colors[GuiColor::Button]);
+
+		GuiState.CurrentWindow->CursorPosition += math::vec2(0.0f, size.y + style.Padding.y);
+	}
+
 	//////////////////////////////////////////////////////////////////////////
 	// Private
 	//////////////////////////////////////////////////////////////////////////
@@ -278,12 +291,12 @@ namespace monk
 		GuiStyle& style = Gui::GetStyle();
 
 		style.Padding = math::vec2(5.0f, 5.0f);
-		style.HeaderHeight = 20.0f;
+		style.HeaderHeight = 24.0f;
 		style.HeaderPadding = 6.0f;
 		style.HeaderContentSize = 0.8f;
-		style.FontSize = style.HeaderHeight;
+		style.FontSize = style.HeaderHeight * 0.75;
 		style.MinWindowSize = math::vec2(100, 25);
-		style.WindowBorderSize = math::vec2(3.0f);
+		style.WindowBorderSize = math::vec2(1.0f);
 		style.WindowResizeCornerSize = math::vec2(14.0f);
 
 		Gui::DefaultColorTheme();
@@ -296,26 +309,28 @@ namespace monk
 
 		colors[GuiColor::None] = math::vec4(0.0f);
 		
-		colors[GuiColor::Header] = math::vec4(0.2f, 0.2f, 0.2f, 1.0f);
-		colors[GuiColor::HotHeader] = math::vec4(0.25f, 0.25f, 0.25f, 1.0f);
-		colors[GuiColor::ActiveHeader] = math::vec4(0.4f, 0.4f, 0.35f, 1.0f);
+		colors[GuiColor::Header] = math::vec4(0.1f, 0.1f, 0.1f, 1.0f);
+		colors[GuiColor::HotHeader] = math::vec4(0.1f, 0.1f, 0.1f, 1.0f);
+		colors[GuiColor::ActiveHeader] = math::vec4(0.1f, 0.1f, 0.1f, 1.0f);
 		
-		colors[GuiColor::Window] = math::vec4(0.3f, 0.3f, 0.3f, 1.0f);
-		colors[GuiColor::HotWindow] = math::vec4(0.32f, 0.32f, 0.32f, 1.0f);
-		colors[GuiColor::ActiveWindow] = math::vec4(0.3f, 0.3f, 0.3f, 1.0f);
+		colors[GuiColor::Window] = math::vec4(0.15f, 0.15f, 0.15f, 1.0f);
+		colors[GuiColor::HotWindow] = math::vec4(0.15f, 0.15f, 0.15f, 1.0f);
+		colors[GuiColor::ActiveWindow] = math::vec4(0.15f, 0.15f, 0.15f, 1.0f);
 
 		colors[GuiColor::WindowTitle] = math::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-		colors[GuiColor::WindowBorder] = math::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+		colors[GuiColor::WindowBorder] = math::vec4(0.35f, 0.35f, 0.35f, 1.0f);
 		
-		colors[GuiColor::HotWindowCollapseButton] = math::vec4(1.0f, 1.0f, 1.0f, 1.0f);
 		colors[GuiColor::WindowCollapseButton] = math::vec4(0.8f, 0.8f, 0.8f, 1.0f);
+		colors[GuiColor::HotWindowCollapseButton] = math::vec4(1.0f, 1.0f, 1.0f, 1.0f);
 
-		colors[GuiColor::HotWindowCloseButton] = math::vec4(0.85f, 0.65f, 0.65f, 1.0f);
-		colors[GuiColor::WindowCloseButton] = math::vec4(0.9f, 0.3f, 0.3f, 1.0f);
+		colors[GuiColor::WindowCloseButton] = math::vec4(0.1f, 0.1f, 0.1f, 1.0f);
+		colors[GuiColor::HotWindowCloseButton] = math::vec4(0.85f, 0.3f, 0.3f, 1.0f);
 
 		colors[GuiColor::WindowResizeCorner] = math::vec4(0.1f, 0.2f, 0.3f, 1.0f);
 		colors[GuiColor::HotWindowResizeCorner] = math::vec4(0.3f, 0.7f, 0.2f, 1.0f);
 		colors[GuiColor::ActiveWindowResizeCorner] = math::vec4(0.2f, 0.4f, 0.1f, 1.0f);
+
+		colors[GuiColor::Button] = math::vec4(0.8f, 0.8f, 0.8f, 1.0f);
 	}
 
 	bool Gui::RestoreWindow(GuiWindow* window)
@@ -387,7 +402,7 @@ namespace monk
 		GuiStyle& style = Gui::GetStyle();
 		const math::vec2 headerSize = math::vec2(window->Size.x, style.HeaderHeight);
 		GuiRect collapseButtonRect = window->GetCollapseButton();
-		GuiCircle closeButtonCircle = window->GetCloseButton();
+		GuiRect closeButtonRect = window->GetCloseButton();
 		GuiRect border;
 		border.Size = headerSize + style.WindowBorderSize * 2;
 		border.Position = window->Position - style.WindowBorderSize;
@@ -411,13 +426,17 @@ namespace monk
 			headerColor = style.Colors[GuiColor::Header];
 		}
 
-		s_Renderer->FillRoundRect(border.Position, border.Size, style.Colors[GuiColor::WindowBorder], math::vec4(1.0f, 1.0f, 0.0f, 0.0f));
-		s_Renderer->FillRoundRect(window->Position, headerSize, headerColor, math::vec4(1.0f, 1.0f, 0.0f, 0.0f));
+		s_Renderer->FillRect(border.Position, border.Size, style.Colors[GuiColor::WindowBorder]);
+		s_Renderer->FillRect(window->Position, headerSize, headerColor);
+
 		s_Renderer->FillRect(collapseButtonRect.Position, collapseButtonRect.Size, collapseButtonColor);
 		s_Renderer->Text(titlePosition, window->Name, style.FontSize, style.Colors[GuiColor::WindowTitle]);
 		
-		if(window->Open)
-			s_Renderer->FillCircle(closeButtonCircle.Center, closeButtonCircle.Radius, closeButtonColor);
+		if (window->Open)
+		{
+			s_Renderer->FillRect(closeButtonRect.Position, closeButtonRect.Size, closeButtonColor);
+			s_Renderer->Text(closeButtonRect.Position + math::vec2(style.FontSize * 0.435, closeButtonRect.Size.y - 2), "x", style.FontSize * 1.5f);
+		}
 	}
 
 	void Gui::DrawWindowBody(const GuiWindow* window)

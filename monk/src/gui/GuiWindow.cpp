@@ -69,7 +69,7 @@ namespace monk
 	{
 		const GuiStyle& style = Gui::GetStyle();
 
-		GuiCircle closeRect = GetCloseButton();
+		GuiRect closeRect = GetCloseButton();
 		return closeRect.IsInside(Input::GetMousePosition());
 	}
 
@@ -113,19 +113,19 @@ namespace monk
 		return collapse;
 	}
 
-	GuiCircle GuiWindow::GetCloseButton() const
+	GuiRect GuiWindow::GetCloseButton() const
 	{
 		const GuiStyle& style = Gui::GetStyle();
 		math::vec2 headerSize = math::vec2(Size.x, style.HeaderHeight);
-		const float buttonHeightPercentOfHeaderHeight = 0.8; // close button occupy 80% of headerHeight
+		const float buttonHeightPercentOfHeaderHeight = 0.8f; // close button occupy 80% of headerHeight
 		const float& percent = buttonHeightPercentOfHeaderHeight;
 
-		GuiCircle close;
-		close.Radius = style.HeaderHeight * percent / 2.0f;
-		
-		close.Center.x = Position.x + Size.x - style.HeaderPadding - close.Radius;
-		close.Center.y = Position.y + style.HeaderHeight / 2.0f;
+		const float closeButtonWidth = 30;
 
+		GuiRect close;
+		close.Size = math::vec2(closeButtonWidth, headerSize.y * percent);
+		close.Position = Position + math::vec2(Size.x - close.Size.x - style.HeaderPadding, headerSize.y * (1.0f - percent) * 0.5f);
+		
 		return close;
 	}
 }
