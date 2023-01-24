@@ -16,7 +16,8 @@ project "monk"
    characterset ("ASCII")
 
    files {
-      "monk/src/**"
+      "monk/src/**",
+      "monk/res/**"
    }
 
    includedirs {

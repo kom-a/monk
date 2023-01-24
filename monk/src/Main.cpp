@@ -56,21 +56,11 @@ Application::~Application()
 
 void Application::Run()
 {
-	Gui::Init();
-
-	auto lastTime = std::chrono::system_clock::now();
-
-	bool guiWindowOpen = true;
+	Time timer;
 
 	while (!m_Window->Closed())
 	{
-		auto currentTime = std::chrono::system_clock::now();
-		auto deltaTime = std::chrono::duration_cast<std::chrono::microseconds>(currentTime - lastTime).count();
-		lastTime = currentTime;
-
-		float delta = deltaTime / 1000.0f;
-
-		//LOG_TRACE("FPS: {0}, deltaTime: {1}ms", 1000.0f / delta, delta);
+		LOG_TRACE("Delta: {0}", timer.Delta());
 
 		glClear(GL_COLOR_BUFFER_BIT);
 
@@ -78,23 +68,6 @@ void Application::Run()
 
 		if (Input::IsKeyPressed(Key::Escape))
 			m_Window->Close();
-
-		Gui::NewFrame(math::Ortho(0.0f, (float)m_Window->GetWidth(), (float)m_Window->GetHeight(), 0.0f, -1.0f, 1.0f));
-
-		if (guiWindowOpen)
-		{
-			Gui::Begin("Settings", &guiWindowOpen);
-
-			Gui::Button("Monk button");
-
-			Gui::End();
-		}
-
-		Gui::Begin("Window2");
-
-		Gui::End();
-
-		Gui::EndFrame();
 
 		m_Window->Update();
 		Input::Update();
