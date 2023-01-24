@@ -15,6 +15,9 @@ namespace monk
 		void Begin(const math::mat4& projection);
 		void End();
 
+		void SetClearColor(const math::vec4& clearColor);
+		void Clear();
+
 		void DrawRect(const math::vec2& position, const math::vec2& size, const math::vec4& color);
 		void DrawRoundRect(const math::vec2& position, const math::vec2& size, const math::vec4& color, math::vec4 round = math::vec4(1.0f));
 		void DrawCircle(const math::vec2& center, float radius, const math::vec4& color, uint32_t segments = 24);
@@ -28,6 +31,8 @@ namespace monk
 	private:
 		unsigned m_VAO = 0;
 		math::mat4 m_ProjectionMatrix = math::mat4(0);
+
+		math::vec4 m_ClearColor = math::vec4(1.0f);
 
 		VertexBuffer* m_VertexBuffer = nullptr;
 		IndexBuffer* m_IndexBuffer = nullptr;

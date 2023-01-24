@@ -45,13 +45,13 @@ Application::Application()
 	}
 
 	m_Renderer = new Renderer2D();
-
-	glClearColor(0.45f, 0.45f, 0.45f, 1.0f);
+	m_Renderer->SetClearColor(math::vec4(0.3f, 0.4f, 0.8f, 1.0f));
 }
 
 Application::~Application()
 {
 	delete m_Window;
+	delete m_Renderer;
 }
 
 void Application::Run()
@@ -60,9 +60,9 @@ void Application::Run()
 
 	while (!m_Window->Closed())
 	{
-		LOG_TRACE("Delta: {0}", timer.Delta());
-
-		glClear(GL_COLOR_BUFFER_BIT);
+		m_Renderer->Begin(math::Ortho(0, m_Window->GetWidth(), m_Window->GetHeight(), 0, -1, 1));
+		m_Renderer->Clear();
+		m_Renderer->End();
 
 		m_Window->PollEvents();
 

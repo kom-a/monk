@@ -60,6 +60,17 @@ namespace monk
 
 	}
 
+	void Renderer2D::SetClearColor(const math::vec4& clearColor)
+	{
+		m_ClearColor = clearColor;
+	}
+
+	void Renderer2D::Clear()
+	{
+		glClearColor(m_ClearColor.r, m_ClearColor.g, m_ClearColor.b, m_ClearColor.a);
+		glClear(GL_COLOR_BUFFER_BIT);
+	}
+
 	void Renderer2D::FillRect(const math::vec2& position, const math::vec2& size, const math::vec4& color)
 	{
 		float left = position.x;
