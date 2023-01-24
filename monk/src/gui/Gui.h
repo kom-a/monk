@@ -53,7 +53,6 @@ namespace monk
 		float HeaderPadding;
 		float HeaderContentSize; // Text, buttons... occupation in percentage (0.5 - content occupy 50% of HeaderHeight)
 
-		float FontSize;
 		math::vec4 Colors[GuiColor::Count];
 
 		math::vec2 MinWindowSize;

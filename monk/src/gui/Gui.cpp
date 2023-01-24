@@ -294,7 +294,6 @@ namespace monk
 		style.HeaderHeight = 24.0f;
 		style.HeaderPadding = 6.0f;
 		style.HeaderContentSize = 0.8f;
-		style.FontSize = style.HeaderHeight * 0.75;
 		style.MinWindowSize = math::vec2(100, 25);
 		style.WindowBorderSize = math::vec2(1.0f);
 		style.WindowResizeCornerSize = math::vec2(14.0f);
@@ -430,12 +429,10 @@ namespace monk
 		s_Renderer->FillRect(window->Position, headerSize, headerColor);
 
 		s_Renderer->FillRect(collapseButtonRect.Position, collapseButtonRect.Size, collapseButtonColor);
-		s_Renderer->Text(titlePosition, window->Name, style.FontSize, style.Colors[GuiColor::WindowTitle]);
 		
 		if (window->Open)
 		{
 			s_Renderer->FillRect(closeButtonRect.Position, closeButtonRect.Size, closeButtonColor);
-			s_Renderer->Text(closeButtonRect.Position + math::vec2(style.FontSize * 0.435, closeButtonRect.Size.y - 2), "x", style.FontSize * 1.5f);
 		}
 	}
 

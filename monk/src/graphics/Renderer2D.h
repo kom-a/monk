@@ -3,7 +3,6 @@
 #include "math/Math.h"
 #include "graphics/Buffer.h"
 #include "graphics/Shader.h"
-#include "graphics/font/Font.h"
 
 namespace monk
 {
@@ -15,8 +14,6 @@ namespace monk
 
 		void Begin(const math::mat4& projection);
 		void End();
-
-		void Text(math::vec2 position, const std::string& text, int fontSize, const math::vec4& color = math::vec4(1.0f));
 
 		void DrawRect(const math::vec2& position, const math::vec2& size, const math::vec4& color);
 		void DrawRoundRect(const math::vec2& position, const math::vec2& size, const math::vec4& color, math::vec4 round = math::vec4(1.0f));
@@ -35,11 +32,6 @@ namespace monk
 		VertexBuffer* m_VertexBuffer = nullptr;
 		IndexBuffer* m_IndexBuffer = nullptr;
 		Shader* m_Shader = nullptr;
-
-		// Font rendering
-		// TODO: share font across all renderers (there is no need to load same font for every single renderer)
-		Font* m_Font = nullptr;
-		Shader* m_FontShader = nullptr;
 
 		Shader* m_TextureShader = nullptr;
 	};

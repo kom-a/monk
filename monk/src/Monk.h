@@ -21,6 +21,4 @@
 #include "graphics/Buffer.h"
 #include "graphics/Renderer2D.h"
 
-#include "graphics/font/Truetype.h"
-
 #include "gui/Gui.h"

@@ -46,7 +46,7 @@ Application::Application()
 
 	m_Renderer = new Renderer2D();
 
-	glClearColor(0.45f, 0.1f, 0.8f, 1.0f);
+	glClearColor(0.45f, 0.45f, 0.45f, 1.0f);
 }
 
 Application::~Application()
@@ -59,8 +59,6 @@ void Application::Run()
 	Gui::Init();
 
 	auto lastTime = std::chrono::system_clock::now();
-
-	Font* myFont = new Font("C:/Users/koma/Desktop/CascadiaMono.ttf");
 
 	bool guiWindowOpen = true;
 
@@ -97,12 +95,6 @@ void Application::Run()
 		Gui::End();
 
 		Gui::EndFrame();
-		
-		m_Renderer->Begin(math::Ortho(0.0f, (float)m_Window->GetWidth(), (float)m_Window->GetHeight(), 0.0f, -1.0f, 1.0f));
-
-		m_Renderer->Text(math::vec2(0.0f, 32.0f), "FPS: " + std::to_string(1000.0f / delta), 32, math::vec4(1.0f, 0.0f, 0.0f, 1.0f));
-
-		m_Renderer->End();
 
 		m_Window->Update();
 		Input::Update();
