@@ -28,6 +28,12 @@ namespace monk
 		return delta;
 	}
 
+	long long Time::CurrentTime()
+	{
+		using namespace std::chrono;
+		return duration_cast<nanoseconds>(high_resolution_clock::now().time_since_epoch()).count();
+	}
+
 }
 
 

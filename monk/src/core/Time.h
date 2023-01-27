@@ -14,6 +14,8 @@ namespace monk
 		void Reset();
 		float Elapsed();
 		float Delta();
+	public:
+		static long long CurrentTime();
 
 	private:
 		std::chrono::time_point<std::chrono::high_resolution_clock> m_Start;
