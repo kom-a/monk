@@ -34,10 +34,17 @@ namespace monk
 
 		math::vec4 m_ClearColor = math::vec4(1.0f);
 
+		struct BatchSettings
+		{
+			size_t MaxVerticies = 32;
+			size_t MaxIndices = 64;
+		};
+
+		BatchSettings m_BatchSettings;
+
 		VertexBuffer* m_VertexBuffer = nullptr;
+		BufferLayout* m_VertexBufferLayout = nullptr;
 		IndexBuffer* m_IndexBuffer = nullptr;
 		Shader* m_Shader = nullptr;
-
-		Shader* m_TextureShader = nullptr;
 	};
 }

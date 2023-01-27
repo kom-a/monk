@@ -79,6 +79,13 @@ namespace monk
 		glBufferData(GL_ARRAY_BUFFER, size, data, GL_STATIC_DRAW);
 	}
 
+	VertexBuffer::VertexBuffer(const BufferLayout& layout)
+	{
+		glGenBuffers(1, &m_ID);
+		glBindBuffer(GL_ARRAY_BUFFER, m_ID);
+		glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW);
+	}
+
 	VertexBuffer::~VertexBuffer()
 	{
 		glDeleteBuffers(1, &m_ID);
@@ -111,6 +118,13 @@ namespace monk
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint32_t) * count, data, GL_STATIC_DRAW);
 	}
 
+	IndexBuffer::IndexBuffer()
+	{
+		glGenBuffers(1, &m_ID);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ID);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW);
+	}
+
 	IndexBuffer::~IndexBuffer()
 	{
 		glDeleteBuffers(1, &m_ID);
@@ -126,4 +140,9 @@ namespace monk
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	}
 
+	void IndexBuffer::SetData(uint32_t* data, size_t count)
+	{
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ID);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint32_t) * count, data, GL_DYNAMIC_DRAW);
+	}
 }

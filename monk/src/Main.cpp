@@ -32,7 +32,7 @@ Application::Application()
 {
 	m_Window = new Window(1280, 720, "Monk");
 	m_Window->SetEventCallback(BIND_FUNCTION(Application::OnEvent));
-	m_Window->SwapInterval(1);
+	m_Window->SwapInterval(0);
 
 	if (!utils::OpenGLLoader::LoadOpenGL(utils::OpenGLVersion::OPENGL_3_3))
 		DIE("Failed to load OpenGL functions");
@@ -58,10 +58,25 @@ void Application::Run()
 {
 	Time timer;
 
+	math::vec2 grid = { 128, 128 };
+
 	while (!m_Window->Closed())
 	{
+		float deltaTime = timer.Delta();
+		LOG_INFO("FPS: {0}", 1.0f / deltaTime);
+
 		m_Renderer->Begin(math::Ortho(0, m_Window->GetWidth(), m_Window->GetHeight(), 0, -1, 1));
 		m_Renderer->Clear();
+
+		math::vec2 cell = { m_Window->GetWidth() / grid.x, m_Window->GetHeight() / grid.y };
+		for (int i = 0; i < grid.y; i++)
+		{
+			for (int j = 0; j < grid.x; j++)
+			{
+				m_Renderer->FillRect(math::vec2(i * cell.x, j * cell.y), cell, Random::Color());
+			}
+		}
+
 		m_Renderer->End();
 
 		m_Window->PollEvents();

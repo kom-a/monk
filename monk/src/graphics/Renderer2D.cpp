@@ -22,7 +22,7 @@ namespace monk
 		};
 
 		m_VertexBuffer = new VertexBuffer(nullptr, 0, layout);
-		
+
 		uint32_t indices[] = {
 			0, 1, 2, 0, 2, 3
 		};
@@ -35,11 +35,6 @@ namespace monk
 		std::string fragmentSrc = utils::FileManager::ReadFile("res/FragmentShader.glsl");
 
 		m_Shader = new Shader(vertexSrc, fragmentSrc);
-
-		vertexSrc = utils::FileManager::ReadFile("res/TextureVertex.glsl");
-		fragmentSrc = utils::FileManager::ReadFile("res/TextureFragment.glsl");
-
-		m_TextureShader = new Shader(vertexSrc, fragmentSrc);
 	}
 
 	Renderer2D::~Renderer2D()
@@ -151,7 +146,7 @@ namespace monk
 			math::vec3 p1(std::cosf(angle), std::sinf(angle), 0.0f);
 			angle += step;
 			math::vec3 p2(std::cosf(angle), std::sinf(angle), 0.0f);
-			
+
 			p1 *= radius;
 			p2 *= radius;
 
@@ -193,6 +188,7 @@ namespace monk
 
 	void Renderer2D::DrawTexture(const math::vec2& position, const math::vec2& size, uint32_t textureID)
 	{
+#if 0
 		float left = position.x;
 		float right = position.x + size.x;
 		float top = position.y;
@@ -224,5 +220,6 @@ namespace monk
 		glDrawElements(GL_TRIANGLES, m_IndexBuffer->Count(), GL_UNSIGNED_INT, nullptr);
 
 		glBindVertexArray(0);
+#endif
 	}
 }

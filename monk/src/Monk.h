@@ -4,6 +4,7 @@
 #include "core/Log.h"
 #include "core/Time.h"
 #include "core/Assert.h"
+#include "core/Random.h"
 
 #include "utils/OpenGL.h"
 #include "utils/FileManager.h"
