@@ -9,7 +9,6 @@ namespace monk
 {
 	int Random::Next()
 	{
-		std::srand(Time::CurrentTime());
 		return std::rand();
 	}
 
@@ -17,13 +16,11 @@ namespace monk
 	{
 		MONK_ASSERT(min < max, "Minimal value can not be greater than maximal");
 
-		std::srand(Time::CurrentTime());
 		return min + std::rand() % (max - min);
 	}
 
 	float Random::Normalized()
 	{
-		std::srand(Time::CurrentTime());
 		return (float)std::rand() / RAND_MAX;
 	}
 
@@ -31,5 +28,4 @@ namespace monk
 	{
 		return math::vec4(Normalized(), Normalized(), Normalized(), 1.0f);
 	}
-
 }
