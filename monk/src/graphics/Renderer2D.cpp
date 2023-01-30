@@ -16,24 +16,28 @@ namespace monk
 		glGenVertexArrays(1, &m_VAO);
 		glBindVertexArray(m_VAO);
 
-		BufferLayout layout = {
-			{ 0, BufferLayout::AttribType::Float3 },
-			{ 1, BufferLayout::AttribType::Float4 },
-		};
+		m_VertexBuffer = new VertexBuffer(sizeof(Vertex) * m_BatchSettings.MaxVerticies, Vertex::GetLayout());
 
-		m_VertexBuffer = new VertexBuffer(nullptr, 0, layout);
+		uint32_t* indices = new uint32_t[m_BatchSettings.MaxIndices];
+		size_t offset = 0;
+		for (int i = 0; i < m_BatchSettings.MaxIndices; i += 6)
+		{
+			indices[i + 0] = offset + 0;
+			indices[i + 1] = offset + 1;
+			indices[i + 2] = offset + 2;
+			indices[i + 3] = offset + 2;
+			indices[i + 4] = offset + 3;
+			indices[i + 5] = offset + 0;
 
-		uint32_t indices[] = {
-			0, 1, 2, 0, 2, 3
-		};
+			offset += 4;
+		}
 
-		m_IndexBuffer = new IndexBuffer(indices, 6);
+		m_IndexBuffer = new IndexBuffer(indices, m_BatchSettings.MaxIndices);
 
 		glBindVertexArray(0);
 
-		std::string vertexSrc = utils::FileManager::ReadFile("res/VertexShader.glsl");
-		std::string fragmentSrc = utils::FileManager::ReadFile("res/FragmentShader.glsl");
-
+		std::string vertexSrc = utils::FileManager::ReadFile("res/Renderer2D.vert");
+		std::string fragmentSrc = utils::FileManager::ReadFile("res/Renderer2D.frag");
 		m_Shader = new Shader(vertexSrc, fragmentSrc);
 	}
 
@@ -48,11 +52,14 @@ namespace monk
 	void Renderer2D::Begin(const math::mat4& projection)
 	{
 		m_ProjectionMatrix = projection;
+		m_RenderStats.Reset();
+		BeginBatch();
 	}
 
 	void Renderer2D::End()
 	{
-
+		EndBatch();
+		Flush();
 	}
 
 	void Renderer2D::SetClearColor(const math::vec4& clearColor)
@@ -68,6 +75,7 @@ namespace monk
 
 	void Renderer2D::FillRect(const math::vec2& position, const math::vec2& size, const math::vec4& color)
 	{
+#if 0
 		float left = position.x;
 		float right = position.x + size.x;
 		float top = position.y;
@@ -92,8 +100,47 @@ namespace monk
 		glDrawElements(GL_TRIANGLES, m_IndexBuffer->Count(), GL_UNSIGNED_INT, nullptr);
 
 		glBindVertexArray(0);
+#else
+		MONK_ASSERT(m_VertexBufferData);
+
+		glBindVertexArray(m_VAO);
+
+		Vertex topLeftVertex;
+		topLeftVertex.Position = math::vec3(position.x, position.y, 0.0f);
+		topLeftVertex.Color = color;
+		topLeftVertex.TextureID = 0;
+		topLeftVertex.TextureCoords = math::vec2(0.0f);
+
+		Vertex topRightVertex = topLeftVertex;
+		topRightVertex.Position.x += size.x;
+
+		Vertex bottomRightVertex = topRightVertex;
+		bottomRightVertex.Position.y += size.y;
+
+		Vertex bottomLeftVertex = topLeftVertex;
+		bottomLeftVertex.Position.y += size.y;
+
+		if (m_BatchStats.Quads >= m_BatchSettings.MaxQuads)
+		{
+			EndBatch();
+			Flush();
+			BeginBatch();
+		}
+
+		m_VertexBufferData[m_BatchStats.Verticies + 0] = topLeftVertex;
+		m_VertexBufferData[m_BatchStats.Verticies + 1] = topRightVertex;
+		m_VertexBufferData[m_BatchStats.Verticies + 2] = bottomRightVertex;
+		m_VertexBufferData[m_BatchStats.Verticies + 3] = bottomLeftVertex;
+
+		m_BatchStats.Verticies += 4;
+		m_BatchStats.Indices += 6;
+		m_BatchStats.Quads += 1;
+#endif // 0
+
+
 	}
 
+#if 0
 	void Renderer2D::FillRoundRect(const math::vec2& position, const math::vec2& size, const math::vec4& color, math::vec4 round /*= math::vec4(1.0f)*/)
 	{
 		std::vector<float> data;
@@ -188,7 +235,6 @@ namespace monk
 
 	void Renderer2D::DrawTexture(const math::vec2& position, const math::vec2& size, uint32_t textureID)
 	{
-#if 0
 		float left = position.x;
 		float right = position.x + size.x;
 		float top = position.y;
@@ -220,6 +266,35 @@ namespace monk
 		glDrawElements(GL_TRIANGLES, m_IndexBuffer->Count(), GL_UNSIGNED_INT, nullptr);
 
 		glBindVertexArray(0);
+	}
 #endif
+	void Renderer2D::BeginBatch()
+	{
+		m_VertexBufferData = (Vertex*)m_VertexBuffer->Map();
+		m_BatchStats.Reset();
+	}
+
+	void Renderer2D::EndBatch()
+	{
+		m_VertexBuffer->Unmap();
+		m_VertexBufferData = nullptr;
+		m_RenderStats += m_BatchStats;
+	}
+
+	void Renderer2D::Flush()
+	{
+		MONK_ASSERT(!m_VertexBufferData, "Unmap vertex buffer first");
+
+		glBindVertexArray(m_VAO);
+
+		m_VertexBuffer->Bind();
+		m_IndexBuffer->Bind();
+
+		m_Shader->Bind();
+		m_Shader->SetMatrix4("u_Projection", m_ProjectionMatrix);
+		m_Shader->SetMatrix4("u_View", math::mat4(1.0f));
+
+
+		glDrawElements(GL_TRIANGLES, m_BatchStats.Indices, GL_UNSIGNED_INT, nullptr);
 	}
 }

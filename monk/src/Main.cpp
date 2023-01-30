@@ -59,21 +59,29 @@ void Application::Run()
 	Time timer;
 
 	math::vec2 grid = { 128, 128 };
+	int fps = 0;
+	float lastFpsTime = 0;
 
 	while (!m_Window->Closed())
 	{
 		float deltaTime = timer.Delta();
-		LOG_INFO("FPS: {0}", 1.0f / deltaTime);
+		fps++;
+		if (timer.Elapsed() - lastFpsTime > 1)
+		{
+			lastFpsTime = timer.Elapsed();
+			LOG_INFO("FPS: {0}", fps);
+			fps = 0;
+		}
 
 		m_Renderer->Begin(math::Ortho(0, m_Window->GetWidth(), m_Window->GetHeight(), 0, -1, 1));
 		m_Renderer->Clear();
 
-		math::vec2 cell = { m_Window->GetWidth() / grid.x, m_Window->GetHeight() / grid.y };
-		for (int i = 0; i < grid.y; i++)
+		math::vec2 cell = { (float)m_Window->GetWidth() / grid.x, (float)m_Window->GetHeight() / grid.y };
+		for (int y = 0; y < grid.y; y++)
 		{
-			for (int j = 0; j < grid.x; j++)
+			for (int x = 0; x < grid.x; x++)
 			{
-				m_Renderer->FillRect(math::vec2(i * cell.x, j * cell.y), cell, Random::Color());
+				m_Renderer->FillRect(math::vec2(x * cell.x, y * cell.y), cell, Random::Color());
 			}
 		}
 

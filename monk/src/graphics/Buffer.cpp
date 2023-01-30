@@ -3,6 +3,7 @@
 #include "utils/OpenGL.h"
 
 #include "core/Log.h"
+#include "core/Assert.h"
 
 namespace monk
 {
@@ -21,11 +22,11 @@ namespace monk
 		for (const auto& l : m_Layout)
 		{
 			glVertexAttribPointer(
-				l.Index, 
-				l.ComponentCount(), 
-				l.ToOpenGLType(), 
-				GL_FALSE, 
-				m_Stride, 
+				l.Index,
+				l.ComponentCount(),
+				l.ToOpenGLType(),
+				GL_FALSE,
+				m_Stride,
 				(const void*)offset);
 			glEnableVertexAttribArray(l.Index);
 
@@ -37,10 +38,10 @@ namespace monk
 	{
 		switch (Type)
 		{
-			case BufferLayout::AttribType::Float:  return 4 * 1;
-			case BufferLayout::AttribType::Float2: return 4 * 2;
-			case BufferLayout::AttribType::Float3: return 4 * 3;
-			case BufferLayout::AttribType::Float4: return 4 * 4;
+		case BufferLayout::AttribType::Float:  return 4 * 1;
+		case BufferLayout::AttribType::Float2: return 4 * 2;
+		case BufferLayout::AttribType::Float3: return 4 * 3;
+		case BufferLayout::AttribType::Float4: return 4 * 4;
 		}
 	}
 
@@ -48,10 +49,10 @@ namespace monk
 	{
 		switch (Type)
 		{
-			case BufferLayout::AttribType::Float:  return 1;
-			case BufferLayout::AttribType::Float2: return 2;
-			case BufferLayout::AttribType::Float3: return 3;
-			case BufferLayout::AttribType::Float4: return 4;
+		case BufferLayout::AttribType::Float:  return 1;
+		case BufferLayout::AttribType::Float2: return 2;
+		case BufferLayout::AttribType::Float3: return 3;
+		case BufferLayout::AttribType::Float4: return 4;
 		}
 	}
 
@@ -59,10 +60,10 @@ namespace monk
 	{
 		switch (Type)
 		{
-			case BufferLayout::AttribType::Float:  return GL_FLOAT;
-			case BufferLayout::AttribType::Float2: return GL_FLOAT;
-			case BufferLayout::AttribType::Float3: return GL_FLOAT;
-			case BufferLayout::AttribType::Float4: return GL_FLOAT;
+		case BufferLayout::AttribType::Float:  return GL_FLOAT;
+		case BufferLayout::AttribType::Float2: return GL_FLOAT;
+		case BufferLayout::AttribType::Float3: return GL_FLOAT;
+		case BufferLayout::AttribType::Float4: return GL_FLOAT;
 		}
 
 		LOG_ERROR("Invalid attrib pointer type");
@@ -72,18 +73,19 @@ namespace monk
 	// Vertex Buffer ///////////////////////////////////////////////////
 
 	VertexBuffer::VertexBuffer(float* data, size_t size, const BufferLayout& layout)
-		: m_Layout(layout)
+		: m_Size(size), m_Layout(layout)
 	{
 		glGenBuffers(1, &m_ID);
 		glBindBuffer(GL_ARRAY_BUFFER, m_ID);
 		glBufferData(GL_ARRAY_BUFFER, size, data, GL_STATIC_DRAW);
 	}
 
-	VertexBuffer::VertexBuffer(const BufferLayout& layout)
+	VertexBuffer::VertexBuffer(size_t size, const BufferLayout& layout)
+		: m_Size(size), m_Layout(layout)
 	{
 		glGenBuffers(1, &m_ID);
 		glBindBuffer(GL_ARRAY_BUFFER, m_ID);
-		glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, size, nullptr, GL_DYNAMIC_DRAW);
 	}
 
 	VertexBuffer::~VertexBuffer()
@@ -102,10 +104,16 @@ namespace monk
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
 
-	void VertexBuffer::SetData(float* data, size_t size)
+	void* VertexBuffer::Map()
 	{
-		glBindBuffer(GL_ARRAY_BUFFER, m_ID);
-		glBufferData(GL_ARRAY_BUFFER, size, data, GL_DYNAMIC_DRAW);
+		Bind();
+		return glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
+	}
+
+	void VertexBuffer::Unmap()
+	{
+		Bind();
+		glUnmapBuffer(GL_ARRAY_BUFFER);
 	}
 
 	// Index Buffer ///////////////////////////////////////////////////
@@ -118,11 +126,12 @@ namespace monk
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint32_t) * count, data, GL_STATIC_DRAW);
 	}
 
-	IndexBuffer::IndexBuffer()
+	IndexBuffer::IndexBuffer(size_t count)
+		: m_Count(count)
 	{
 		glGenBuffers(1, &m_ID);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ID);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint32_t) * count, nullptr, GL_DYNAMIC_DRAW);
 	}
 
 	IndexBuffer::~IndexBuffer()
@@ -140,9 +149,17 @@ namespace monk
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	}
 
-	void IndexBuffer::SetData(uint32_t* data, size_t count)
+	uint32_t* IndexBuffer::Map()
 	{
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ID);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint32_t) * count, data, GL_DYNAMIC_DRAW);
+		Bind();
+		uint32_t* data = (uint32_t*)glMapBuffer(GL_ELEMENT_ARRAY_BUFFER, GL_READ_WRITE);
+		return data;
 	}
+
+	void IndexBuffer::Unmap()
+	{
+		Bind();
+		glUnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);
+	}
+
 }

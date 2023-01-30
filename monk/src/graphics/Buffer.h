@@ -40,30 +40,35 @@ namespace monk
 	{
 	public:
 		VertexBuffer(float* data, size_t size, const BufferLayout& layout);
-		VertexBuffer(const BufferLayout& layout);
+		VertexBuffer(size_t size, const BufferLayout& layout);
 		~VertexBuffer();
 
+	public:
 		void Bind() const;
 		void Unbind() const;
 
-		void SetData(float* data, size_t size);
+		void* Map();
+		void Unmap();
 
 	private:
 		uint32_t m_ID;
 		BufferLayout m_Layout;
+		size_t m_Size;
 	};
 
 	class IndexBuffer
 	{
 	public:
 		IndexBuffer(uint32_t* data, size_t count);
-		IndexBuffer();
+		IndexBuffer(size_t count);
 		~IndexBuffer();
 
+	public:
 		void Bind() const;
 		void Unbind() const;
 
-		void SetData(uint32_t* data, size_t count);
+		uint32_t* Map();
+		void Unmap();
 
 		uint32_t Count() const { return m_Count; }
 
