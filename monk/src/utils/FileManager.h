@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-namespace monk::utils
+namespace monk
 {
 	struct FileData
 	{

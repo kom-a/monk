@@ -7,7 +7,7 @@
 #include <fstream>
 
 
-namespace monk::utils
+namespace monk
 {
 	std::string FileManager::ReadFile(const char* filepath)
 	{
