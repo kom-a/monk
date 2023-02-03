@@ -7,6 +7,12 @@
 
 namespace monk
 {
+
+	void Random::Seed(uint32_t seed)
+	{
+		std::srand(seed);
+	}
+
 	int Random::Next()
 	{
 		return std::rand();
