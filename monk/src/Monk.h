@@ -5,9 +5,11 @@
 #include "core/Time.h"
 #include "core/Assert.h"
 #include "core/Random.h"
+#include "core/Memory.h"
 
 #include "utils/OpenGL.h"
 #include "utils/FileManager.h"
+#include "utils/TextureLoader.h"
 
 #include "math/Math.h"
 
@@ -23,5 +25,6 @@
 #include "graphics/Shader.h"
 #include "graphics/Buffer.h"
 #include "graphics/Renderer2D.h"
+#include "graphics/Texture2D.h"
 
 #include "gui/Gui.h"
