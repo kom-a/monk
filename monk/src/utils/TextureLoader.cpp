@@ -1,5 +1,7 @@
 #include "TextureLoader.h"
 
+#include <cctype>
+
 #include "core/Assert.h"
 #include "core/Log.h"
 
@@ -23,6 +25,29 @@ namespace monk
 		memcpy(&value, *data, sizeof(uint32_t));
 		*data += sizeof(uint32_t);
 		return value;
+	}
+
+	static uint32_t ReadASCII(uint8_t** data)
+	{
+		uint32_t value = 0;
+		while (std::isdigit(**data))
+		{
+			int digit = **data - '0';
+			value *= 10;
+			value += digit;
+			*data += 1;
+		}
+
+		return value;
+	}
+
+	static void EatWhitespace(uint8_t** data)
+	{
+		const char* whitespace = " \t\n\r";
+		while (std::strchr(whitespace, **data))
+		{
+			*data += 1;
+		}
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -101,6 +126,34 @@ namespace monk
 		BI_CMYKRLE4 = 13,
 	};
 
+	struct PPMImage
+	{
+		uint8_t P6[2] = {0};
+		uint32_t Width = 0;
+		uint32_t Height = 0;
+		uint32_t Maxval;
+		uint8_t* Image = nullptr;
+
+		PPMImage(uint8_t* data)
+		{
+			P6[0] = data[0];
+			P6[1] = data[1];
+			data += 2;
+
+			EatWhitespace(&data);
+			Width = ReadASCII(&data);
+			EatWhitespace(&data);
+			Height = ReadASCII(&data);
+			EatWhitespace(&data);
+			Maxval = ReadASCII(&data);
+			EatWhitespace(&data);
+			Image = data;
+
+			if (Maxval != 255)
+				MONK_ASSERT("Not supported");
+		}
+	};
+
 	//////////////////////////////////////////////////////////////////////////
 	// Implementation
 	//////////////////////////////////////////////////////////////////////////
@@ -112,6 +165,8 @@ namespace monk
 
 		if (IsBMP(filedata))
 			textureData = LoadBMP(filedata, format);
+		else if (IsPPM(filedata))
+			textureData = LoadPPM(filedata, format);
 		else
 			MONK_ASSERT("Unsupported texture file format");
 
@@ -123,6 +178,11 @@ namespace monk
 	bool TextureLoader::IsBMP(const FileData& filedata)
 	{
 		return filedata.Data[0] == 'B' && filedata.Data[1] == 'M';
+	}
+
+	bool TextureLoader::IsPPM(const FileData& filedata)
+	{
+		return filedata.Data[0] == 'P' && filedata.Data[1] == '6';
 	}
 
 	TextureData TextureLoader::LoadBMP(const FileData& filedata, TextureFormat format)
@@ -173,6 +233,22 @@ namespace monk
 				}
 			}
 		}
+
+		return texture;
+	}
+
+	TextureData TextureLoader::LoadPPM(const FileData& filedata, TextureFormat format)
+	{
+		MONK_ASSERT(format == TextureFormat::RGB, "PPM RGBA texture format not supported");
+
+		PPMImage ppm(filedata.Data);
+
+		TextureData texture;
+		texture.Width = ppm.Width;
+		texture.Height = ppm.Height;
+		texture.Channels = 3; // TODO: Hardcode this for now
+		texture.Data = new uint8_t[(size_t)texture.Width * texture.Height * texture.Channels];
+		memcpy(texture.Data, ppm.Image, texture.Width * texture.Height * texture.Channels);
 
 		return texture;
 	}

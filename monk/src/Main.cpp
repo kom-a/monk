@@ -67,8 +67,8 @@ void Application::Run()
 	Ref<Texture2D> textures[5]; 
 
 	// There is a memory leak here :(
-	textures[0] = Texture2D::Create("res/sample.bmp", TextureFormat::RGB);
-	textures[1] = Texture2D::Create("res/bmp_24.bmp", TextureFormat::RGB);
+	textures[0] = Texture2D::Create("res/test.ppm", TextureFormat::RGB);
+	textures[1] = Texture2D::Create("res/voronoi_sphere2.ppm", TextureFormat::RGB);
 	textures[2] = Texture2D::Create("res/blackbuck.bmp", TextureFormat::RGBA);
 	textures[3] = Texture2D::Create("res/ray.bmp", TextureFormat::RGB);
 	textures[4] = Texture2D::Create("res/marbles.BMP", TextureFormat::RGBA);
