@@ -36,8 +36,8 @@ namespace monk
 
 		glBindVertexArray(0);
 
-		std::string vertexSrc = utils::FileManager::ReadFile("res/Renderer2D.vert");
-		std::string fragmentSrc = utils::FileManager::ReadFile("res/Renderer2D.frag");
+		std::string vertexSrc = FileManager::ReadFile("res/Renderer2D.vert");
+		std::string fragmentSrc = FileManager::ReadFile("res/Renderer2D.frag");
 		m_Shader = new Shader(vertexSrc, fragmentSrc);
 	}
 
@@ -75,50 +75,9 @@ namespace monk
 
 	void Renderer2D::FillRect(const math::vec2& position, const math::vec2& size, const math::vec4& color)
 	{
-#if 0
-		float left = position.x;
-		float right = position.x + size.x;
-		float top = position.y;
-		float bottom = position.y + size.y;
-
-		float data[] = {
-			left,	top,	0.0f,		color.r, color.g, color.b, color.a,
-			right,	top,	0.0f,		color.r, color.g, color.b, color.a,
-			right,	bottom, 0.0f,		color.r, color.g, color.b, color.a,
-			left,	bottom, 0.0f,		color.r, color.g, color.b, color.a,
-		};
-
-		glBindVertexArray(m_VAO);
-
-		m_VertexBuffer->Bind();
-		m_VertexBuffer->SetData(data, sizeof(data));
-		m_IndexBuffer->Bind();
-
-		m_Shader->Bind();
-		m_Shader->SetMatrix4("u_Projection", m_ProjectionMatrix);
-
-		glDrawElements(GL_TRIANGLES, m_IndexBuffer->Count(), GL_UNSIGNED_INT, nullptr);
-
-		glBindVertexArray(0);
-#else
 		MONK_ASSERT(m_VertexBufferData);
 
 		glBindVertexArray(m_VAO);
-
-		Vertex topLeftVertex;
-		topLeftVertex.Position = math::vec3(position.x, position.y, 0.0f);
-		topLeftVertex.Color = color;
-		topLeftVertex.TextureID = 0;
-		topLeftVertex.TextureCoords = math::vec2(0.0f);
-
-		Vertex topRightVertex = topLeftVertex;
-		topRightVertex.Position.x += size.x;
-
-		Vertex bottomRightVertex = topRightVertex;
-		bottomRightVertex.Position.y += size.y;
-
-		Vertex bottomLeftVertex = topLeftVertex;
-		bottomLeftVertex.Position.y += size.y;
 
 		if (m_BatchStats.Quads >= m_BatchSettings.MaxQuads)
 		{
@@ -127,17 +86,27 @@ namespace monk
 			BeginBatch();
 		}
 
-		m_VertexBufferData[m_BatchStats.Verticies + 0] = topLeftVertex;
-		m_VertexBufferData[m_BatchStats.Verticies + 1] = topRightVertex;
-		m_VertexBufferData[m_BatchStats.Verticies + 2] = bottomRightVertex;
-		m_VertexBufferData[m_BatchStats.Verticies + 3] = bottomLeftVertex;
+		Vertex& topLeftVertex = m_VertexBufferData[m_BatchStats.Verticies + 0];
+		topLeftVertex.Position = math::vec3(position.x, position.y, 0.0f);
+		topLeftVertex.Color = color;
+		topLeftVertex.TextureID = 0;
+		topLeftVertex.TextureCoords = math::vec2(0.0f);
+
+		Vertex& topRightVertex = m_VertexBufferData[m_BatchStats.Verticies + 1];
+		topRightVertex = topLeftVertex;
+		topRightVertex.Position.x += size.x;
+
+		Vertex& bottomRightVertex = m_VertexBufferData[m_BatchStats.Verticies + 2];
+		bottomRightVertex = topRightVertex;
+		bottomRightVertex.Position.y += size.y;
+
+		Vertex& bottomLeftVertex = m_VertexBufferData[m_BatchStats.Verticies + 3]; 
+		bottomLeftVertex = topLeftVertex;
+		bottomLeftVertex.Position.y += size.y;
 
 		m_BatchStats.Verticies += 4;
 		m_BatchStats.Indices += 6;
 		m_BatchStats.Quads += 1;
-#endif // 0
-
-
 	}
 
 #if 0
@@ -232,6 +201,7 @@ namespace monk
 
 		glBindVertexArray(0);
 	}
+#endif
 
 	void Renderer2D::DrawTexture(const math::vec2& position, const math::vec2& size, uint32_t textureID)
 	{
@@ -257,17 +227,21 @@ namespace monk
 		glBindVertexArray(m_VAO);
 
 		buffer.Bind();
-		buffer.SetData(data, sizeof(data));
 		m_IndexBuffer->Bind();
 
-		m_TextureShader->Bind();
-		m_TextureShader->SetMatrix4("u_Projection", m_ProjectionMatrix);
+		static std::string vertexSrc = FileManager::ReadFile("res/TextureVertex.glsl");
+		static std::string fragmentSrc = FileManager::ReadFile("res/TextureFragment.glsl");
+		static Shader textureShader(vertexSrc, fragmentSrc);
 
-		glDrawElements(GL_TRIANGLES, m_IndexBuffer->Count(), GL_UNSIGNED_INT, nullptr);
+		textureShader.Bind();
+		textureShader.SetMatrix4("u_Projection", m_ProjectionMatrix);
+		textureShader.SetInt("tex", 1);
+
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
 
 		glBindVertexArray(0);
 	}
-#endif
+
 	void Renderer2D::BeginBatch()
 	{
 		m_VertexBufferData = (Vertex*)m_VertexBuffer->Map();
