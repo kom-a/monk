@@ -64,11 +64,12 @@ void Application::Run()
 	int fps = 0;
 	float lastFpsTime = 0;
 
-	Ref<Texture2D> textures[2]; 
+	Ref<Texture2D> textures[32]; 
 
 	// There is a memory leak here :(
 	textures[0] = Texture2D::Create("res/images/monk1.ppm", TextureFormat::RGB);
 	textures[1] = Texture2D::Create("res/images/monk2.ppm", TextureFormat::RGB);
+
 
 	while (!m_Window->Closed())
 	{
@@ -86,19 +87,11 @@ void Application::Run()
 
 		math::vec2 cell = { (float)m_Window->GetWidth() / grid.x, (float)m_Window->GetHeight() / grid.y };
 
-		for (int i = 0; i < 2; i++)
-		{
-			textures[i]->Bind(1);
-			m_Renderer->DrawTexture(math::vec2(100 + i * 200, 100), math::vec2(150, 150), textures[i]->GetID());
-		}
-
 		for (int y = 1; y < grid.y - 1; y++)
 		{
 			for (int x = 1; x < grid.x - 1; x++)
 			{
-				int textureIndex = (x + y) % 2;
-				textures[textureIndex]->Bind(1);
-				m_Renderer->DrawTexture(math::vec2(x * cell.x, y * cell.y), cell, textures[textureIndex]->GetID());
+				m_Renderer->DrawTexture(math::vec2(x * cell.x, y * cell.y), cell, *textures[(x + y) % 2]);
 			}
 		}
 

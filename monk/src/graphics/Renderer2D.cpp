@@ -39,6 +39,11 @@ namespace monk
 		std::string vertexSrc = FileManager::ReadFile("res/Renderer2D.vert");
 		std::string fragmentSrc = FileManager::ReadFile("res/Renderer2D.frag");
 		m_Shader = new Shader(vertexSrc, fragmentSrc);
+
+		uint32_t whiteTexture = 0xffffffff;
+		m_WhiteTexture = CreateScope<Texture2D>(1, 1, 4, (uint8_t*)&whiteTexture);
+
+		m_BatchStats.Textures = std::vector<uint32_t>();
 	}
 
 	Renderer2D::~Renderer2D()
@@ -100,7 +105,7 @@ namespace monk
 		bottomRightVertex = topRightVertex;
 		bottomRightVertex.Position.y += size.y;
 
-		Vertex& bottomLeftVertex = m_VertexBufferData[m_BatchStats.Verticies + 3]; 
+		Vertex& bottomLeftVertex = m_VertexBufferData[m_BatchStats.Verticies + 3];
 		bottomLeftVertex = topLeftVertex;
 		bottomLeftVertex.Position.y += size.y;
 
@@ -203,49 +208,68 @@ namespace monk
 	}
 #endif
 
-	void Renderer2D::DrawTexture(const math::vec2& position, const math::vec2& size, uint32_t textureID)
+	void Renderer2D::DrawTexture(const math::vec2& position, const math::vec2& size, const Texture2D& texture)
 	{
-		float left = position.x;
-		float right = position.x + size.x;
-		float top = position.y;
-		float bottom = position.y + size.y;
-
-		float data[] = {
-			left,	top,	0.0f, 0.0f,
-			right,	top,	1.0f, 0.0f,
-			right,	bottom, 1.0f, 1.0f,
-			left,	bottom, 0.0f, 1.0f,
-		};
-
-		BufferLayout layout = {
-			{ 0, BufferLayout::AttribType::Float2 },
-			{ 1, BufferLayout::AttribType::Float2 },
-		};
-
-		VertexBuffer buffer(data, sizeof(data), layout);
+		MONK_ASSERT(m_VertexBufferData);
 
 		glBindVertexArray(m_VAO);
 
-		buffer.Bind();
-		m_IndexBuffer->Bind();
+		if (m_BatchStats.Quads >= m_BatchSettings.MaxQuads || m_BatchStats.TextureIndex >= m_BatchSettings.MaxTextures - 1)
+		{
+			EndBatch();
+			Flush();
+			BeginBatch();
+		}
 
-		static std::string vertexSrc = FileManager::ReadFile("res/TextureVertex.glsl");
-		static std::string fragmentSrc = FileManager::ReadFile("res/TextureFragment.glsl");
-		static Shader textureShader(vertexSrc, fragmentSrc);
+		float textureID = -1;
+		for (int i = 0; i < m_BatchStats.TextureIndex; i++)
+		{
+			if (texture.GetID() == m_BatchStats.Textures[i])
+			{
+				textureID = i;
+				break;
+			}
+		}
 
-		textureShader.Bind();
-		textureShader.SetMatrix4("u_Projection", m_ProjectionMatrix);
-		textureShader.SetInt("tex", 1);
+		if(textureID == -1)
+		{
+			m_BatchStats.Textures[m_BatchStats.TextureIndex] = texture.GetID();
+			textureID = (float)m_BatchStats.TextureIndex;
+			m_BatchStats.TextureIndex++;
+		}
 
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
+		Vertex& topLeftVertex = m_VertexBufferData[m_BatchStats.Verticies + 0];
+		topLeftVertex.Position = math::vec3(position.x, position.y, 0.0f);
+		topLeftVertex.Color = math::vec4(1.0f);
+		topLeftVertex.TextureID = textureID;
+		topLeftVertex.TextureCoords = math::vec2(0.0f, 0.0f);
 
-		glBindVertexArray(0);
+		Vertex& topRightVertex = m_VertexBufferData[m_BatchStats.Verticies + 1];
+		topRightVertex = topLeftVertex;
+		topRightVertex.Position.x += size.x;
+		topRightVertex.TextureCoords = math::vec2(1.0f, 0.0f);
+
+		Vertex& bottomRightVertex = m_VertexBufferData[m_BatchStats.Verticies + 2];
+		bottomRightVertex = topRightVertex;
+		bottomRightVertex.Position.y += size.y;
+		bottomRightVertex.TextureCoords = math::vec2(1.0f, 1.0f);
+
+		Vertex& bottomLeftVertex = m_VertexBufferData[m_BatchStats.Verticies + 3];
+		bottomLeftVertex = topLeftVertex;
+		bottomLeftVertex.Position.y += size.y;
+		bottomLeftVertex.TextureCoords = math::vec2(0.0f, 1.0f);
+
+		m_BatchStats.Verticies += 4;
+		m_BatchStats.Indices += 6;
+		m_BatchStats.Quads += 1;
 	}
 
 	void Renderer2D::BeginBatch()
 	{
 		m_VertexBufferData = (Vertex*)m_VertexBuffer->Map();
 		m_BatchStats.Reset();
+		m_BatchStats.Textures.resize(m_BatchSettings.MaxTextures);
+		m_BatchStats.Textures[0] = m_WhiteTexture->GetID();
 	}
 
 	void Renderer2D::EndBatch()
@@ -268,6 +292,13 @@ namespace monk
 		m_Shader->SetMatrix4("u_Projection", m_ProjectionMatrix);
 		m_Shader->SetMatrix4("u_View", math::mat4(1.0f));
 
+		for (int i = 0; i < m_BatchStats.TextureIndex; i++)
+		{
+			glActiveTexture(GL_TEXTURE0 + i);
+			glBindTexture(GL_TEXTURE_2D, m_BatchStats.Textures[i]);
+			m_Shader->SetInt(std::string("u_Texture") + std::to_string(i), i);
+		}
+			
 
 		glDrawElements(GL_TRIANGLES, m_BatchStats.Indices, GL_UNSIGNED_INT, nullptr);
 	}

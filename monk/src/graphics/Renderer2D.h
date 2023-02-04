@@ -1,8 +1,10 @@
 #pragma once
 
+#include "core/Memory.h"
 #include "math/Math.h"
 #include "graphics/Buffer.h"
 #include "graphics/Shader.h"
+#include "graphics/Texture2D.h"
 
 namespace monk
 {
@@ -46,7 +48,7 @@ namespace monk
 		void FillRoundRect(const math::vec2& position, const math::vec2& size, const math::vec4& color, math::vec4 round = math::vec4(1.0f));
 		void FillCircle(const math::vec2& center, float radius, const math::vec4& color, uint32_t segments = 24);
 
-		void DrawTexture(const math::vec2& position, const math::vec2& size, uint32_t textureID);
+		void DrawTexture(const math::vec2& position, const math::vec2& size, const Texture2D& texture);
 
 	private:
 		void BeginBatch();
@@ -62,9 +64,10 @@ namespace monk
 
 		struct BatchSettings
 		{
-			size_t MaxQuads = 1000;
-			size_t MaxVerticies = MaxQuads * 4;
-			size_t MaxIndices = MaxQuads * 6;
+			const size_t MaxQuads = 1000;
+			const size_t MaxVerticies = MaxQuads * 4;
+			const size_t MaxIndices = MaxQuads * 6;
+			const size_t MaxTextures = 16;
 		} m_BatchSettings;
 
 		struct BatchStats
@@ -72,12 +75,15 @@ namespace monk
 			size_t Quads = 0;
 			size_t Verticies = 0;
 			size_t Indices = 0;
+			std::vector<uint32_t> Textures;
+			size_t TextureIndex = 1;
 
 			void Reset()
 			{
 				Quads = 0;
 				Verticies = 0;
 				Indices = 0;
+				TextureIndex = 1;
 			}
 		} m_BatchStats;
 
@@ -110,5 +116,6 @@ namespace monk
 		Vertex* m_VertexBufferData = nullptr;
 		IndexBuffer* m_IndexBuffer = nullptr;
 		Shader* m_Shader = nullptr;
+		Scope<Texture2D> m_WhiteTexture = nullptr;
 	};
 }
