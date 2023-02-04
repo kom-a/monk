@@ -25,12 +25,12 @@ namespace monk
 		RGBA,
 	};
 
+	// Prefer using PPM format for now
 	class TextureLoader
 	{
 	private:
 		TextureLoader() = default;
 		~TextureLoader() = default;
-
 
 	public:
 		static TextureData LoadFromFile(const std::string& filename, TextureFormat format);
@@ -39,10 +39,8 @@ namespace monk
 	private:
 		static bool IsBMP(const FileData& filedata);
 		static bool IsPPM(const FileData& filedata);
-		static bool IsPNG(const FileData& filedata);
 
 		static TextureData LoadBMP(const FileData& filedata, TextureFormat format);
 		static TextureData LoadPPM(const FileData& filedata, TextureFormat format);
-		static TextureData LoadPNG(const FileData& filedata, TextureFormat format);
 	};
 }

@@ -41,13 +41,27 @@ namespace monk
 		return value;
 	}
 
-	static void EatWhitespace(uint8_t** data)
+	static void EatWhitespaces(uint8_t** data)
 	{
 		const char* whitespace = " \t\n\r";
 		while (std::strchr(whitespace, **data))
-		{
 			*data += 1;
-		}
+	}
+
+	static void EatSingleWhitespace(uint8_t** data)
+	{
+		const char* whitespace = " \t\n\r";
+		if (std::strchr(whitespace, **data))
+			*data += 1;
+		else
+			MONK_ASSERT("Not a whitespace character");
+	}
+
+	static void EatComment(uint8_t** data)
+	{
+		if (**data == '#')
+			while (**data != '\n')
+				*data += 1;
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -66,14 +80,14 @@ namespace monk
 	struct BitMapInfoHeader
 	{
 		uint32_t Size;
-		uint32_t Width;
-		uint32_t Height;
+		int32_t Width;
+		int32_t Height;
 		uint16_t Planes;
 		uint16_t BitCount;
 		uint32_t Compression;
 		uint32_t SizeImage;
-		uint32_t XpelsPerMeter;
-		uint32_t YpelsPerMeter;
+		int32_t XpelsPerMeter;
+		int32_t YpelsPerMeter;
 		uint32_t ColorsUsed;
 		uint32_t ColorsImportant;
 	};
@@ -131,7 +145,7 @@ namespace monk
 		uint8_t P6[2] = {0};
 		uint32_t Width = 0;
 		uint32_t Height = 0;
-		uint32_t Maxval;
+		uint32_t Maxval = 0;
 		uint8_t* Image = nullptr;
 
 		PPMImage(uint8_t* data)
@@ -140,13 +154,20 @@ namespace monk
 			P6[1] = data[1];
 			data += 2;
 
-			EatWhitespace(&data);
+			EatWhitespaces(&data);
+			EatComment(&data);
+			EatWhitespaces(&data);
 			Width = ReadASCII(&data);
-			EatWhitespace(&data);
+
+			EatWhitespaces(&data);
 			Height = ReadASCII(&data);
-			EatWhitespace(&data);
+
+			EatWhitespaces(&data);
+			EatComment(&data);
+			EatWhitespaces(&data);
 			Maxval = ReadASCII(&data);
-			EatWhitespace(&data);
+
+			EatSingleWhitespace(&data);
 			Image = data;
 
 			if (Maxval != 255)
@@ -246,7 +267,7 @@ namespace monk
 		TextureData texture;
 		texture.Width = ppm.Width;
 		texture.Height = ppm.Height;
-		texture.Channels = 3; // TODO: Hardcode this for now
+		texture.Channels = TextureFormatBytesPerPixel(format);
 		texture.Data = new uint8_t[(size_t)texture.Width * texture.Height * texture.Channels];
 		memcpy(texture.Data, ppm.Image, texture.Width * texture.Height * texture.Channels);
 

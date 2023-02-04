@@ -28,6 +28,7 @@ namespace monk
 		MONK_ASSERT(channels == 3 || channels == 4, "Unsupported channels value");
 
 		glGenTextures(1, &m_TextureID);
+		glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, m_TextureID);
 
