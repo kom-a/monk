@@ -78,6 +78,19 @@ namespace monk
 		glClear(GL_COLOR_BUFFER_BIT);
 	}
 
+	void Renderer2D::EnableAlphaBlending(bool enable)
+	{
+		if (enable)
+		{
+			glEnable(GL_BLEND);
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		}
+		else
+		{
+			glDisable(GL_BLEND);
+		}
+	}
+
 	void Renderer2D::FillRect(const math::vec2& position, const math::vec2& size, const math::vec4& color)
 	{
 		MONK_ASSERT(m_VertexBufferData);

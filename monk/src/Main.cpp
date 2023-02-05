@@ -46,6 +46,7 @@ Application::Application()
 
 	m_Renderer = new Renderer2D();
 	m_Renderer->SetClearColor(math::vec4(0.3f, 0.4f, 0.8f, 1.0f));
+	m_Renderer->EnableAlphaBlending(true);
 
 	Random::Seed(Time::CurrentTime());
 }
@@ -60,27 +61,27 @@ void Application::Run()
 {
 	Time timer;
 
-	math::vec2 grid = { 12, 12 };
+	math::vec2 grid = { 8, 8 };
 	int fps = 0;
 	float lastFpsTime = 0;
 
 	Ref<Texture2D> textures[32]; 
 
 	// There is a memory leak here :(
-	textures[0] = Texture2D::Create("res/images/monk1.ppm", TextureFormat::RGB);
-	textures[1] = Texture2D::Create("res/images/monk2.ppm", TextureFormat::RGB);
-
-
+	textures[0] = Texture2D::Create("res/images/cubes.pam");
+	textures[1] = Texture2D::Create("res/images/monk2.ppm");
+	textures[2] = Texture2D::Create("res/images/monk1.ppm");
+	
 	while (!m_Window->Closed())
 	{
 		float deltaTime = timer.Delta();
-		fps++;
 		if (timer.Elapsed() - lastFpsTime > 1)
 		{
 			lastFpsTime = timer.Elapsed();
 			LOG_INFO("FPS: {0}", fps);
 			fps = 0;
 		}
+		fps++;
 
 		m_Renderer->Begin(math::Ortho(0, m_Window->GetWidth(), m_Window->GetHeight(), 0, -1, 1));
 		m_Renderer->Clear();
@@ -91,7 +92,12 @@ void Application::Run()
 		{
 			for (int x = 1; x < grid.x - 1; x++)
 			{
-				m_Renderer->DrawTexture(math::vec2(x * cell.x, y * cell.y), cell, *textures[(x + y) % 2]);
+				if((x + y) % 3 == 0) 
+					m_Renderer->DrawTexture(math::vec2(x * cell.x, y * cell.y), cell, *textures[0]);
+				else if ((x + y) % 3 == 1)
+					m_Renderer->DrawTexture(math::vec2(x * cell.x, y * cell.y), cell, *textures[1]);
+				else
+					m_Renderer->DrawTexture(math::vec2(x * cell.x, y * cell.y), cell, *textures[2]);
 			}
 		}
 

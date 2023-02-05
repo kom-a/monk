@@ -13,7 +13,7 @@ namespace monk
 	class Texture2D
 	{
 	public:
-		static Ref<Texture2D> Create(const std::string& filename, TextureFormat format = TextureFormat::RGBA);
+		static Ref<Texture2D> Create(const std::string& filename, TextureFormat format = TextureFormat::INTERNAL);
 		static Ref<Texture2D> Create(int width, int height, TextureFormat format = TextureFormat::RGBA, uint8_t* data = nullptr);
 
 

@@ -20,12 +20,12 @@ namespace monk
 
 	enum class TextureFormat
 	{
-		NONE,
+		INTERNAL,
 		RGB,
 		RGBA,
 	};
 
-	// Prefer using PPM format for now
+	// Prefer not using BMP format for now (it is not always working)
 	class TextureLoader
 	{
 	private:
@@ -39,8 +39,10 @@ namespace monk
 	private:
 		static bool IsBMP(const FileData& filedata);
 		static bool IsPPM(const FileData& filedata);
+		static bool IsPAM(const FileData& filedata);
 
 		static TextureData LoadBMP(const FileData& filedata, TextureFormat format);
 		static TextureData LoadPPM(const FileData& filedata, TextureFormat format);
+		static TextureData LoadPAM(const FileData& filedata, TextureFormat format);
 	};
 }

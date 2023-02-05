@@ -41,27 +41,65 @@ namespace monk
 		return value;
 	}
 
-	static void EatWhitespaces(uint8_t** data)
+	static void PNM_EatWhitespaces(uint8_t** data)
 	{
 		const char* whitespace = " \t\n\r";
-		while (std::strchr(whitespace, **data))
+		while (std::strchr(whitespace, **data) && **data != '\0')
 			*data += 1;
 	}
 
-	static void EatSingleWhitespace(uint8_t** data)
+	static void PNM_EatSingleWhitespace(uint8_t** data)
 	{
 		const char* whitespace = " \t\n\r";
-		if (std::strchr(whitespace, **data))
+		if (std::strchr(whitespace, **data) && **data != '\0')
 			*data += 1;
 		else
 			MONK_ASSERT("Not a whitespace character");
 	}
 
-	static void EatComment(uint8_t** data)
+	static void PNM_EatSingleComment(uint8_t** data)
 	{
 		if (**data == '#')
 			while (**data != '\n')
 				*data += 1;
+		*data += 1;
+	}
+
+	static void PNM_EatComments(uint8_t** data)
+	{
+		while (**data == '#')
+		{
+			PNM_EatSingleComment(data);
+		}
+	}
+
+	static void PNM_Next(uint8_t** data)
+	{
+		PNM_EatWhitespaces(data);
+		while (**data == '#')
+		{
+			PNM_EatSingleComment(data);
+			PNM_EatWhitespaces(data);
+		}
+	}
+
+	static bool PNM_IsWhitespace(uint8_t* data)
+	{
+		const char* whitespace = " \t\n\r";
+		return std::strchr(whitespace, *data) && *data != '\0';
+	}
+
+	static std::string PNM_Token(uint8_t** data)
+	{
+		std::string token;
+
+		while (!PNM_IsWhitespace(*data))
+		{
+			token.append(1, **data);
+			*data += 1;
+		}
+
+		return token;
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -154,24 +192,84 @@ namespace monk
 			P6[1] = data[1];
 			data += 2;
 
-			EatWhitespaces(&data);
-			EatComment(&data);
-			EatWhitespaces(&data);
+			PNM_Next(&data);
 			Width = ReadASCII(&data);
 
-			EatWhitespaces(&data);
+			PNM_Next(&data);
 			Height = ReadASCII(&data);
 
-			EatWhitespaces(&data);
-			EatComment(&data);
-			EatWhitespaces(&data);
+			PNM_Next(&data);
 			Maxval = ReadASCII(&data);
 
-			EatSingleWhitespace(&data);
+			PNM_Next(&data); // TOOD: This could not work if image data starts with "whitespace" character (???)
 			Image = data;
 
 			if (Maxval != 255)
 				MONK_ASSERT("Not supported");
+		}
+	};
+
+	struct PAMImage
+	{
+		uint8_t P7[2] = {0};
+		uint32_t Width = 0;
+		uint32_t Height = 0;
+		uint32_t MaxVal = 0;
+		uint32_t Depth = 0;
+		enum class PNMFormat {
+			NONE,
+			RGB,
+			RGB_ALPHA
+		} Format = PNMFormat::NONE;
+		uint8_t* Image = nullptr;
+
+		PAMImage(uint8_t* data)
+		{
+			P7[0] = data[0];
+			P7[1] = data[1];
+			data += 2;
+
+			std::string token;
+			PNM_Next(&data);
+
+			// TODO: Error handling
+			do
+			{
+				token = PNM_Token(&data);
+				PNM_EatWhitespaces(&data);
+				if (token == "WIDTH")
+					Width = ReadASCII(&data);
+				else if (token == "HEIGHT")
+					Height = ReadASCII(&data);
+				else if (token == "DEPTH")
+					Depth = ReadASCII(&data);
+				else if (token == "MAXVAL")
+					MaxVal = ReadASCII(&data);
+				else if (token == "TUPLTYPE")
+				{
+					PNM_EatWhitespaces(&data);
+					token = PNM_Token(&data);
+					if (token == "RGB")
+						Format = PNMFormat::RGB;
+					else if (token == "RGB_ALPHA")
+						Format = PNMFormat::RGB_ALPHA;
+					else
+						MONK_ASSERT("Unsupported PNM format");
+				}
+				else if (token == "ENDHDR")
+				{
+					// Pass
+				}
+				else
+				{
+					MONK_ASSERT("Unexpected token");
+				}
+				PNM_Next(&data);
+			} while (token != "ENDHDR");
+
+			Image = data;
+
+			MONK_ASSERT(MaxVal == 255, "Unsupported");
 		}
 	};
 
@@ -188,6 +286,8 @@ namespace monk
 			textureData = LoadBMP(filedata, format);
 		else if (IsPPM(filedata))
 			textureData = LoadPPM(filedata, format);
+		else if (IsPAM(filedata))
+			textureData = LoadPAM(filedata, format);
 		else
 			MONK_ASSERT("Unsupported texture file format");
 
@@ -204,6 +304,11 @@ namespace monk
 	bool TextureLoader::IsPPM(const FileData& filedata)
 	{
 		return filedata.Data[0] == 'P' && filedata.Data[1] == '6';
+	}
+
+	bool TextureLoader::IsPAM(const FileData& filedata)
+	{
+		return filedata.Data[0] == 'P' && filedata.Data[1] == '7';
 	}
 
 	TextureData TextureLoader::LoadBMP(const FileData& filedata, TextureFormat format)
@@ -260,16 +365,37 @@ namespace monk
 
 	TextureData TextureLoader::LoadPPM(const FileData& filedata, TextureFormat format)
 	{
-		MONK_ASSERT(format == TextureFormat::RGB, "PPM RGBA texture format not supported");
+		MONK_ASSERT(format == TextureFormat::INTERNAL, "Unsupported");
 
 		PPMImage ppm(filedata.Data);
 
 		TextureData texture;
 		texture.Width = ppm.Width;
 		texture.Height = ppm.Height;
-		texture.Channels = TextureFormatBytesPerPixel(format);
+		texture.Channels = 3; // TODO: Make this not hardcoded
 		texture.Data = new uint8_t[(size_t)texture.Width * texture.Height * texture.Channels];
 		memcpy(texture.Data, ppm.Image, texture.Width * texture.Height * texture.Channels);
+
+		return texture;
+	}
+
+	TextureData TextureLoader::LoadPAM(const FileData& filedata, TextureFormat format)
+	{
+		MONK_ASSERT(format == TextureFormat::INTERNAL, "Unsupported");
+
+		PAMImage pam(filedata.Data);
+
+		TextureData texture;
+		texture.Width = pam.Width;
+		texture.Height = pam.Height;
+		switch (pam.Format)
+		{
+		case PAMImage::PNMFormat::RGB: texture.Channels = 3; break;
+		case PAMImage::PNMFormat::RGB_ALPHA: texture.Channels = 4; break;
+		default: MONK_ASSERT("Unsupported pam format");
+		}
+		texture.Data = new uint8_t[(size_t)texture.Width * texture.Height * texture.Channels];
+		memcpy(texture.Data, pam.Image, texture.Width * texture.Height * texture.Channels);
 
 		return texture;
 	}

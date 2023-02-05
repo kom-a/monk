@@ -39,6 +39,7 @@ namespace monk
 
 		void SetClearColor(const math::vec4& clearColor);
 		void Clear();
+		void EnableAlphaBlending(bool enable);
 
 		void DrawRect(const math::vec2& position, const math::vec2& size, const math::vec4& color);
 		void DrawRoundRect(const math::vec2& position, const math::vec2& size, const math::vec4& color, math::vec4 round = math::vec4(1.0f));

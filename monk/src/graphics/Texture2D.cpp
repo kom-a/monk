@@ -19,6 +19,7 @@ namespace monk
 
 	Ref<Texture2D> Texture2D::Create(int width, int height, TextureFormat format, uint8_t* data)
 	{
+		MONK_ASSERT(format != TextureFormat::INTERNAL, "Must specify texture format");
 		return CreateRef<Texture2D>(width, height, TextureLoader::TextureFormatBytesPerPixel(format), data);
 	}
 
