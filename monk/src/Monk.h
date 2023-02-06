@@ -26,5 +26,6 @@
 #include "graphics/Buffer.h"
 #include "graphics/Renderer2D.h"
 #include "graphics/Texture2D.h"
+#include "graphics/OrthographicCamera.h"
 
 #include "gui/Gui.h"

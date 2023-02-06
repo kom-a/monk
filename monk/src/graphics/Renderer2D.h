@@ -5,6 +5,7 @@
 #include "graphics/Buffer.h"
 #include "graphics/Shader.h"
 #include "graphics/Texture2D.h"
+#include "graphics/OrthographicCamera.h"
 
 namespace monk
 {
@@ -34,7 +35,7 @@ namespace monk
 		};
 
 	public:
-		void Begin(const math::mat4& projection);
+		void Begin(const OrthographicCamera& camera);
 		void End();
 
 		void SetClearColor(const math::vec4& clearColor);
@@ -59,8 +60,8 @@ namespace monk
 
 	private:
 		unsigned m_VAO = 0;
-		math::mat4 m_ProjectionMatrix = math::mat4(0);
-
+		
+		const OrthographicCamera* m_Camera;
 		math::vec4 m_ClearColor = math::vec4(1.0f);
 
 		struct BatchSettings

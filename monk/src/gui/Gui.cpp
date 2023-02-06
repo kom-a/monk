@@ -11,6 +11,7 @@ namespace monk
 	GuiStyle Gui::s_GuiStyle;
 	std::unordered_map<uint32_t, GuiWindowCacheData> Gui::s_WindowCache;
 	std::unique_ptr<Renderer2D> Gui::s_Renderer;
+	OrthographicCamera Gui::s_Camera(0, 1280, 720, 0, -1, 1);
 
 	struct
 	{
@@ -196,14 +197,14 @@ namespace monk
 		return s_GuiStyle;
 	}
 
-	void Gui::NewFrame(const math::mat4& projection)
+	void Gui::NewFrame()
 	{
 		GuiState.HotWindowID = 0;
 		GuiState.HotWindow = nullptr;
 		GuiState.HotWindowZOrder = -1;
 		GuiState.CollapsedWindowID = 0;
 		GuiState.ClosedWindowID = 0;
-		s_Renderer->Begin(projection);
+		s_Renderer->Begin(s_Camera);
 	}
 
 	void Gui::EndFrame()

@@ -60,7 +60,8 @@ Application::~Application()
 void Application::Run()
 {
 	Time timer;
-
+	OrthographicCamera camera(math::Ortho(0, m_Window->GetWidth(), m_Window->GetHeight(), 0, -1, 1));
+	
 	math::vec2 grid = { 8, 8 };
 	int fps = 0;
 	float lastFpsTime = 0;
@@ -71,9 +72,15 @@ void Application::Run()
 	textures[0] = Texture2D::Create("res/images/cubes.pam");
 	textures[1] = Texture2D::Create("res/images/monk2.ppm");
 	textures[2] = Texture2D::Create("res/images/monk1.ppm");
+
+	bool showGui = false;
+
+	math::vec3 cameraPosition = math::vec3(0.0f);
 	
 	while (!m_Window->Closed())
 	{
+		m_Window->PollEvents();
+
 		float deltaTime = timer.Delta();
 		if (timer.Elapsed() - lastFpsTime > 1)
 		{
@@ -83,7 +90,21 @@ void Application::Run()
 		}
 		fps++;
 
-		m_Renderer->Begin(math::Ortho(0, m_Window->GetWidth(), m_Window->GetHeight(), 0, -1, 1));
+		if (Input::IsKeyUp(Key::G))
+			showGui = !showGui;
+
+		const float cameraSpeed = 1;
+		if (Input::IsKeyPressed(Key::W))
+			cameraPosition.y += cameraSpeed * deltaTime;
+		if(Input::IsKeyPressed(Key::S))
+			cameraPosition.y -= cameraSpeed * deltaTime;
+		if (Input::IsKeyPressed(Key::A))
+			cameraPosition.x -= cameraSpeed * deltaTime;
+		if (Input::IsKeyPressed(Key::D))
+			cameraPosition.x += cameraSpeed * deltaTime;
+		camera.SetPosition(cameraPosition);
+
+		m_Renderer->Begin(camera);
 		m_Renderer->Clear();
 
 		math::vec2 cell = { (float)m_Window->GetWidth() / grid.x, (float)m_Window->GetHeight() / grid.y };
@@ -102,8 +123,6 @@ void Application::Run()
 		}
 
 		m_Renderer->End();
-
-		m_Window->PollEvents();
 
 		if (Input::IsKeyPressed(Key::Escape))
 			m_Window->Close();

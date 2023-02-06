@@ -25,6 +25,9 @@ namespace monk::math
 		vec3& operator*=(float scalar);
 		vec3& operator/=(float scalar);
 
+		vec3 operator+() const;
+		vec3 operator-() const;
+
 		bool operator==(const vec3& other) const;
 		bool operator!=(const vec3& other) const;
 

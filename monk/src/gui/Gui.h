@@ -7,6 +7,7 @@
 #include "gui/GuiWindow.h"
 
 #include "graphics/Renderer2D.h"
+#include "graphics/OrthographicCamera.h"
 #include "math/Math.h"
 
 #include "events/MouseEvent.h"
@@ -67,7 +68,7 @@ namespace monk
 		static void Init();
 		static GuiStyle& GetStyle();
 
-		static void NewFrame(const math::mat4& projection);
+		static void NewFrame();
 		static void EndFrame();
 
 		static void Begin(const std::string& name, bool* open = nullptr);
@@ -90,6 +91,7 @@ namespace monk
 		static math::vec2 s_LastMouse;
 		static GuiStyle s_GuiStyle;
 		static std::unordered_map<uint32_t, GuiWindowCacheData> s_WindowCache;
+		static OrthographicCamera s_Camera;
 		static std::unique_ptr<Renderer2D> s_Renderer;
 	};
 }

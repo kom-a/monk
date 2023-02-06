@@ -54,9 +54,9 @@ namespace monk
 		glDeleteVertexArrays(1, &m_VAO);
 	}
 
-	void Renderer2D::Begin(const math::mat4& projection)
+	void Renderer2D::Begin(const OrthographicCamera& camera)
 	{
-		m_ProjectionMatrix = projection;
+		m_Camera = &camera;
 		m_RenderStats.Reset();
 		BeginBatch();
 	}
@@ -302,8 +302,7 @@ namespace monk
 		m_IndexBuffer->Bind();
 
 		m_Shader->Bind();
-		m_Shader->SetMatrix4("u_Projection", m_ProjectionMatrix);
-		m_Shader->SetMatrix4("u_View", math::mat4(1.0f));
+		m_Shader->SetMatrix4("u_ProjectionView", m_Camera->GetProjectionViewMatrix());
 
 		for (int i = 0; i < m_BatchStats.TextureIndex; i++)
 		{
