@@ -6,3 +6,6 @@ bin-int/
 .vs/
 *.sln
 **.vcxproj*
+
+# 3d models
+**/models/**
