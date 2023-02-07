@@ -24,7 +24,9 @@
 
 #include "graphics/Shader.h"
 #include "graphics/Buffer.h"
+#include "graphics/Render.h"
 #include "graphics/Renderer2D.h"
+#include "graphics/Renderer.h"
 #include "graphics/Texture2D.h"
 #include "graphics/OrthographicCamera.h"
 

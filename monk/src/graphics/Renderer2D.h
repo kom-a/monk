@@ -38,18 +38,7 @@ namespace monk
 		void Begin(const OrthographicCamera& camera);
 		void End();
 
-		void SetClearColor(const math::vec4& clearColor);
-		void Clear();
-		void EnableAlphaBlending(bool enable);
-
-		void DrawRect(const math::vec2& position, const math::vec2& size, const math::vec4& color);
-		void DrawRoundRect(const math::vec2& position, const math::vec2& size, const math::vec4& color, math::vec4 round = math::vec4(1.0f));
-		void DrawCircle(const math::vec2& center, float radius, const math::vec4& color, uint32_t segments = 24);
-
-		void FillRect(const math::vec2& position, const math::vec2& size, const math::vec4& color);
-		void FillRoundRect(const math::vec2& position, const math::vec2& size, const math::vec4& color, math::vec4 round = math::vec4(1.0f));
-		void FillCircle(const math::vec2& center, float radius, const math::vec4& color, uint32_t segments = 24);
-
+		void DrawQuad(const math::vec2& position, const math::vec2& size, const math::vec4& color);
 		void DrawTexture(const math::vec2& position, const math::vec2& size, const Texture2D& texture);
 
 	private:
@@ -62,7 +51,6 @@ namespace monk
 		unsigned m_VAO = 0;
 		
 		const OrthographicCamera* m_Camera;
-		math::vec4 m_ClearColor = math::vec4(1.0f);
 
 		struct BatchSettings
 		{

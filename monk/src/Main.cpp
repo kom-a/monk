@@ -22,10 +22,12 @@ public:
 private:
 	void OnEvent(Event& e);
 	bool OnWindowResize(WindowResizeEvent& e);
+	void Update(float deltaTime);
 
 private:
 	Window* m_Window;
-	Renderer2D* m_Renderer;
+	Renderer2D* m_Renderer2D;
+	Renderer* m_Renderer;
 };
 
 Application::Application()
@@ -44,9 +46,11 @@ Application::Application()
 		LOG_INFO("	version: {0}", glGetString(GL_VERSION));
 	}
 
-	m_Renderer = new Renderer2D();
-	m_Renderer->SetClearColor(math::vec4(0.3f, 0.4f, 0.8f, 1.0f));
-	m_Renderer->EnableAlphaBlending(true);
+	Render::SetClearColor(math::vec4(0.2f, 0.2f, 0.25f, 1.0f));
+	Render::EnableBlending(true);
+
+	m_Renderer2D = new Renderer2D();
+	m_Renderer = new Renderer();
 
 	Random::Seed(Time::CurrentTime());
 }
@@ -54,75 +58,40 @@ Application::Application()
 Application::~Application()
 {
 	delete m_Window;
+	delete m_Renderer2D;
 	delete m_Renderer;
 }
 
 void Application::Run()
 {
 	Time timer;
-	OrthographicCamera camera(math::Ortho(0, m_Window->GetWidth(), m_Window->GetHeight(), 0, -1, 1));
-	
-	math::vec2 grid = { 8, 8 };
-	int fps = 0;
-	float lastFpsTime = 0;
 
-	Ref<Texture2D> textures[32]; 
+	float buffer_data[] = {
+		-0.5f, 0.5f, 0.0f,
+		 0.5f, 0.5f, 0.0f,
+		 0.5f, -0.5f, 0.0f,
+		-0.5f, -0.5f, 0.0f,
+	};
 
-	// There is a memory leak here :(
-	textures[0] = Texture2D::Create("res/images/cubes.pam");
-	textures[1] = Texture2D::Create("res/images/monk2.ppm");
-	textures[2] = Texture2D::Create("res/images/monk1.ppm");
+	BufferLayout layout = {
+		{ 0, BufferLayout::AttribType::Float3 },
+	};
 
-	bool showGui = false;
+	uint32_t index_data[] = {
+		0, 1, 2,
+		2, 3, 0
+	};
 
-	math::vec3 cameraPosition = math::vec3(0.0f);
-	
+	VertexBuffer buffer(buffer_data, sizeof(buffer_data), layout);
+	IndexBuffer indices(index_data, sizeof(index_data) / sizeof(index_data[0]));
+
 	while (!m_Window->Closed())
 	{
+		float deltaTime = timer.Delta();
 		m_Window->PollEvents();
 
-		float deltaTime = timer.Delta();
-		if (timer.Elapsed() - lastFpsTime > 1)
-		{
-			lastFpsTime = timer.Elapsed();
-			LOG_INFO("FPS: {0}", fps);
-			fps = 0;
-		}
-		fps++;
-
-		if (Input::IsKeyUp(Key::G))
-			showGui = !showGui;
-
-		const float cameraSpeed = 1;
-		if (Input::IsKeyPressed(Key::W))
-			cameraPosition.y += cameraSpeed * deltaTime;
-		if(Input::IsKeyPressed(Key::S))
-			cameraPosition.y -= cameraSpeed * deltaTime;
-		if (Input::IsKeyPressed(Key::A))
-			cameraPosition.x -= cameraSpeed * deltaTime;
-		if (Input::IsKeyPressed(Key::D))
-			cameraPosition.x += cameraSpeed * deltaTime;
-		camera.SetPosition(cameraPosition);
-
-		m_Renderer->Begin(camera);
-		m_Renderer->Clear();
-
-		math::vec2 cell = { (float)m_Window->GetWidth() / grid.x, (float)m_Window->GetHeight() / grid.y };
-
-		for (int y = 1; y < grid.y - 1; y++)
-		{
-			for (int x = 1; x < grid.x - 1; x++)
-			{
-				if((x + y) % 3 == 0) 
-					m_Renderer->DrawTexture(math::vec2(x * cell.x, y * cell.y), cell, *textures[0]);
-				else if ((x + y) % 3 == 1)
-					m_Renderer->DrawTexture(math::vec2(x * cell.x, y * cell.y), cell, *textures[1]);
-				else
-					m_Renderer->DrawTexture(math::vec2(x * cell.x, y * cell.y), cell, *textures[2]);
-			}
-		}
-
-		m_Renderer->End();
+		Render::Clear();
+		m_Renderer->DrawIndexed(buffer, indices);
 
 		if (Input::IsKeyPressed(Key::Escape))
 			m_Window->Close();
@@ -140,7 +109,7 @@ void Application::OnEvent(Event& e)
 bool Application::OnWindowResize(WindowResizeEvent& e)
 {
 	glViewport(0, 0, e.GetWidth(), e.GetHeight());
-	
+
 	return true;
 }
 

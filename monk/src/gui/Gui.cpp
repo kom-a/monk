@@ -278,7 +278,7 @@ namespace monk
 
 		math::vec2 position = GuiState.CurrentWindow->Position + GuiState.CurrentWindow->CursorPosition + math::vec2(0.0f, style.Padding.y);
 
-		s_Renderer->FillRect(position, size, style.Colors[GuiColor::Button]);
+		s_Renderer->DrawQuad(position, size, style.Colors[GuiColor::Button]);
 
 		GuiState.CurrentWindow->CursorPosition += math::vec2(0.0f, size.y + style.Padding.y);
 	}
@@ -426,14 +426,14 @@ namespace monk
 			headerColor = style.Colors[GuiColor::Header];
 		}
 
-		s_Renderer->FillRect(border.Position, border.Size, style.Colors[GuiColor::WindowBorder]);
-		s_Renderer->FillRect(window->Position, headerSize, headerColor);
+		s_Renderer->DrawQuad(border.Position, border.Size, style.Colors[GuiColor::WindowBorder]);
+		s_Renderer->DrawQuad(window->Position, headerSize, headerColor);
 
-		s_Renderer->FillRect(collapseButtonRect.Position, collapseButtonRect.Size, collapseButtonColor);
+		s_Renderer->DrawQuad(collapseButtonRect.Position, collapseButtonRect.Size, collapseButtonColor);
 		
 		if (window->Open)
 		{
-			s_Renderer->FillRect(closeButtonRect.Position, closeButtonRect.Size, closeButtonColor);
+			s_Renderer->DrawQuad(closeButtonRect.Position, closeButtonRect.Size, closeButtonColor);
 		}
 	}
 
@@ -469,13 +469,13 @@ namespace monk
 		}
 
 		// Border
-		s_Renderer->FillRect(borderPosition, borderSize, style.Colors[GuiColor::WindowBorder]);
+		s_Renderer->DrawQuad(borderPosition, borderSize, style.Colors[GuiColor::WindowBorder]);
 
 		// Window body
-		s_Renderer->FillRect(windowBodyPosition, windowBodySize, windowColor);
+		s_Renderer->DrawQuad(windowBodyPosition, windowBodySize, windowColor);
 
 		// Window resize corner
-		s_Renderer->FillRect(resizeCornerPosition, style.WindowResizeCornerSize, style.Colors[GuiColor::WindowResizeCorner]);
+		s_Renderer->DrawQuad(resizeCornerPosition, style.WindowResizeCornerSize, style.Colors[GuiColor::WindowResizeCorner]);
 	}
 
 }
