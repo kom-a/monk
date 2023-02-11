@@ -10,6 +10,7 @@
 #include "utils/OpenGL.h"
 #include "utils/FileManager.h"
 #include "utils/TextureLoader.h"
+#include "utils/JSON.h"
 
 #include "math/Math.h"
 

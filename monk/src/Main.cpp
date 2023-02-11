@@ -65,6 +65,7 @@ Application::~Application()
 void Application::Run()
 {
 	Time timer;
+	auto json = JSON::ParseFile("res/models/Box/Box.gltf");
 
 	float buffer_data[] = {
 		-0.5f, 0.5f, 0.0f,
@@ -93,6 +94,8 @@ void Application::Run()
 		Render::Clear();
 		m_Renderer->DrawIndexed(buffer, indices);
 
+		Update(deltaTime);
+
 		if (Input::IsKeyPressed(Key::Escape))
 			m_Window->Close();
 
@@ -111,6 +114,12 @@ bool Application::OnWindowResize(WindowResizeEvent& e)
 	glViewport(0, 0, e.GetWidth(), e.GetHeight());
 
 	return true;
+}
+
+void Application::Update(float deltaTime)
+{
+
+		
 }
 
 int main()
