@@ -20,7 +20,7 @@ namespace monk
 			Value = false;
 		}
 
-		const JSONObject& GetObject() const;
+		const JSONObject& GetJSONObject() const;
 		const JSONList& GetList() const;
 		const std::string& GetString() const;
 		float GetNumber() const;

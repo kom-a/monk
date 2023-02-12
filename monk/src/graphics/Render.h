@@ -13,6 +13,7 @@ namespace monk
 	public:
 		static void SetClearColor(const math::vec4& clearColor);
 		static void Clear();
+		static void EnableDepthTest(bool enable = true);
 		static void EnableBlending(bool enable = true);
 
 	private:

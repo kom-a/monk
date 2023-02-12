@@ -390,7 +390,7 @@ namespace monk
 		return json;
 	}
 
-	const JSONObject& JSONNode::GetObject() const
+	const JSONObject& JSONNode::GetJSONObject() const
 	{
 		if (auto value = std::get_if<std::shared_ptr<const JSONObject>>(&Value))
 		{

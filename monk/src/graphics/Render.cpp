@@ -17,6 +17,14 @@ namespace monk
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	}
 
+	void Render::EnableDepthTest(bool enable /*= true*/)
+	{
+		if (enable)
+			glEnable(GL_DEPTH_TEST);
+		else 
+			glDisable(GL_DEPTH_TEST);
+	}
+
 	void Render::EnableBlending(bool enable /*= true*/)
 	{
 		if (enable)
