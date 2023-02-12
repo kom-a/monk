@@ -20,20 +20,22 @@ namespace monk
 			Value = false;
 		}
 
-		std::shared_ptr<const JSONObject> GetObject() const;
-		std::shared_ptr<const JSONList> GetList() const;
-		std::shared_ptr<std::string> GetString() const;
+		const JSONObject& GetObject() const;
+		const JSONList& GetList() const;
+		const std::string& GetString() const;
 		float GetNumber() const;
 		bool GetBoolean() const;
+
+		const JSONNode& operator[](const std::string& key) const;
+		const JSONNode& operator[](size_t index) const;
 
 	public:
 		std::variant<std::shared_ptr<const JSONObject>, std::shared_ptr<const JSONList>, std::shared_ptr<std::string>, float, bool, std::nullptr_t> Value;
 	};
 
-	
 	class JSON
 	{
 	public:
-		static std::shared_ptr<const JSONObject> ParseFile(const std::string & filename);
+		static std::shared_ptr<const JSONNode> ParseFile(const std::string & filename);
 	};
 }

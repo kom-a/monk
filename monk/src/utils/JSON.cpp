@@ -369,53 +369,52 @@ namespace monk
 		return object;
 	}
 
-	std::shared_ptr<const JSONObject> JSON::ParseFile(const std::string& filename)
+	std::shared_ptr<const JSONNode> JSON::ParseFile(const std::string& filename)
 	{
 		if(Stream.is_open())
 			Stream.close();
 		Open(filename);
 
-		std::shared_ptr<JSONObject> json = nullptr;
+		std::shared_ptr<JSONNode> json = std::make_shared<JSONNode>();
 
 		Get();
 		if (Next().Type == TokenType::CURLY_OPEN)
-			json = CollectObject();
+			json->Value = CollectObject();
 		else
 		{
 			Stream.close();
 			throw std::logic_error("Not a JSON object");
 		}
-			
-
+		
 		Stream.close();
 		return json;
 	}
 
-	std::shared_ptr<const JSONObject> JSONNode::GetObject() const
+	const JSONObject& JSONNode::GetObject() const
 	{
 		if (auto value = std::get_if<std::shared_ptr<const JSONObject>>(&Value))
 		{
-			return *value;
+			return **value;
 		}
 		else
 			throw std::logic_error("Not a JSONObject");
 	}
 
-	std::shared_ptr<const JSONList> JSONNode::GetList() const
+	const JSONList& JSONNode::GetList() const
 	{
 		if (auto value = std::get_if<std::shared_ptr<const JSONList>>(&Value))
 		{
-			return *value;
+			return **value;
 		}
 		else
 			throw std::logic_error("Not a JSONList");
 	}
 
-	std::shared_ptr<std::string> JSONNode::GetString() const
+	const std::string& JSONNode::GetString() const
 	{
 		if (auto value = std::get_if<std::shared_ptr<std::string>>(&Value))
 		{
-			return *value;
+			return **value;
 		}
 		else
 			throw std::logic_error("Not a string");
@@ -439,6 +438,30 @@ namespace monk
 		}
 		else
 			throw std::logic_error("Not a boolean");
+	}
+
+	const monk::JSONNode& JSONNode::operator[](const std::string& key) const
+	{
+		if (auto ptr = std::get_if<std::shared_ptr<const JSONObject>>(&Value))
+		{
+			auto& object = **ptr;
+			auto value = object.at(key);
+			return *value;
+		}
+		else
+			throw std::logic_error("Not a JSONObject");
+	}
+
+	const monk::JSONNode& JSONNode::operator[](size_t index) const
+	{
+		if (auto ptr = std::get_if<std::shared_ptr<const JSONList>>(&Value))
+		{
+			auto& object = **ptr;
+			auto value = object.at(index);
+			return *value;
+		}
+		else
+			throw std::logic_error("Not a JSONList");
 	}
 
 }

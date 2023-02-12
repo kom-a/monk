@@ -65,7 +65,17 @@ Application::~Application()
 void Application::Run()
 {
 	Time timer;
-	auto json = JSON::ParseFile("res/models/Box/Box.gltf");
+	std::shared_ptr<const JSONNode> json_ptr = JSON::ParseFile("res/example.json");
+	const JSONNode& json = *json_ptr;
+
+	float pi = json["pi"].GetNumber();
+	bool happy = json["happy"].GetBoolean();
+	const std::string& name = json["name"].GetString();
+	auto nothing = json["nothing"];
+	float answer_everything = json["answer"]["everything"].GetNumber();
+	const JSONList& list = json["list"].GetList();
+	const std::string& object_currency = json["object"]["currency"].GetString();
+	const float object_value = json["object"]["value"].GetNumber();
 
 	float buffer_data[] = {
 		-0.5f, 0.5f, 0.0f,
