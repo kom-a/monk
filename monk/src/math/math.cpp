@@ -129,4 +129,24 @@ namespace monk::math
 	{
 		return a > b ? a : b;
 	}
+
+	mat4 LookAt(const vec3& position, const vec3& target)
+	{
+		vec3 cameraDirection = Normalize(target - position);
+		vec3 up = vec3(0.0f, 1.0f, 0.0f);
+		vec3 cameraRight = Normalize(Cross(up, cameraDirection));
+		vec3 cameraUp = Cross(cameraDirection, cameraRight);
+
+		const vec3& R = cameraRight;
+		const vec3& U = cameraUp;
+		const vec3& D = cameraDirection;
+		const vec3& P = position;
+
+		return mat4(
+			R.x, R.y, R.z, R.x * -P.x + R.y * -P.y + R.z * -P.z,
+			U.x, U.y, U.z, U.x * -P.x + U.y * -P.y + U.z * -P.z,
+			D.x, D.y, D.z, D.x * -P.x + D.y * -P.y + D.z * -P.z,
+			0, 0, 0, 1);
+	}
+
 }

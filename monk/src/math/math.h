@@ -23,4 +23,6 @@ namespace monk::math
 
 	float Min(float a, float b);
 	float Max(float a, float b);
+
+	math::mat4 LookAt(const vec3& position, const vec3& target);
 }
