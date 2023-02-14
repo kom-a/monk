@@ -53,6 +53,8 @@ namespace monk
 
 	void CameraController::UpdateLooking(float deltaTime)
 	{
+		// FIXME: Center calculating wrong if mouse is moving while pressing right mouse button
+
 		if (!Input::IsKeyPressed(Mouse::ButtonRight))
 		{
 			m_FirstMouseInteration = true;
