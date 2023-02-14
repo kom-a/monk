@@ -11,33 +11,6 @@
 
 using namespace monk;
 
-math::mat4 lookAt(const math::vec3 position, const math::vec3& target)
-{
-	math::vec3 cameraDirection = math::Normalize(target - position);
-	math::vec3 up = math::vec3(0.0f, 1.0f, 0.0f);
-	math::vec3 cameraRight = math::Normalize(math::Cross(up, cameraDirection));
-	math::vec3 cameraUp = math::Cross(cameraDirection, cameraRight);
-
-	const math::vec3& R = cameraRight;
-	const math::vec3& U = cameraUp;
-	const math::vec3& D = cameraDirection;
-	const math::vec3& P = position;
-
-	math::mat4 left(
-		R.x, R.y, R.z, 0,
-		U.x, U.y, U.z, 0,
-		D.x, D.y, D.z, 0,
-		0, 0, 0, 1);
-
-	math::mat4 right(
-		1, 0, 0, -P.x,
-		0, 1, 0, -P.y,
-		0, 0, 1, -P.z,
-		0, 0, 0, 1);
-
-	return left * right;
-}
-
 class Application
 {
 public:
@@ -49,6 +22,8 @@ public:
 private:
 	void OnEvent(Event& e);
 	bool OnWindowResize(WindowResizeEvent& e);
+	bool OnButtonDown(MouseButtonDownEvent& e);
+	bool OnButtonUp(MouseButtonUpEvent& e);
 	void Update(float deltaTime);
 
 private:
@@ -105,8 +80,8 @@ void Application::Run()
 	{
 		uint32_t ByteLength;
 		std::string Uri;
-	} gltfBuffer { 0 };
-	
+	} gltfBuffer{ 0 };
+
 	gltfBuffer.ByteLength = json["buffers"].GetList()[0]->GetJSONObject().at("byteLength")->GetNumber();
 	gltfBuffer.Uri = json["buffers"][0]["uri"].GetString();
 
@@ -117,26 +92,16 @@ void Application::Run()
 	glGenVertexArrays(1, &vao);
 	glBindVertexArray(vao);
 
-	const uint32_t count = 36;
-	uint8_t* indices_buffer = new uint8_t[sizeof(uint16_t) * count];
-	memcpy(indices_buffer, gltfBin.Data + 576, 72);
-
 	/*uint16_t indices_buffer[] = {
 		0, 1, 2,
 		2, 3, 0
 	};*/
-	
+
 	unsigned ibo;
 	glGenBuffers(1, &ibo);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint16_t) * count, indices_buffer, GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, 72, gltfBin.Data + 576, GL_STATIC_DRAW);
 	//glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices_buffer), indices_buffer, GL_STATIC_DRAW);
-
-	uint32_t accessor_byte_offset = 288;
-	uint32_t accessor_count = 24;
-
-	uint8_t* vertex_data = new uint8_t[24 * sizeof(float) * 3];
-	memcpy(vertex_data, gltfBin.Data + 288, 24 * sizeof(float) * 3);
 
 	/*float vertex_data[] = {
 		-0.5f, 0.5f, 0.0f,
@@ -148,11 +113,14 @@ void Application::Run()
 	unsigned vbo;
 	glGenBuffers(1, &vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, 24 * sizeof(float) * 3, vertex_data, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, 576, gltfBin.Data, GL_STATIC_DRAW);
 	//glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_data), vertex_data, GL_STATIC_DRAW);
 
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 12, 0);
 	glEnableVertexAttribArray(0);
+
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 12, (const void*)(288));
+	glEnableVertexAttribArray(1);
 
 	std::string vertex_src = FileManager::ReadFile("res/Renderer.vert");
 	std::string fragment_src = FileManager::ReadFile("res/Renderer.frag");
@@ -160,40 +128,33 @@ void Application::Run()
 
 	//math::mat4 projection = math::Ortho(-1.0f, 1.0f, -1.0f, 1.0f, -1.0f, 1.0f);
 	math::mat4 projection = math::Perspective(45.0f, 16.0f / 9.0f, 0.1f, 100.0f);
-	
-	math::vec3 position(0.0f, 0.0f, -4.0f);
-	math::mat4 view = lookAt(position, math::vec3(0.0f));
-	view = math::mat4(1.0f);
-	view.Translate(math::vec3(0.0f, 0.0f, -10));
 
+	Camera camera(45.0f, (float)m_Window->GetWidth() / m_Window->GetHeight(), 0.01f, 100.0f);
+	camera.SetPosition(math::vec3(0.0f, 0.0f, -10.0f));
+	camera.SetTarget(math::vec3(0.0f));
+	CameraController controller(&camera);
+	
+	float cameraRadius = 5;
+	math::vec2 cameraRotation(0.0f);
+
+	math::vec3 direction(0.0f, 0.0f, -1.0f);
+	
 	while (!m_Window->Closed())
 	{
 		float deltaTime = timer.Delta();
 		m_Window->PollEvents();
+		controller.Update(deltaTime);
 
 		Render::Clear();
-		
-		const float cameraSpeed = 5.0f;
-		if (Input::IsKeyPressed(Key::D))
-			position.x += cameraSpeed * deltaTime;
-		if (Input::IsKeyPressed(Key::A))
-			position.x -= cameraSpeed * deltaTime;
-		if (Input::IsKeyPressed(Key::W))
-			position.y += cameraSpeed * deltaTime;
-		if (Input::IsKeyPressed(Key::S))
-			position.y -= cameraSpeed * deltaTime;
-		
+
 		shader.Bind();
 		glBindVertexArray(vao);
 		glBindBuffer(GL_ARRAY_BUFFER, vbo);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
 
-		math::mat4 view = lookAt(position, math::vec3(0.0f));
-		shader.SetMatrix4("u_Projection", projection);
-		shader.SetMatrix4("u_View", view);
+		shader.SetMatrix4("u_ProjectionView", camera.GetProjectionViewMatrix());
 
-		glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_SHORT, nullptr);
-		// glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, nullptr);
+		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, nullptr);
 
 		Update(deltaTime);
 
@@ -208,6 +169,8 @@ void Application::Run()
 void Application::OnEvent(Event& e)
 {
 	e.Dispatch<WindowResizeEvent>(BIND_FUNCTION(Application::OnWindowResize));
+	e.Dispatch<MouseButtonDownEvent>(BIND_FUNCTION(Application::OnButtonDown));
+	e.Dispatch<MouseButtonUpEvent>(BIND_FUNCTION(Application::OnButtonUp));
 }
 
 bool Application::OnWindowResize(WindowResizeEvent& e)
@@ -217,10 +180,37 @@ bool Application::OnWindowResize(WindowResizeEvent& e)
 	return true;
 }
 
+bool Application::OnButtonDown(MouseButtonDownEvent& e)
+{
+	if (e.GetButton() == Mouse::ButtonRight)
+	{
+		m_Window->HideCursor(true);
+		m_Window->LockCursor(true);
+	}
+
+	return true;
+}
+
+bool Application::OnButtonUp(MouseButtonUpEvent& e)
+{
+	if (e.GetButton() == Mouse::ButtonRight)
+	{
+		m_Window->HideCursor(false);
+		m_Window->LockCursor(false);
+	}
+
+	return true;
+}
+
 void Application::Update(float deltaTime)
 {
+	static bool showCursor = true;
 
-		
+	if (Input::IsKeyDown(Key::H))
+	{
+		showCursor = !showCursor;
+		m_Window->HideCursor(showCursor);
+	}
 }
 
 int main()

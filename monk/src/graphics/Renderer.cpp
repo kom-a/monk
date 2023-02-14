@@ -28,5 +28,4 @@ namespace monk
 
 		glDrawElements(GL_TRIANGLES, indices.Count(), GL_UNSIGNED_INT, nullptr);
 	}
-
 }

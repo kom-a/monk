@@ -53,6 +53,8 @@ namespace monk
 			// TODO: Add other functional keys
 			Escape = 0x1B,
 			Enter = 0x0D,
+			Space = 0x20,
+			LeftControl = 0xA2,
 		};
 	}
 }

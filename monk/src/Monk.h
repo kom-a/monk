@@ -30,5 +30,7 @@
 #include "graphics/Renderer.h"
 #include "graphics/Texture2D.h"
 #include "graphics/OrthographicCamera.h"
+#include "graphics/Camera.h"
+#include "graphics/CameraController.h"
 
 #include "gui/Gui.h"

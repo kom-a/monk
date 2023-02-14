@@ -149,4 +149,8 @@ namespace monk::math
 			0, 0, 0, 1);
 	}
 
+	float ToRadians(float degrees)
+	{
+		return TO_RADIANS(degrees);
+	}
 }

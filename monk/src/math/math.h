@@ -9,6 +9,8 @@ namespace monk::math
 	float Dot(const vec2& left, const vec2& right);
 	float Dot(const vec3& left, const vec3& right);
 	vec3 Cross(const vec3& left, const vec3& right);
+
+	float ToRadians(float degrees);
 	
 	vec2 Normalize(const vec2& vector);
 	vec3 Normalize(const vec3& vector);
