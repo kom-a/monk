@@ -51,11 +51,7 @@ Application::Application()
 	Render::SetClearColor(math::vec4(0.2f, 0.2f, 0.25f, 1.0f));
 	Render::EnableDepthTest(true);
 	Render::EnableBlending(true);
-
-
-	/*glEnable(GL_CULL_FACE);
-	glCullFace(GL_BACK);
-	glFrontFace(GL_CW);*/
+	Render::EnableCulling(true);
 
 	m_Renderer2D = new Renderer2D();
 	m_Renderer = new Renderer();

@@ -1,7 +1,5 @@
 #include "Render.h"
 
-#include "utils/OpenGL.h"
-
 namespace monk
 {
 	math::vec4 Render::s_ClearColor = math::vec4(0.0f, 0.0f, 0.0f, 1.0f);
@@ -35,4 +33,17 @@ namespace monk
 		else
 			glDisable(GL_BLEND);
 	}
+
+	void Render::EnableCulling(bool enable /*= true*/, CullFace cullFace /*= CullFace::Front*/, FrontFace frontFace /*= FrontFace::Clockwise*/)
+	{
+		if (enable)
+		{
+			glEnable(GL_CULL_FACE);
+			glCullFace((GLenum)cullFace);
+			glFrontFace((GLenum)frontFace);
+		}
+		else
+			glDisable(GL_CULL_FACE);
+	}
+
 }
