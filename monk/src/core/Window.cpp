@@ -112,6 +112,14 @@ namespace monk
 
 			MouseMoveEvent e(x, y);
 			window->m_WindowData.EventCallbackFn(e);
+
+			if (window->m_MouseLocked)
+			{
+				POINT mousePosition = { (int)window->m_WindowData.Width / 2, (int)window->m_WindowData.Height / 2 };
+				ClientToScreen(window->m_WindowHandle, &mousePosition);
+				SetCursorPos(mousePosition.x, mousePosition.y);
+			}
+				
 		} break;
 		case WM_MOUSEWHEEL:
 		{
@@ -173,6 +181,70 @@ namespace monk
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 		}
+	}
+
+	void Window::HideCursor(bool hide)
+	{
+		if (hide)
+			while (ShowCursor(0) >= 0);
+		else
+			while (ShowCursor(1) < 0);
+	}
+
+	void Window::LockCursor(bool lock)
+	{
+		m_MouseLocked = lock;
+
+		if (lock)
+		{
+			m_LockMousePosition = Input::GetMousePosition();
+			SetCursorPosition(m_WindowData.Width / 2, m_WindowData.Height / 2);
+			ClipCursorInsideWindow(true);
+		}			
+		else
+		{
+			SetCursorPosition(m_LockMousePosition.x, m_LockMousePosition.y);
+			ClipCursorInsideWindow(false);
+		}
+	}
+
+	void Window::ClipCursorInsideWindow(bool enable)
+	{
+		if (enable)
+		{
+			RECT rect;
+			GetClientRect(m_WindowHandle, &rect);
+
+			POINT ul;
+			ul.x = rect.left;
+			ul.y = rect.top;
+
+			POINT lr;
+			lr.x = rect.right;
+			lr.y = rect.bottom;
+
+			MapWindowPoints(m_WindowHandle, nullptr, &ul, 1);
+			MapWindowPoints(m_WindowHandle, nullptr, &lr, 1);
+
+			rect.left = ul.x;
+			rect.top = ul.y;
+
+			rect.right = lr.x;
+			rect.bottom = lr.y;
+
+			ClipCursor(&rect);
+		}
+		else
+		{
+			ClipCursor(NULL);
+		}
+	}
+
+	void Window::SetCursorPosition(int x, int y)
+	{
+		POINT point = { x, y };
+		ClientToScreen(m_WindowHandle, &point);
+		SetCursorPos(point.x, point.y);
 	}
 
 	bool Window::CreateWin32Window()

@@ -35,8 +35,14 @@ namespace monk
 
 		inline void SwapInterval(int interval) { m_SwapIntervalFn(interval); }
 
+		void HideCursor(bool hide);
+		void LockCursor(bool lock);
+
 	private:
 		friend LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+		void ClipCursorInsideWindow(bool enable);
+		void SetCursorPosition(int x, int y);
 
 		bool CreateWin32Window();
 		bool CreateOpenGLContext(int major, int minor);
@@ -61,6 +67,9 @@ namespace monk
 			int Height;
 			std::function<void(Event&)> EventCallbackFn;
 		} m_WindowData;
+
+		math::vec2 m_LockMousePosition;
+		bool m_MouseLocked = false;
 
 		PFNWGLSWAPINTERVALEXTPROC m_SwapIntervalFn;
 	};
