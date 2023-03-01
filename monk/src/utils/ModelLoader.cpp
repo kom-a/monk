@@ -26,6 +26,7 @@ namespace monk
 		gltf.BufferViews = GetGLTFBufferViews(json);
 		gltf.Accessros = GetGLTFAccessors(json);
 		gltf.Meshes = GetGLTFMeshes(json);
+		gltf.Nodes = GetGLTFNodes(json);
 
 		return gltf;
 	}
@@ -107,6 +108,37 @@ namespace monk
 		return gltfMeshes;
 	}
 
+	std::vector<GLTFNode> ModelLoader::GetGLTFNodes(const JSONNode& json)
+	{
+		std::vector<GLTFNode> gltfNodes;
+		auto nodes = json["nodes"].GetList();
+
+		for (auto node : nodes)
+		{
+			GLTFNode gltfNode;
+			gltfNode.Camera = (*node).TryGetNumber("camera", -1);
+			gltfNode.Children = node->Has("children") ? GetNumbersFromJSONList<uint32_t>((*node)["children"].GetList()) : std::vector<uint32_t>();
+			
+			if (node->Has("matrix"))
+			{
+				gltfNode.Matrix = GetMatrixFromJSONList((*node)["matrix"].GetList());
+				gltfNode.UseMatrix = true;
+			}
+			else
+			{
+				// TODO: Get Translation, Rotation and Scale and use them
+				gltfNode.Matrix = math::mat4(1.0f);
+				gltfNode.UseMatrix = false;
+			}
+			gltfNode.Mesh = (*node).TryGetNumber("mesh", -1);
+			gltfNode.Name = (*node).TryGetString("name", "No name");
+
+			gltfNodes.push_back(gltfNode);
+		}
+
+		return gltfNodes;
+	}
+
 	std::vector<GLTFPrimitive> ModelLoader::GetGLTFPrimitives(const JSONList& list)
 	{
 		std::vector<GLTFPrimitive> gltfPrimitives;
@@ -135,6 +167,31 @@ namespace monk
 		return attributes;
 	}
 
+	math::mat4 ModelLoader::GetMatrixFromJSONList(const JSONList& list)
+	{
+		return math::Transpose(math::mat4(
+			list[0 * 4 + 0]->GetNumber(),
+			list[0 * 4 + 1]->GetNumber(),
+			list[0 * 4 + 2]->GetNumber(),
+			list[0 * 4 + 3]->GetNumber(),
+
+			list[1 * 4 + 0]->GetNumber(),
+			list[1 * 4 + 1]->GetNumber(),
+			list[1 * 4 + 2]->GetNumber(),
+			list[1 * 4 + 3]->GetNumber(),
+
+			list[2 * 4 + 0]->GetNumber(),
+			list[2 * 4 + 1]->GetNumber(),
+			list[2 * 4 + 2]->GetNumber(),
+			list[2 * 4 + 3]->GetNumber(),
+
+			list[3 * 4 + 0]->GetNumber(),
+			list[3 * 4 + 1]->GetNumber(),
+			list[3 * 4 + 2]->GetNumber(),
+			list[3 * 4 + 3]->GetNumber()
+		));
+	}
+
 	Shared<Model> ModelLoader::m_Model = nullptr;
 	Filepath ModelLoader::m_Filepath = "No filepath";
 
@@ -144,31 +201,6 @@ namespace monk
 		
 
 		return nullptr;
-	}
-
-	math::mat4 GetMatrix(const JSONList& matrixList)
-	{
-		return math::Transpose(math::mat4(
-			matrixList[0 * 4 + 0]->GetNumber(), 
-			matrixList[0 * 4 + 1]->GetNumber(),
-			matrixList[0 * 4 + 2]->GetNumber(),
-			matrixList[0 * 4 + 3]->GetNumber(),
-
-			matrixList[1 * 4 + 0]->GetNumber(),
-			matrixList[1 * 4 + 1]->GetNumber(),
-			matrixList[1 * 4 + 2]->GetNumber(),
-			matrixList[1 * 4 + 3]->GetNumber(),
-
-			matrixList[2 * 4 + 0]->GetNumber(),
-			matrixList[2 * 4 + 1]->GetNumber(),
-			matrixList[2 * 4 + 2]->GetNumber(),
-			matrixList[2 * 4 + 3]->GetNumber(),
-
-			matrixList[3 * 4 + 0]->GetNumber(),
-			matrixList[3 * 4 + 1]->GetNumber(),
-			matrixList[3 * 4 + 2]->GetNumber(),
-			matrixList[3 * 4 + 3]->GetNumber()
-			));
 	}
 
 	GLTFAccessor::AccessorType GLTFAccessor::ConvertToAccessorType(const std::string& type)

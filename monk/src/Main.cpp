@@ -119,7 +119,7 @@ void Application::Run()
 
 	math::vec3 direction(0.0f, 0.0f, -1.0f);
 
-	Shared<Model> model = ModelLoader::LoadFromFile("res/models/Lieutenant/lieutenantHead.gltf");
+	Shared<Model> model = ModelLoader::LoadFromFile("res/models/this_tree_is_growing/scene.gltf");
 	
 	while (!m_Window->Closed())
 	{

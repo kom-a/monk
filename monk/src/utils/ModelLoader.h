@@ -62,12 +62,27 @@ namespace monk
 		std::vector<GLTFPrimitive> Primitives;
 	};
 
+	struct GLTFNode
+	{
+		uint32_t Camera = -1;
+		std::vector<uint32_t> Children;
+		math::mat4 Matrix;
+		uint32_t Mesh;
+		math::vec3 Translation;
+		math::vec4 Rotation;
+		math::vec3 Scale;
+		std::string Name;
+
+		bool UseMatrix;
+	};
+
 	struct GLTF
 	{
 		std::vector<GLTFBuffer> Buffers;
 		std::vector<GLTFAccessor> Accessros;
 		std::vector<GLTFBufferView> BufferViews;
 		std::vector<GLTFMesh> Meshes;
+		std::vector<GLTFNode> Nodes;
 	};
 
 	class ModelLoader
@@ -85,13 +100,27 @@ namespace monk
 		static std::vector<GLTFBufferView> GetGLTFBufferViews(const JSONNode& json);
 		static std::vector<GLTFAccessor> GetGLTFAccessors(const JSONNode& json);
 		static std::vector<GLTFMesh> GetGLTFMeshes(const JSONNode& json);
+		static std::vector<GLTFNode> GetGLTFNodes(const JSONNode& json);
 		static std::vector<GLTFPrimitive> GetGLTFPrimitives(const JSONList& list);
 		static GLTFAttributes GetGLTFAttributes(const JSONNode& json);
 
-		
+		template <typename T>
+		static std::vector<T> GetNumbersFromJSONList(const JSONList& list);
 
-	private:
-		static Shared<Model> m_Model;
-		static Filepath m_Filepath;
+		static math::mat4 GetMatrixFromJSONList(const JSONList& list);
 	};
+
+	template <typename T>
+	static std::vector<T> ModelLoader::GetNumbersFromJSONList(const JSONList& list)
+	{
+		std::vector<T> numbers;
+
+		for (auto n : list)
+		{
+			numbers.push_back(n->GetNumber());
+		}
+
+		return numbers;
+	}
+
 }
