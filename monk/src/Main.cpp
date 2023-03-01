@@ -121,6 +121,10 @@ void Application::Run()
 
 	Shared<Model> model = ModelLoader::LoadFromFile("res/models/this_tree_is_growing/scene.gltf");
 	
+	vertex_src = FileManager::ReadFile("res/GLTFShader.vert");
+	fragment_src = FileManager::ReadFile("res/GLTFShader.frag");
+	Shader gltfShader(vertex_src, fragment_src);
+
 	while (!m_Window->Closed())
 	{
 		float deltaTime = timer.Delta();
@@ -137,6 +141,17 @@ void Application::Run()
 		shader.SetMatrix4("u_ProjectionView", camera.GetProjectionViewMatrix());
 
 		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, nullptr);
+
+		gltfShader.Bind();
+		gltfShader.SetMatrix4("u_ProjectionView", camera.GetProjectionViewMatrix());
+
+		for (auto mesh : model->m_Meshes)
+		{
+			mesh.m_VertexBuffer->Bind();
+			mesh.m_IndexBuffer->Bind();
+			//gltfShader.SetMatrix4("u_Model", mesh.m_ModelMatrix);
+			glDrawElements(GL_TRIANGLES, mesh.m_IndexBuffer->Count(), GL_UNSIGNED_INT, nullptr);
+		}
 
 		Update(deltaTime);
 

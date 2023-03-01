@@ -20,7 +20,7 @@ namespace monk
 			MONK_ASSERT("Not glTF model file format not supported");
 		}
 
-		const JSONNode json = *jsonPtr;
+		const JSONNode& json = *jsonPtr;
 		GLTF gltf;
 		gltf.Buffers = GetGLTFBuffers(json, filename);
 		gltf.BufferViews = GetGLTFBufferViews(json);
@@ -40,11 +40,11 @@ namespace monk
 		{
 			GLTFBuffer gltfBuffer;
 			gltfBuffer.ByteLength = (*buffer)["byteLength"].GetNumber();
-			gltfBuffer.URI = root / (*buffer)["uri"].GetString();
+			gltfBuffer.URI = root.parent_path() / (*buffer)["uri"].GetString();
 
 			gltfBuffers.push_back(gltfBuffer);
 		}
-		
+
 		return gltfBuffers;
 	}
 
@@ -118,7 +118,7 @@ namespace monk
 			GLTFNode gltfNode;
 			gltfNode.Camera = (*node).TryGetNumber("camera", -1);
 			gltfNode.Children = node->Has("children") ? GetNumbersFromJSONList<uint32_t>((*node)["children"].GetList()) : std::vector<uint32_t>();
-			
+
 			if (node->Has("matrix"))
 			{
 				gltfNode.Matrix = GetMatrixFromJSONList((*node)["matrix"].GetList());
@@ -192,15 +192,33 @@ namespace monk
 		));
 	}
 
-	Shared<Model> ModelLoader::m_Model = nullptr;
-	Filepath ModelLoader::m_Filepath = "No filepath";
-
 	Shared<Model> ModelLoader::LoadFromFile(const Filepath& filename)
 	{
 		GLTF gltf = LoadGLTF(filename);
-		
 
-		return nullptr;
+		Shared<Model> model = CreateShared<Model>();
+
+		FileData buffer = FileManager::ReadBytes(gltf.Buffers[0].URI.string());
+
+		for (const auto& mesh : gltf.Meshes)
+		{
+			GLTFPrimitive primitive = mesh.Primitives[0];
+			GLTFAccessor positionAccessor = gltf.Accessros[primitive.Attributes.Position];
+			GLTFAccessor indicesAccessor = gltf.Accessros[primitive.Indices];
+
+			GLTFBufferView positionBufferView = gltf.BufferViews[positionAccessor.BufferView];
+			GLTFBufferView indicesBufferView = gltf.BufferViews[indicesAccessor.BufferView];
+
+			BufferLayout layout = {
+				{ 0, BufferLayout::AttribType::Float3 }
+			};
+			Shared<VertexBuffer> vertexBuffer = CreateShared<VertexBuffer>((float*)(buffer.Data + positionBufferView.ByteOffset + positionAccessor.ByteOffset), positionBufferView.ByteLength - positionAccessor.ByteOffset, layout);
+			Shared<IndexBuffer> indexBuffer = CreateShared<IndexBuffer>((uint32_t*)(buffer.Data + indicesBufferView.ByteOffset + indicesAccessor.ByteOffset), indicesAccessor.Count);
+			model->m_Meshes.push_back(Mesh(vertexBuffer, indexBuffer, math::mat4(1.0f), mesh.Name));
+		}
+
+		buffer.Free();
+		return model;
 	}
 
 	GLTFAccessor::AccessorType GLTFAccessor::ConvertToAccessorType(const std::string& type)
@@ -211,7 +229,7 @@ namespace monk
 			return AccessorType::VEC2;
 		else if (type == "VEC3")
 			return AccessorType::VEC3;
-		
+
 		return AccessorType::NONE;
 	}
 }
