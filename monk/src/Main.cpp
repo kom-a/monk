@@ -88,29 +88,14 @@ void Application::Run()
 	glGenVertexArrays(1, &vao);
 	glBindVertexArray(vao);
 
-	/*uint16_t indices_buffer[] = {
-		0, 1, 2,
-		2, 3, 0
-	};*/
-
 	unsigned ibo;
 	glGenBuffers(1, &ibo);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, 72, gltfBin.Data + 576, GL_STATIC_DRAW);
-	//glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices_buffer), indices_buffer, GL_STATIC_DRAW);
-
-	/*float vertex_data[] = {
-		-0.5f, 0.5f, 0.0f,
-		 0.5f, 0.5f, 0.0f,
-		 0.5f, -0.5f, 0.0f,
-		-0.5f, -0.5f, 0.0f,
-	};*/
-
 	unsigned vbo;
 	glGenBuffers(1, &vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glBufferData(GL_ARRAY_BUFFER, 576, gltfBin.Data, GL_STATIC_DRAW);
-	//glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_data), vertex_data, GL_STATIC_DRAW);
 
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 12, 0);
 	glEnableVertexAttribArray(0);
@@ -122,7 +107,6 @@ void Application::Run()
 	std::string fragment_src = FileManager::ReadFile("res/Renderer.frag");
 	Shader shader(vertex_src, fragment_src);
 
-	//math::mat4 projection = math::Ortho(-1.0f, 1.0f, -1.0f, 1.0f, -1.0f, 1.0f);
 	math::mat4 projection = math::Perspective(45.0f, 16.0f / 9.0f, 0.1f, 100.0f);
 
 	Camera camera(45.0f, (float)m_Window->GetWidth() / m_Window->GetHeight(), 0.01f, 100.0f);
@@ -134,6 +118,8 @@ void Application::Run()
 	math::vec2 cameraRotation(0.0f);
 
 	math::vec3 direction(0.0f, 0.0f, -1.0f);
+
+	Shared<Model> model = ModelLoader::LoadFromFile("res/models/Lieutenant/lieutenantHead.gltf");
 	
 	while (!m_Window->Closed())
 	{
@@ -200,13 +186,7 @@ bool Application::OnButtonUp(MouseButtonUpEvent& e)
 
 void Application::Update(float deltaTime)
 {
-	static bool showCursor = true;
 
-	if (Input::IsKeyDown(Key::H))
-	{
-		showCursor = !showCursor;
-		m_Window->HideCursor(showCursor);
-	}
 }
 
 int main()

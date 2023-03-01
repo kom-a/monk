@@ -41,7 +41,7 @@ namespace monk
 		m_Shader = new Shader(vertexSrc, fragmentSrc);
 
 		uint32_t whiteTexture = 0xffffffff;
-		m_WhiteTexture = CreateScope<Texture2D>(1, 1, 4, (uint8_t*)&whiteTexture);
+		m_WhiteTexture = CreateUnique<Texture2D>(1, 1, 4, (uint8_t*)&whiteTexture);
 
 		m_BatchStats.Textures = std::vector<uint32_t>();
 	}

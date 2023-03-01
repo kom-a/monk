@@ -26,6 +26,10 @@ namespace monk
 		float GetNumber() const;
 		bool GetBoolean() const;
 
+		std::string TryGetString(const std::string& key, const std::string& default) const;
+		float TryGetNumber(const std::string& key, float default) const;
+		bool TryGetBoolean(const std::string& key, bool default) const;
+
 		const JSONNode& operator[](const std::string& key) const;
 		const JSONNode& operator[](size_t index) const;
 

@@ -310,16 +310,7 @@ namespace monk
 
 				EatToken(TokenType::COLON);
 				token = Next();
-				/*CURLY_OPEN,
-				CURLY_CLOSE,
-				COLON,
-				STRING,
-				NUMBER,
-				ARRAY_OPEN,
-				ARRAY_CLOSE,
-				COMMA,
-				BOOLEAN,
-				NULL_TYPE*/
+
 				switch (token.Type)
 				{
 				case TokenType::CURLY_OPEN:
@@ -373,7 +364,9 @@ namespace monk
 	{
 		if(Stream.is_open())
 			Stream.close();
-		Open(filename);
+		
+		if (!Open(filename))
+			throw std::logic_error("Failed to open file");
 
 		std::shared_ptr<JSONNode> json = std::make_shared<JSONNode>();
 
@@ -438,6 +431,48 @@ namespace monk
 		}
 		else
 			throw std::logic_error("Not a boolean");
+	}
+
+	std::string JSONNode::TryGetString(const std::string& key, const std::string& default) const
+	{
+		if (auto value = std::get_if<std::shared_ptr<const JSONObject>>(&Value))
+		{
+			auto object = **value;
+			if (object.find(key) != object.end())
+				return (*object.at(key)).GetString();
+			else
+				return default;
+		}
+		else
+			return default;
+	}
+
+	float JSONNode::TryGetNumber(const std::string& key, float default) const
+	{
+		if (auto value = std::get_if<std::shared_ptr<const JSONObject>>(&Value))
+		{
+			auto object = **value;
+			if (object.find(key) != object.end())
+				return (*object.at(key)).GetNumber();
+			else
+				return default;
+		}
+		else
+			return default;
+	}
+
+	bool JSONNode::TryGetBoolean(const std::string& key, bool default) const
+	{
+		if (auto value = std::get_if<std::shared_ptr<const JSONObject>>(&Value))
+		{
+			auto object = **value;
+			if (object.find(key) != object.end())
+				return (*object.at(key)).GetBoolean();
+			else
+				return default;
+		}
+		else
+			return default;
 	}
 
 	const monk::JSONNode& JSONNode::operator[](const std::string& key) const

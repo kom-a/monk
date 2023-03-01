@@ -10,6 +10,7 @@
 #include "utils/OpenGL.h"
 #include "utils/FileManager.h"
 #include "utils/TextureLoader.h"
+#include "utils/ModelLoader.h"
 #include "utils/JSON.h"
 
 #include "math/Math.h"
@@ -32,5 +33,6 @@
 #include "graphics/OrthographicCamera.h"
 #include "graphics/Camera.h"
 #include "graphics/CameraController.h"
+#include "graphics/Model.h"
 
 #include "gui/Gui.h"

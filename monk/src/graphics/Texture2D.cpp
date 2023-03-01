@@ -9,18 +9,18 @@
 
 namespace monk
 {
-	Ref<Texture2D> Texture2D::Create(const std::string& filename, TextureFormat format)
+	Shared<Texture2D> Texture2D::Create(const std::string& filename, TextureFormat format)
 	{
 		TextureData textureData = TextureLoader::LoadFromFile(filename, format);
-		auto result = CreateRef<Texture2D>(textureData.Width, textureData.Height, textureData.Channels, textureData.Data);
+		auto result = CreateShared<Texture2D>(textureData.Width, textureData.Height, textureData.Channels, textureData.Data);
 		textureData.Free();
 		return result;
 	}
 
-	Ref<Texture2D> Texture2D::Create(int width, int height, TextureFormat format, uint8_t* data)
+	Shared<Texture2D> Texture2D::Create(int width, int height, TextureFormat format, uint8_t* data)
 	{
 		MONK_ASSERT(format != TextureFormat::INTERNAL, "Must specify texture format");
-		return CreateRef<Texture2D>(width, height, TextureLoader::TextureFormatBytesPerPixel(format), data);
+		return CreateShared<Texture2D>(width, height, TextureLoader::TextureFormatBytesPerPixel(format), data);
 	}
 
 	Texture2D::Texture2D(int width, int height, int channels, uint8_t* data)

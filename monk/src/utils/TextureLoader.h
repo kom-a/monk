@@ -31,7 +31,7 @@ namespace monk
 	private:
 		TextureLoader() = default;
 		~TextureLoader() = default;
-
+		
 	public:
 		static TextureData LoadFromFile(const std::string& filename, TextureFormat format);
 		static int TextureFormatBytesPerPixel(TextureFormat format);

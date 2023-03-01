@@ -23,6 +23,9 @@ namespace monk
 
 	void CameraController::UpdateMoving(float deltaTime)
 	{
+		if (!Input::IsMouseButtonPressed(Mouse::ButtonRight))
+			return;
+
 		const float speed = m_MoveSpeed * deltaTime;
 		math::vec3 moveDirection(0.0f);
 

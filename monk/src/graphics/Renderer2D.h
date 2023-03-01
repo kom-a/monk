@@ -106,6 +106,6 @@ namespace monk
 		Vertex* m_VertexBufferData = nullptr;
 		IndexBuffer* m_IndexBuffer = nullptr;
 		Shader* m_Shader = nullptr;
-		Scope<Texture2D> m_WhiteTexture = nullptr;
+		Unique<Texture2D> m_WhiteTexture = nullptr;
 	};
 }
