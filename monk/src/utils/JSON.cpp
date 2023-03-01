@@ -444,7 +444,7 @@ namespace monk
 				return default;
 		}
 		else
-			return default;
+			throw std::logic_error("Not a JSONObject");
 	}
 
 	float JSONNode::TryGetNumber(const std::string& key, float default) const
@@ -458,7 +458,7 @@ namespace monk
 				return default;
 		}
 		else
-			return default;
+			throw std::logic_error("Not a JSONObject");
 	}
 
 	bool JSONNode::TryGetBoolean(const std::string& key, bool default) const
@@ -472,7 +472,17 @@ namespace monk
 				return default;
 		}
 		else
-			return default;
+			throw std::logic_error("Not a JSONObject");
+	}
+
+	bool JSONNode::Has(const std::string& key) const
+	{
+		if (auto value = std::get_if<std::shared_ptr<const JSONObject>>(&Value))
+		{
+			return (**value).find(key) != (**value).end();
+		}
+		else
+			throw std::logic_error("Not a JSONObject");
 	}
 
 	const monk::JSONNode& JSONNode::operator[](const std::string& key) const
