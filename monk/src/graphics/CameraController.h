@@ -2,13 +2,14 @@
 
 #include "graphics/Camera.h"
 #include "math/Math.h"
+#include "core/Memory.h"
 
 namespace monk
 {
 	class CameraController
 	{
 	public:
-		CameraController(Camera* camera);
+		CameraController(Shared<Camera> camera);
 
 	public:
 		void Update(float deltaTime);
@@ -18,7 +19,7 @@ namespace monk
 		void UpdateLooking(float deltaTime);
 
 	private:
-		Camera* m_Camera = nullptr; // Not owned by CameraController
+		Shared<Camera> m_Camera = nullptr;
 		math::vec3 m_LookDirection;
 		math::vec3 m_RightDirection;
 		math::vec3 m_UpDirection;

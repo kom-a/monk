@@ -16,7 +16,8 @@ namespace monk
 		Mesh(Shared<VertexBuffer> vertexBuffer, Shared<IndexBuffer> indexBuffer, const math::mat4& modelMatrix, const std::string& name = "None");
 		~Mesh() = default;
 
-	public:
+	private:
+		friend class Renderer;
 		Shared<VertexBuffer> m_VertexBuffer = nullptr;
 		Shared<IndexBuffer> m_IndexBuffer = nullptr;
 		math::mat4 m_ModelMatrix = math::mat4(1.0f);
@@ -28,8 +29,9 @@ namespace monk
 	public:
 		Model();
 
-	public:
+	private:
 		friend class ModelLoader;
+		friend class Renderer;
 		std::vector<Mesh> m_Meshes;
 	};
 }

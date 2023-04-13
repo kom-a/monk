@@ -7,7 +7,7 @@
 
 namespace monk
 {
-	CameraController::CameraController(Camera* camera)
+	CameraController::CameraController(Shared<Camera> camera)
 	{
 		m_Camera = camera;
 		m_LookDirection = camera->GetLookDirection();

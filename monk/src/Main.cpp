@@ -69,89 +69,33 @@ Application::~Application()
 void Application::Run()
 {
 	Time timer;
-	std::shared_ptr<const JSONNode> json_ptr = JSON::ParseFile("res/models/Box/Box.gltf");
-	const JSONNode& json = *json_ptr;
 
-	struct
-	{
-		uint32_t ByteLength;
-		std::string Uri;
-	} gltfBuffer{ 0 };
-
-	gltfBuffer.ByteLength = json["buffers"].GetList()[0]->GetJSONObject().at("byteLength")->GetNumber();
-	gltfBuffer.Uri = json["buffers"][0]["uri"].GetString();
-
-	FileData gltfBin = FileManager::ReadBytes(std::string("res/models/Box/") + gltfBuffer.Uri);
-	MONK_ASSERT(gltfBin.Size == gltfBuffer.ByteLength);
-
-	unsigned vao;
-	glGenVertexArrays(1, &vao);
-	glBindVertexArray(vao);
-
-	unsigned ibo;
-	glGenBuffers(1, &ibo);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, 72, gltfBin.Data + 576, GL_STATIC_DRAW);
-	unsigned vbo;
-	glGenBuffers(1, &vbo);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, 576, gltfBin.Data, GL_STATIC_DRAW);
-
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 12, 0);
-	glEnableVertexAttribArray(0);
-
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 12, (const void*)(288));
-	glEnableVertexAttribArray(1);
-
-	std::string vertex_src = FileManager::ReadFile("res/Renderer.vert");
-	std::string fragment_src = FileManager::ReadFile("res/Renderer.frag");
-	Shader shader(vertex_src, fragment_src);
-
-	math::mat4 projection = math::Perspective(45.0f, 16.0f / 9.0f, 0.1f, 100.0f);
-
-	Camera camera(45.0f, (float)m_Window->GetWidth() / m_Window->GetHeight(), 0.01f, 100.0f);
-	camera.SetPosition(math::vec3(0.0f, 0.0f, -10.0f));
-	camera.SetTarget(math::vec3(0.0f));
-	CameraController controller(&camera);
-	
-	float cameraRadius = 5;
-	math::vec2 cameraRotation(0.0f);
-
-	math::vec3 direction(0.0f, 0.0f, -1.0f);
+	Shared<Camera> camera = std::make_shared<Camera>(45.0f, (float)m_Window->GetWidth() / m_Window->GetHeight(), 0.01f, 100.0f);
+	camera->SetPosition(math::vec3(0.0f, 0.0f, -10.0f));
+	camera->SetTarget(math::vec3(0.0f));
+	CameraController cameraController(camera);
 
 	Shared<Model> model = ModelLoader::LoadFromFile("res/models/this_tree_is_growing/scene.gltf");
 	
-	vertex_src = FileManager::ReadFile("res/GLTFShader.vert");
-	fragment_src = FileManager::ReadFile("res/GLTFShader.frag");
-	Shader gltfShader(vertex_src, fragment_src);
+	auto vertex_src = FileManager::ReadFile("res/GLTFShader.vert");
+	auto fragment_src = FileManager::ReadFile("res/GLTFShader.frag");
+	Shared<Shader> gltfShader = std::make_shared<Shader>(vertex_src, fragment_src);
+
+	Renderer renderer;
 
 	while (!m_Window->Closed())
 	{
 		float deltaTime = timer.Delta();
 		m_Window->PollEvents();
-		controller.Update(deltaTime);
+		cameraController.Update(deltaTime);
 
 		Render::Clear();
 
-		shader.Bind();
-		glBindVertexArray(vao);
-		glBindBuffer(GL_ARRAY_BUFFER, vbo);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
+		renderer.Begin(camera, gltfShader);
 
-		shader.SetMatrix4("u_ProjectionView", camera.GetProjectionViewMatrix());
+		renderer.DrawModel(model);
 
-		// glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_SHORT, nullptr);
-
-		gltfShader.Bind();
-		gltfShader.SetMatrix4("u_ProjectionView", camera.GetProjectionViewMatrix());
-
-		for (auto mesh : model->m_Meshes)
-		{
-			mesh.m_VertexBuffer->Bind();
-			mesh.m_IndexBuffer->Bind();
-			gltfShader.SetMatrix4("u_Model", mesh.m_ModelMatrix);
-			glDrawElements(GL_TRIANGLES, mesh.m_IndexBuffer->Count(), IndexBuffer::ToOpenGLType(mesh.m_IndexBuffer->Type()), nullptr);
-		}
+		renderer.End();
 
 		Update(deltaTime);
 
