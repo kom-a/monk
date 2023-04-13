@@ -22,6 +22,11 @@ namespace monk::math
 		mat4 operator*(const mat4& other);
 		mat4 operator*(float scalar);
 
+		friend const mat4 operator+(const mat4& left, const mat4& right);
+		friend const mat4 operator-(const mat4& left, const mat4& right);
+		friend const mat4 operator*(const mat4& left, const mat4& right);
+		friend const mat4 operator*(const mat4& left, float right);
+
 		mat4& operator+=(const mat4& other);
 		mat4& operator-=(const mat4& other);
 		mat4& operator*=(const mat4& other);

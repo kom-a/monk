@@ -46,7 +46,7 @@ namespace monk::math
 
 		m_Elements[2 * 4 + 0] = a20;
 		m_Elements[2 * 4 + 1] = a21;
-		m_Elements[2 * 4 + 2] = a22;
+		m_Elements[2 * 4 + 2] = a22; 
 		m_Elements[2 * 4 + 3] = a23;
 
 		m_Elements[3 * 4 + 0] = a30;
@@ -121,7 +121,7 @@ namespace monk::math
 				m_Elements[i * 4 + j] += other.m_Elements[i * 4 + j];
 
 		return *this;
-	}
+	}	
 
 	mat4& mat4::operator-=(const mat4& other)
 	{
@@ -225,4 +225,23 @@ namespace monk::math
 		return m_Rows[index];
 	}
 
+	const mat4 operator+(const mat4& left, const mat4& right)
+	{
+		return mat4(left) + right;
+	}
+
+	const mat4 operator-(const mat4& left, const mat4& right)
+	{
+		return mat4(left) - right;
+	}
+
+	const mat4 operator*(const mat4& left, const mat4& right)
+	{
+		return mat4(left) * right;
+	}
+
+	const mat4 operator*(const mat4& left, float right)
+	{
+		return mat4(left) * right;
+	}
 }

@@ -2,7 +2,6 @@
 
 #include "core/Log.h"
 #include "core/Assert.h"
-#include "utils/FileManager.h"
 
 namespace monk
 {
@@ -27,8 +26,27 @@ namespace monk
 		gltf.Accessros = GetGLTFAccessors(json);
 		gltf.Meshes = GetGLTFMeshes(json);
 		gltf.Nodes = GetGLTFNodes(json);
+		gltf.Scenes = GetGLTFScenes(json);
+		gltf.Scene = json.TryGetNumber("scene", -1);
 
 		return gltf;
+	}
+
+	std::vector<GLTFScene> ModelLoader::GetGLTFScenes(const JSONNode& json)
+	{
+		std::vector<GLTFScene> gltfScenes;
+		auto scenes = json["scenes"].GetList();
+
+		for (auto scene : scenes)
+		{
+			GLTFScene gltfScene;
+			gltfScene.Name = (*scene).TryGetString("name", "No name");
+			gltfScene.Nodes = scene->Has("nodes") ? GetNumbersFromJSONList<uint32_t>((*scene)["nodes"].GetList()) : std::vector<uint32_t>();
+
+			gltfScenes.push_back(gltfScene);
+		}
+
+		return gltfScenes;
 	}
 
 	std::vector<GLTFBuffer> ModelLoader::GetGLTFBuffers(const JSONNode& json, const Filepath& root)
@@ -167,6 +185,83 @@ namespace monk
 		return attributes;
 	}
 
+	std::vector<Mesh> ModelLoader::ProcessNode(const GLTF& gltf, uint32_t node, const std::vector<FileData>& buffers, const math::mat4& parentMatrix)
+	{
+		std::vector<Mesh> meshes;
+
+		if (gltf.Nodes[node].Children.empty())
+		{
+			if (gltf.Nodes[node].Mesh == -1)
+				return meshes;
+			MONK_ASSERT(gltf.Nodes[node].Mesh != -1, "No mesh if GLFT node with no children");
+			const GLTFMesh& gltfMesh = gltf.Meshes[gltf.Nodes[node].Mesh];
+			//MONK_ASSERT(gltfMesh.Primitives.size() == 1, "Multipile primitives not supported");
+			const GLTFPrimitive& gltfPrimimitive = gltfMesh.Primitives[0];
+			MONK_ASSERT(gltfPrimimitive.Mode == 4, "GLTF Primitive mode != 4 not supported");
+			MONK_ASSERT(gltfPrimimitive.Indices != -1, "No indicies");
+			const GLTFAttributes& gltfAttributes = gltfPrimimitive.Attributes;
+			MONK_ASSERT(gltfAttributes.Position != -1, "No POSITION in gltf mesh");
+			MONK_ASSERT(gltfAttributes.Normal != -1, "No NORMAL in gltf mesh");
+
+			const GLTFAccessor& gltfPositionAccessor = gltf.Accessros[gltfAttributes.Position];
+			const GLTFAccessor& gltfNormalAccessor = gltf.Accessros[gltfAttributes.Normal];
+			const GLTFAccessor& gltfIndicesAccessor = gltf.Accessros[gltfPrimimitive.Indices];
+
+			MONK_ASSERT(gltfPositionAccessor.ComponentType == 5126); // GL_FLOAT
+			MONK_ASSERT(gltfNormalAccessor.ComponentType == 5126); // GL_FLOAT
+			MONK_ASSERT(gltfIndicesAccessor.ComponentType == 5125 || gltfIndicesAccessor.ComponentType == 5123); // GL_UNSIGNED_INT or GL_UNSINGED_SHORT
+			MONK_ASSERT(gltfPositionAccessor.Type == GLTFAccessor::AccessorType::VEC3);
+			MONK_ASSERT(gltfNormalAccessor.Type == GLTFAccessor::AccessorType::VEC3);
+			MONK_ASSERT(gltfIndicesAccessor.Type == GLTFAccessor::AccessorType::SCALAR);
+
+			const GLTFBufferView& gltfPositionBufferView = gltf.BufferViews[gltfPositionAccessor.BufferView];
+			const GLTFBufferView& gltfNormalBufferView = gltf.BufferViews[gltfNormalAccessor.BufferView];
+			const GLTFBufferView& gltfIndicesBufferView = gltf.BufferViews[gltfIndicesAccessor.BufferView];
+
+			BufferLayout layout = {
+				{ 0, BufferLayout::AttribType::Float3 },
+			};
+			uint8_t* data = buffers[gltfPositionBufferView.Buffer].Data;
+	
+			IndexBuffer::IndexType indexType = gltfIndicesAccessor.ComponentType == 5125 ? IndexBuffer::IndexType::UNSIGNED_INT : IndexBuffer::IndexType::UNSIGNED_SHORT;
+			Shared<VertexBuffer> vertexBuffer = CreateShared<VertexBuffer>((float*)(data + gltfPositionBufferView.ByteOffset + gltfPositionAccessor.ByteOffset), gltfPositionBufferView.ByteLength - gltfPositionAccessor.ByteOffset, layout);
+			Shared<IndexBuffer> indexBuffer = CreateShared<IndexBuffer>((void*)(data + gltfIndicesBufferView.ByteOffset + gltfIndicesAccessor.ByteOffset), gltfIndicesAccessor.Count, indexType, IndexBuffer::IndexUsage::STATIC);
+
+			meshes.push_back(Mesh(vertexBuffer, indexBuffer, parentMatrix));
+		}
+		else
+		{
+			for (auto child : gltf.Nodes[node].Children)
+			{
+				auto childMeshes = ProcessNode(gltf, child, buffers, parentMatrix * gltf.Nodes[node].Matrix);
+				meshes.insert(meshes.begin(), childMeshes.begin(), childMeshes.end());
+			}
+		}
+
+		return meshes;
+	}
+
+	std::vector<FileData> ModelLoader::LoadBuffers(const std::vector<GLTFBuffer>& gltfBuffers)
+	{
+		std::vector<FileData> buffers;
+
+		for (auto buffer : gltfBuffers)
+		{
+			FileData fileData = FileManager::ReadBytes(buffer.URI.string());
+			MONK_ASSERT(fileData.Size == buffer.ByteLength, "Buffer size missmatch");
+
+			buffers.push_back(fileData);
+		}
+
+		return buffers;
+	}
+
+	void ModelLoader::FreeBuffers(const std::vector<FileData> buffers)
+	{
+		for (auto fileData : buffers)
+			fileData.Free();
+	}
+
 	math::mat4 ModelLoader::GetMatrixFromJSONList(const JSONList& list)
 	{
 		return math::Transpose(math::mat4(
@@ -195,29 +290,20 @@ namespace monk
 	Shared<Model> ModelLoader::LoadFromFile(const Filepath& filename)
 	{
 		GLTF gltf = LoadGLTF(filename);
-
+		MONK_ASSERT(gltf.Scene != -1, "No default GLTF scene");
 		Shared<Model> model = CreateShared<Model>();
+		std::vector<Mesh> meshes;
+		std::vector<FileData> buffers = LoadBuffers(gltf.Buffers);
 
-		FileData buffer = FileManager::ReadBytes(gltf.Buffers[0].URI.string());
-
-		for (const auto& mesh : gltf.Meshes)
+		for (auto node : gltf.Scenes[gltf.Scene].Nodes)
 		{
-			GLTFPrimitive primitive = mesh.Primitives[0];
-			GLTFAccessor positionAccessor = gltf.Accessros[primitive.Attributes.Position];
-			GLTFAccessor indicesAccessor = gltf.Accessros[primitive.Indices];
-
-			GLTFBufferView positionBufferView = gltf.BufferViews[positionAccessor.BufferView];
-			GLTFBufferView indicesBufferView = gltf.BufferViews[indicesAccessor.BufferView];
-
-			BufferLayout layout = {
-				{ 0, BufferLayout::AttribType::Float3 }
-			};
-			Shared<VertexBuffer> vertexBuffer = CreateShared<VertexBuffer>((float*)(buffer.Data + positionBufferView.ByteOffset + positionAccessor.ByteOffset), positionBufferView.ByteLength - positionAccessor.ByteOffset, layout);
-			Shared<IndexBuffer> indexBuffer = CreateShared<IndexBuffer>((uint32_t*)(buffer.Data + indicesBufferView.ByteOffset + indicesAccessor.ByteOffset), indicesAccessor.Count);
-			model->m_Meshes.push_back(Mesh(vertexBuffer, indexBuffer, math::mat4(1.0f), mesh.Name));
+			auto nodeMeshes = ProcessNode(gltf, node, buffers);
+			meshes.insert(meshes.end(), nodeMeshes.begin(), nodeMeshes.end());
 		}
 
-		buffer.Free();
+		model->m_Meshes = meshes;
+
+		FreeBuffers(buffers);
 		return model;
 	}
 

@@ -59,8 +59,11 @@ namespace monk
 	class IndexBuffer
 	{
 	public:
-		IndexBuffer(uint32_t* data, size_t count);
-		IndexBuffer(size_t count);
+		enum class IndexType { NONE, UNSIGNED_SHORT, UNSIGNED_INT };
+		enum class IndexUsage { NONE, STATIC, DYNAMIC };
+
+		IndexBuffer(void* data, size_t count, IndexType indexType = IndexType::UNSIGNED_INT, IndexUsage indexUsage = IndexUsage::STATIC);
+		IndexBuffer(size_t count, IndexType indexType);
 		~IndexBuffer();
 
 	public:
@@ -71,9 +74,17 @@ namespace monk
 		void Unmap();
 
 		uint32_t Count() const { return m_Count; }
+		IndexType Type() const { return m_IndexType; }
+		
+		static uint32_t ToOpenGLType(IndexType indexType);
+
+	private:
+		uint32_t IndexTypeToSize(IndexType indexType);
+		uint32_t IndexUsageToOpenGLUsage(IndexUsage indexUsage);
 
 	private:
 		uint32_t m_ID;
 		uint32_t m_Count;
+		IndexType m_IndexType;
 	};
 }

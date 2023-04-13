@@ -6,6 +6,7 @@
 #include "core/Memory.h"
 #include "graphics/Model.h"
 #include "utils/JSON.h"
+#include "utils/FileManager.h"
 
 namespace monk
 {
@@ -76,8 +77,16 @@ namespace monk
 		bool UseMatrix;
 	};
 
+	struct GLTFScene
+	{
+		std::string Name;
+		std::vector<uint32_t> Nodes;
+	};
+
 	struct GLTF
 	{
+		uint32_t Scene;
+		std::vector<GLTFScene> Scenes;
 		std::vector<GLTFBuffer> Buffers;
 		std::vector<GLTFAccessor> Accessros;
 		std::vector<GLTFBufferView> BufferViews;
@@ -96,6 +105,7 @@ namespace monk
 
 	private:
 		static GLTF LoadGLTF(const Filepath& filename);
+		static std::vector<GLTFScene> GetGLTFScenes(const JSONNode& json);
 		static std::vector<GLTFBuffer> GetGLTFBuffers(const JSONNode& json, const Filepath& root);
 		static std::vector<GLTFBufferView> GetGLTFBufferViews(const JSONNode& json);
 		static std::vector<GLTFAccessor> GetGLTFAccessors(const JSONNode& json);
@@ -103,6 +113,11 @@ namespace monk
 		static std::vector<GLTFNode> GetGLTFNodes(const JSONNode& json);
 		static std::vector<GLTFPrimitive> GetGLTFPrimitives(const JSONList& list);
 		static GLTFAttributes GetGLTFAttributes(const JSONNode& json);
+
+		static std::vector<Mesh> ProcessNode(const GLTF& gltf, uint32_t node, const std::vector<FileData>& buffers, const math::mat4& parentMatrix = math::mat4(1.0f));
+
+		static std::vector<FileData> LoadBuffers(const std::vector<GLTFBuffer>& gltfBuffers);
+		static void FreeBuffers(const std::vector<FileData> buffers);
 
 		template <typename T>
 		static std::vector<T> GetNumbersFromJSONList(const JSONList& list);

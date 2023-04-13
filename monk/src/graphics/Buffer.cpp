@@ -118,20 +118,20 @@ namespace monk
 
 	// Index Buffer ///////////////////////////////////////////////////
 
-	IndexBuffer::IndexBuffer(uint32_t* data, size_t count)
-		: m_Count(count)
+	IndexBuffer::IndexBuffer(void* data, size_t count, IndexType indexType, IndexUsage indexUsage)
+		: m_Count(count), m_IndexType(indexType)
 	{
 		glGenBuffers(1, &m_ID);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ID);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint32_t) * count, data, GL_STATIC_DRAW);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, IndexTypeToSize(indexType) * count, data, IndexUsageToOpenGLUsage(indexUsage));
 	}
 
-	IndexBuffer::IndexBuffer(size_t count)
-		: m_Count(count)
+	IndexBuffer::IndexBuffer(size_t count, IndexType indexType)
+		: m_Count(count), m_IndexType(indexType)
 	{
 		glGenBuffers(1, &m_ID);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ID);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint32_t) * count, nullptr, GL_DYNAMIC_DRAW);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, IndexTypeToSize(indexType) * count, nullptr, GL_DYNAMIC_DRAW);
 	}
 
 	IndexBuffer::~IndexBuffer()
@@ -160,6 +160,42 @@ namespace monk
 	{
 		Bind();
 		glUnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);
+	}
+
+	uint32_t IndexBuffer::ToOpenGLType(IndexType indexType)
+	{
+		switch (indexType)
+		{
+		case IndexType::UNSIGNED_SHORT: return GL_UNSIGNED_SHORT;
+		case IndexType::UNSIGNED_INT: return GL_UNSIGNED_INT;
+		default: LOG_ERROR("Unknown index type: {0}", (int)indexType);
+		}
+
+		return 0;
+	}
+
+	uint32_t IndexBuffer::IndexTypeToSize(IndexType indexType)
+	{
+		switch (indexType)
+		{
+			case IndexType::UNSIGNED_SHORT: return sizeof(unsigned short);
+			case IndexType::UNSIGNED_INT: return sizeof(unsigned int);
+			default: LOG_ERROR("Unknown index type: {0}", (int)indexType);
+		}
+
+		return 0;
+	}
+
+	uint32_t IndexBuffer::IndexUsageToOpenGLUsage(IndexUsage indexUsage)
+	{
+		switch (indexUsage)
+		{
+			case IndexUsage::STATIC: return GL_STATIC_DRAW;
+			case IndexUsage::DYNAMIC: return GL_DYNAMIC_DRAW;
+			default: LOG_ERROR("Unknown index usage: {0}", (int)indexUsage);
+		}
+
+		return 0;
 	}
 
 }

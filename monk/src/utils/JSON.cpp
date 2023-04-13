@@ -150,6 +150,7 @@ namespace monk
 
 		if (C == 'E' || C == 'e')
 		{
+			ss << C;
 			Get();
 			if (C == '+' || C == '-')
 			{
