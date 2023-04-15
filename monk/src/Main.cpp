@@ -27,14 +27,19 @@ private:
 	void Update(float deltaTime);
 
 private:
-	Window* m_Window;
-	Renderer2D* m_Renderer2D;
-	Renderer* m_Renderer;
+	Unique<Window> m_Window;
+	Unique<Renderer2D> m_Renderer2D;
+	Unique<Renderer> m_Renderer;
+
+	Shared<Camera> m_Camera;
+	Shared<CameraController> m_CameraController;
+	Shared<Shader> m_GLTFShader;
+
 };
 
 Application::Application()
 {
-	m_Window = new Window(1280, 720, "Monk");
+	m_Window = CreateUnique<Window>(1280, 720, "Monk");
 	m_Window->SetEventCallback(BIND_FUNCTION(Application::OnEvent));
 	m_Window->SwapInterval(1);
 
@@ -53,49 +58,43 @@ Application::Application()
 	Render::EnableBlending(true);
 	Render::EnableCulling(true);
 
-	m_Renderer2D = new Renderer2D();
-	m_Renderer = new Renderer();
+	m_Renderer2D = CreateUnique<Renderer2D>();
+	m_Renderer = CreateUnique<Renderer>();
+	m_Camera = CreateShared<Camera>(45.0f, (float)m_Window->GetWidth() / m_Window->GetHeight(), 0.01f, 100.0f);
+	m_Camera->SetPosition(math::vec3(0.0f, 0.0f, -10.0f));
+	m_Camera->SetTarget(math::vec3(0.0f));
+	m_CameraController = CreateShared<CameraController>(m_Camera);
+	auto vertex_src = FileManager::ReadFile("res/GLTFShader.vert");
+	auto fragment_src = FileManager::ReadFile("res/GLTFShader.frag");
+	m_GLTFShader = CreateShared<Shader>(vertex_src, fragment_src);
 
 	Random::Seed(Time::CurrentTime());
 }
 
 Application::~Application()
 {
-	delete m_Window;
-	delete m_Renderer2D;
-	delete m_Renderer;
+
 }
 
 void Application::Run()
 {
 	Time timer;
 
-	Shared<Camera> camera = std::make_shared<Camera>(45.0f, (float)m_Window->GetWidth() / m_Window->GetHeight(), 0.01f, 100.0f);
-	camera->SetPosition(math::vec3(0.0f, 0.0f, -10.0f));
-	camera->SetTarget(math::vec3(0.0f));
-	CameraController cameraController(camera);
-
-	Shared<Model> model = ModelLoader::LoadFromFile("res/models/this_tree_is_growing/scene.gltf");
-	
-	auto vertex_src = FileManager::ReadFile("res/GLTFShader.vert");
-	auto fragment_src = FileManager::ReadFile("res/GLTFShader.frag");
-	Shared<Shader> gltfShader = std::make_shared<Shader>(vertex_src, fragment_src);
-
-	Renderer renderer;
+	Shared<Model> model = ModelLoader::LoadFromFile("res/models/Lieutenant/lieutenantHead.gltf");
 
 	while (!m_Window->Closed())
 	{
 		float deltaTime = timer.Delta();
 		m_Window->PollEvents();
-		cameraController.Update(deltaTime);
+		m_CameraController->Update(deltaTime);
 
 		Render::Clear();
 
-		renderer.Begin(camera, gltfShader);
+		m_Renderer->Begin(m_Camera, m_GLTFShader);
 
-		renderer.DrawModel(model);
+		m_Renderer->DrawModel(model);
 
-		renderer.End();
+		m_Renderer->End();
 
 		Update(deltaTime);
 
