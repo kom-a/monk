@@ -1,37 +1,9 @@
-workspace "monk"
-   configurations { "Debug", "Release" }
-   architecture "x86_64"
+workspace "Monk"
+	configurations { "Debug", "Release" }
+	architecture "x86_64"
 
-outputdir = "%{cfg.architecture}-%{cfg.buildcfg}"
+include "Common.lua"
 
-project "monk"
-   location "monk"
-   kind "ConsoleApp"
-   language "C++"
-   cppdialect "C++17"
-
-   targetdir ("bin/" .. outputdir)
-   objdir ("bin-int/" .. outputdir)
-
-   characterset ("ASCII")
-
-   files {
-      "monk/src/**",
-      "monk/res/**"
-   }
-
-   includedirs {
-      "./monk/src",
-   }
-
-   links {
-      "opengl32"
-   }
-
-   filter "configurations:Debug"
-      defines { "DEBUG" }
-      symbols "On"
-
-   filter "configurations:Release"
-      optimize "On"
-      symbols "Off"
+include "WangMauna/WangMauna"
+include "MWL/MWL"
+include "Monk"
