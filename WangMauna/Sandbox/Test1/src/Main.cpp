@@ -1,33 +1,32 @@
 #include <iostream>
 
+#include <type_traits>
+
 #include <WangMauna/WangMauna.h>
+
+int foo()
+{
+	return 52;
+}
 
 int main()
 {
-	std::cout << "Hello world" << std::endl;
+	auto logger = wm::Logger("WangMauna", "%n| [%t] %l: %v");
 
-	//pattern.Push(wm::Attribute::String, "WangMuana");
-	//pattern.Push(wm::Attribute::String, "|");
-	//pattern.Push(wm::Attribute::Time);
-	//pattern.Push(wm::Attribute::Level);
-	//pattern.Push(wm::Attribute::Value);
-	//pattern.Push(wm::Attribute::String, "(");
-	//pattern.Push(wm::Attribute::Filepath);
-	//pattern.Push(wm::Attribute::Filename);
-	//pattern.Push(wm::Attribute::String, ":");
-	//pattern.Push(wm::Attribute::Line);
-	//pattern.Push(wm::Attribute::String, ")");
+	double pi = 3.1415;
+	const char* world = "world";
 
-	wm::Logger logger = wm::Logger();
-	logger.SetName("WangMauna");
-	logger.SetPattern("%n| [%t] %l: %v (%fn:%fl)");
+	logger.Trace("{1}", 123, pi, 123);
+	logger.Trace("test {0}, {1}", "Arg1", foo());
+	logger.Trace("This is a trace {0}, {1", "Arg1", foo());
+	logger.Info("Hello world this is an info message {1}", 123, pi);
+	logger.Debug("{0}{0}{1}", "hello", world);
 
-	logger.Trace("Hello world. This is a trace");
 	logger.Info("Logger info");
 	logger.Debug("This is a debug information");
-	logger.Warn("Warning! Warning! Warning! Warning! ");
+	logger.Warning("Warning! Warning! Warning! Warning!");
 	logger.Error("Error");
-	logger.Critical("Legit check");
+	logger.Critical("Critical error.");
 
 	return 0;
 }

@@ -5,30 +5,23 @@
 
 namespace wm
 {
-	enum class Attribute {
+	enum class Attribute 
+	{
 		String,
 		Level,
 		Name,
 		Value,
-		Time,
-		// Date,
-		// DateTime,
-		Filename,
-		Filepath,
-		Fileline
+		Time
 	};
 
 	class Pattern
 	{
 	public:
-
-	public:
-		Pattern(const std::string& pattern);
+		explicit Pattern(std::string_view pattern);
 		~Pattern() = default;
 
-		
 	private:
-		void SplitPattern(const std::string& pattern);
+		void SplitPattern(std::string_view pattern);
 		void Push(std::stringstream& ss, Attribute attr);
 
 	private:
