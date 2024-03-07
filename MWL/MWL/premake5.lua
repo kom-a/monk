@@ -1,7 +1,10 @@
+include "../../WangMauna/WangMauna"
+
 project "MWL"
 	kind "StaticLib"
 	language "C++"
 	cppdialect "C++17"
+	characterset "Unicode"
 
 	SetTargetDir()
 	SetObjectDir()
@@ -11,11 +14,14 @@ project "MWL"
 	}
 
 	includedirs {
+		IncludeDir["WangMauna"],
 		"./monk/src",
 	}
 
 	links {
-		"opengl32"
+		"WangMauna",
+		"opengl32",
+		"UxTheme"
 	}
 
 	filter "configurations:Debug"

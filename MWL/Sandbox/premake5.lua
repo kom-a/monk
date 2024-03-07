@@ -7,3 +7,4 @@ include "../../Common.lua"
 include "Test1"
 
 include "../MWL"
+include "../../MOGL/MOGL"

@@ -11,6 +11,7 @@ namespace mwl
 		uint32_t Width		= 1600;
 		uint32_t Height		= 900;
 		bool VSync			= true;
+		bool Closed			= false;
 	};
 
 	class Window
@@ -19,9 +20,9 @@ namespace mwl
 		virtual ~Window() = default;
 
 	public:
-		virtual void Update()		= 0;
-		virtual void Close()		= 0;
-		virtual void EnableVSync()	= 0;
+		virtual void Update()					= 0;
+		virtual void Close()					= 0;
+		virtual void EnableVSync(bool enable)	= 0;
 
 		virtual bool Closed()			const = 0;
 		virtual uint32_t GetWidth()		const = 0;

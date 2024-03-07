@@ -1,17 +1,18 @@
 #pragma once
 
-#include "Pattern.h"
-#include "Format.h"
-
 #include <string>
 #include <sstream>
+#include <iostream>
+
+#include "Pattern.h"
+#include "Format.h"
 
 namespace wm
 {
 	class Logger
 	{
 	public:
-		Logger(std::string_view name, std::string_view pattern);
+		Logger(std::string_view name, std::string_view pattern = "[%t] | %n | %l: %v");
 		~Logger() = default;
 
 	public:

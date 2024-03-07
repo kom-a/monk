@@ -11,7 +11,8 @@ project "Test1"
 	}
 
 	includedirs {
-		IncludeDir["WangMauna"]
+		IncludeDir["WangMauna"],
+		IncludeDir["MOGl"],
 	}
 
 	links {

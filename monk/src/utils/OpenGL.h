@@ -2082,7 +2082,6 @@ namespace monk::utils
 		~OpenGLLoader() = default;
 
 	private:
-		friend class Window;
 		static void* LoadFunction(const char* name);
 
 		static void LoadOpenGL_1_0();

@@ -11,11 +11,13 @@ project "Test1"
 	}
 
 	includedirs {
-		IncludeDir["MWL"]
+		IncludeDir["MWL"],
+		IncludeDir["MOGL"]
 	}
 
 	links {
-		"MWL"
+		"MWL",
+		"MOGL"
 	}
 
 	filter "configurations:Debug"

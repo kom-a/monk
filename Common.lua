@@ -30,5 +30,6 @@ ObjectDir = "%{wks.location}/Bin-int/%{cfg.buildcfg}-%{cfg.system}-%{cfg.archite
 RootDir = ScriptPath()
 
 IncludeDir = {}
-IncludeDir["MWL"] = string.format("%s/MWL/MWL/include", RootDir)
+IncludeDir["MWL"]		= string.format("%s/MWL/MWL/include", RootDir)
 IncludeDir["WangMauna"] = string.format("%s/WangMauna/WangMauna/include", RootDir)
+IncludeDir["MOGL"]		= string.format("%s/MOGL/MOGL/include", RootDir)

@@ -43,7 +43,7 @@ namespace wm
 
 			State state = State::String;
 
-			const uint32_t INVALID_INDEX = std::numeric_limits<uint32_t>::max();
+			const uint32_t INVALID_INDEX = (uint32_t)-1;
 			uint32_t argumentIndex = INVALID_INDEX;
 
 			for (const auto& c : fmt)
@@ -139,13 +139,24 @@ namespace wm
 
 			return ss.str();
 		}
-			 
+
+		std::string ToString(const wchar_t* wstr)
+		{
+			return ToString(std::wstring(wstr));
+		}
+
 		template <typename T>
 		std::string ToString(const T& arg)
 		{
 			std::stringstream ss;
 			ss << arg;
 			return ss.str();
+		}
+
+		template<>
+		std::string ToString(const std::wstring& wstr)
+		{
+			return ToString(std::string(wstr.begin(), wstr.end()));
 		}
 
 		std::vector<std::string> ArgsToStrings()
