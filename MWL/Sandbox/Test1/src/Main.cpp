@@ -9,11 +9,20 @@
 #include <MOGL/MOGL.h>
 #include <WangMauna/WangMauna.h>
 
+#include <MOGL/MOGL.h>
+
+//#include "D:/dev/Monk/MOGL/MOGL/glad.h"
+
 int main()
 {
 	std::shared_ptr<mwl::Window> window(mwl::Create());
 
-	mogl::OpenGLLoader::LoadOpenGL(mogl::OpenGLVersion::OPENGL_3_3);
+	auto required_opengl_version = mogl::OpenGLVersion::OPENGL_4_3;
+
+	if (required_opengl_version != mogl::OpenGLLoader::LoadOpenGL(required_opengl_version))
+	{
+		std::cout << "Failed to load opengl" << std::endl;
+	}
 
 	GLuint VertexArrayID;
 	glGenVertexArrays(1, &VertexArrayID);
@@ -33,6 +42,8 @@ int main()
 	// Give our vertices to OpenGL.
 	glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
 
+	glBufferData(123123, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
+
 	while (!window->Closed())
 	{
 		glViewport(0, 0, window->GetWidth(), window->GetHeight());
@@ -49,6 +60,7 @@ int main()
 			0,                  // stride
 			(void*)0            // array buffer offset
 		);
+		
 		// Draw the triangle !
 		glDrawArrays(GL_TRIANGLES, 0, 3); // Starting from vertex 0; 3 vertices total -> 1 triangle
 		glDisableVertexAttribArray(0);
