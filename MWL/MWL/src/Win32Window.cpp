@@ -37,6 +37,69 @@ PFNWGLSWAPINTERVALEXTPROC wglSwapIntervalEXT;
 
 namespace mwl
 {
+	static OpenGLVersion g_OpenglVersion = OpenGLVersion::OPENGL_3_3;
+
+	static int GetMajorOpenGLVersion(OpenGLVersion openglVersion)
+	{
+		switch (openglVersion)
+		{
+			case mwl::OpenGLVersion::OPENGL_1_0: return 1;
+			case mwl::OpenGLVersion::OPENGL_1_1: return 1;
+			case mwl::OpenGLVersion::OPENGL_1_2: return 1;
+			case mwl::OpenGLVersion::OPENGL_1_3: return 1;
+			case mwl::OpenGLVersion::OPENGL_1_4: return 1;
+			case mwl::OpenGLVersion::OPENGL_1_5: return 1;
+			case mwl::OpenGLVersion::OPENGL_2_0: return 2;
+			case mwl::OpenGLVersion::OPENGL_2_1: return 2;
+			case mwl::OpenGLVersion::OPENGL_3_0: return 3;
+			case mwl::OpenGLVersion::OPENGL_3_1: return 3;
+			case mwl::OpenGLVersion::OPENGL_3_2: return 3;
+			case mwl::OpenGLVersion::OPENGL_3_3: return 3;
+			case mwl::OpenGLVersion::OPENGL_4_0: return 4;
+			case mwl::OpenGLVersion::OPENGL_4_1: return 4;
+			case mwl::OpenGLVersion::OPENGL_4_2: return 4;
+			case mwl::OpenGLVersion::OPENGL_4_3: return 4;
+			case mwl::OpenGLVersion::OPENGL_4_4: return 4;
+			case mwl::OpenGLVersion::OPENGL_4_5: return 4;
+			case mwl::OpenGLVersion::OPENGL_4_6: return 4;
+		}
+
+		return 3;
+	}
+
+	static int GetMinorOpenGLVersion(OpenGLVersion openglVersion)
+	{
+		switch (openglVersion)
+		{
+			case mwl::OpenGLVersion::OPENGL_1_0: return 0;
+			case mwl::OpenGLVersion::OPENGL_1_1: return 1;
+			case mwl::OpenGLVersion::OPENGL_1_2: return 2;
+			case mwl::OpenGLVersion::OPENGL_1_3: return 3;
+			case mwl::OpenGLVersion::OPENGL_1_4: return 4;
+			case mwl::OpenGLVersion::OPENGL_1_5: return 5;
+			case mwl::OpenGLVersion::OPENGL_2_0: return 0;
+			case mwl::OpenGLVersion::OPENGL_2_1: return 1;
+			case mwl::OpenGLVersion::OPENGL_3_0: return 0;
+			case mwl::OpenGLVersion::OPENGL_3_1: return 1;
+			case mwl::OpenGLVersion::OPENGL_3_2: return 2;
+			case mwl::OpenGLVersion::OPENGL_3_3: return 3;
+			case mwl::OpenGLVersion::OPENGL_4_0: return 0;
+			case mwl::OpenGLVersion::OPENGL_4_1: return 1;
+			case mwl::OpenGLVersion::OPENGL_4_2: return 2;
+			case mwl::OpenGLVersion::OPENGL_4_3: return 3;
+			case mwl::OpenGLVersion::OPENGL_4_4: return 4;
+			case mwl::OpenGLVersion::OPENGL_4_5: return 5;
+			case mwl::OpenGLVersion::OPENGL_4_6: return 6;
+		}
+
+		return 3;
+	}
+
+	void SetOpenGLVersion(OpenGLVersion openglVersion)
+	{
+		g_OpenglVersion = openglVersion;
+	}
+
 	Window* Create(const WindowProps& windowProps /*= WindowProps()*/)
 	{
 		return new Win32Window(windowProps);
@@ -53,7 +116,7 @@ namespace mwl
 		else
 			LOG_INFO("Window successfully created");
 
-		if (!CreateOpenGLContext(3, 3))
+		if (!CreateOpenGLContext(g_OpenglVersion))
 		{
 			LOG_CRITICAL("Could not create OpenGL context");
 			Close();
@@ -147,7 +210,7 @@ namespace mwl
 		return m_Win32Data.WindowHandle != nullptr;
 	}
 
-	bool Win32Window::CreateOpenGLContext(int major, int minor)
+	bool Win32Window::CreateOpenGLContext(OpenGLVersion openglVerson)
 	{
 		if (!InitOpenGLContext())
 		{
@@ -170,7 +233,7 @@ namespace mwl
 			return false;
 		}
 
-		m_Win32Data.OpenGLRenderingContext = CreateOpenGLRenderingContext(major, minor);
+		m_Win32Data.OpenGLRenderingContext = CreateOpenGLRenderingContext(openglVerson);
 
 		if (!m_Win32Data.OpenGLRenderingContext)
 		{
@@ -334,11 +397,11 @@ namespace mwl
 		return pixelFormatAttribs;
 	}
 
-	std::vector<int> Win32Window::GetOpenGLContextAttribs(int major, int minor) const
+	std::vector<int> Win32Window::GetOpenGLContextAttribs(OpenGLVersion openglVerson) const
 	{
 		std::vector<int> glAttribs = {
-			WGL_CONTEXT_MAJOR_VERSION_ARB, major,
-			WGL_CONTEXT_MINOR_VERSION_ARB, minor,
+			WGL_CONTEXT_MAJOR_VERSION_ARB, GetMajorOpenGLVersion(openglVerson),
+			WGL_CONTEXT_MINOR_VERSION_ARB, GetMinorOpenGLVersion(openglVerson),
 			WGL_CONTEXT_PROFILE_MASK_ARB,  WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
 			0,
 		};
@@ -366,9 +429,9 @@ namespace mwl
 		return true;
 	}
 
-	HGLRC Win32Window::CreateOpenGLRenderingContext(int major, int minor)
+	HGLRC Win32Window::CreateOpenGLRenderingContext(OpenGLVersion openglVerson)
 	{
-		std::vector<int> gl_attribs = GetOpenGLContextAttribs(major, minor);
+		std::vector<int> gl_attribs = GetOpenGLContextAttribs(openglVerson);
 
 		HGLRC opengl_rendering_context = wglCreateContextAttribsARB(GetDC(m_Win32Data.OpenGLHandle), nullptr, gl_attribs.data());
 		if (!opengl_rendering_context)
@@ -526,6 +589,10 @@ namespace mwl
 
 	static LRESULT Win32HandleWM_NCHITTEST(HWND hWindow, UINT uMessage, WPARAM wParam, LPARAM lParam)
 	{
+		auto window = (Win32Window*)GetWindowLongPtr(hWindow, GWLP_USERDATA);
+		if (!window)
+			return DefWindowProc(hWindow, uMessage, wParam, lParam);
+
 		// Let the default procedure handle resizing areas
 		LRESULT hit = DefWindowProc(hWindow, uMessage, wParam, lParam);
 		switch (hit)
@@ -541,10 +608,6 @@ namespace mwl
 			case HTBOTTOMLEFT:
 				return hit;
 		}
-
-		auto window = (Win32Window*)GetWindowLongPtr(hWindow, GWLP_USERDATA);
-		if (!window)
-			return DefWindowProc(hWindow, uMessage, wParam, lParam);
 
 		Win32Window::Titlebar::HoveredButton title_bar_hovered_button = window->m_Titlebar.CurrentHoveredButton;
 

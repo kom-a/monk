@@ -3,26 +3,25 @@
 #include <memory>
 #include <iostream>
 #include <chrono>
-
 #include <Windows.h>
+
 
 #include <MOGL/MOGL.h>
 #include <WangMauna/WangMauna.h>
 
-#include <MOGL/MOGL.h>
-
-//#include "D:/dev/Monk/MOGL/MOGL/glad.h"
-
 int main()
 {
-	std::shared_ptr<mwl::Window> window(mwl::Create());
+	mwl::SetOpenGLVersion(mwl::OpenGLVersion::OPENGL_4_6);
+	mwl::Window* window = mwl::Create();
 
-	auto required_opengl_version = mogl::OpenGLVersion::OPENGL_4_3;
-
-	if (required_opengl_version != mogl::OpenGLLoader::LoadOpenGL(required_opengl_version))
+	if (mogl::OpenGLVersion::OPENGL_4_6 != mogl::OpenGLLoader::LoadOpenGL(mogl::OpenGLVersion::OPENGL_4_6))
 	{
 		std::cout << "Failed to load opengl" << std::endl;
 	}
+
+	const char* version = (const char*)glGetString(GL_VERSION);
+
+	std::cout << version << std::endl;
 
 	GLuint VertexArrayID;
 	glGenVertexArrays(1, &VertexArrayID);
@@ -48,7 +47,7 @@ int main()
 	{
 		glViewport(0, 0, window->GetWidth(), window->GetHeight());
 
-		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+		glClearColor(0.9f, 0.7f, 0.8f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 		glEnableVertexAttribArray(0);
 		glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);

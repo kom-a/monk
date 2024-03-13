@@ -24,15 +24,15 @@ namespace mwl
 
 	private:
 		bool CreateWin32Window();
-		bool CreateOpenGLContext(int major, int minor);
+		bool CreateOpenGLContext(OpenGLVersion openglVerson);
 		bool InitOpenGLContext();
 		HWND CreateDummyWindow();
 		void LoadOpenGLExtensions() const;
 		HWND CreateOpenGLHandle();
 		std::vector<int> GetPixelFormatAttribs() const;
-		std::vector<int> GetOpenGLContextAttribs(int major, int minor) const;
+		std::vector<int> GetOpenGLContextAttribs(OpenGLVersion openglVerson) const;
 		bool SetOpenGLPixelFormat(HWND handle);
-		HGLRC CreateOpenGLRenderingContext(int major, int minor);
+		HGLRC CreateOpenGLRenderingContext(OpenGLVersion openglVerson);
 
 		friend RECT Win32GetTitlebarRect			(HWND handle);
 

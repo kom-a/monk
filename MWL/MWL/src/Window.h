@@ -14,6 +14,31 @@ namespace mwl
 		bool Closed			= false;
 	};
 
+	enum class OpenGLVersion
+	{
+		OPENGL_1_0,
+		OPENGL_1_1,
+		OPENGL_1_2,
+		OPENGL_1_3,
+		OPENGL_1_4,
+		OPENGL_1_5,
+		OPENGL_2_0,
+		OPENGL_2_1,
+		OPENGL_3_0,
+		OPENGL_3_1,
+		OPENGL_3_2,
+		OPENGL_3_3,
+		OPENGL_4_0,
+		OPENGL_4_1,
+		OPENGL_4_2,
+		OPENGL_4_3,
+		OPENGL_4_4,
+		OPENGL_4_5,
+		OPENGL_4_6
+	};
+
+	void SetOpenGLVersion(OpenGLVersion openglVersion);
+
 	class Window
 	{
 	public:
