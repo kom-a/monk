@@ -910,35 +910,41 @@ namespace mwl
 		if (!window)
 			return DefWindowProc(hWindow, uMessage, wParam, lParam);
 
+		HCURSOR leftPointer = window->m_Style.Cursor.LeftPointer ? window->m_Style.Cursor.LeftPointer : LoadCursor(nullptr, IDC_ARROW);
+		HCURSOR resizeHorizontal = window->m_Style.Cursor.ResizeHorizontal ? window->m_Style.Cursor.ResizeHorizontal : LoadCursor(nullptr, IDC_SIZEWE);
+		HCURSOR resizeVertical = window->m_Style.Cursor.ResizeVertical ? window->m_Style.Cursor.ResizeVertical : LoadCursor(nullptr, IDC_SIZENS);
+		HCURSOR resizeBDiag = window->m_Style.Cursor.ResizeBDiag ? window->m_Style.Cursor.ResizeBDiag : LoadCursor(nullptr, IDC_SIZENESW);
+		HCURSOR resizeFDiag = window->m_Style.Cursor.ResizeFDiag ? window->m_Style.Cursor.ResizeFDiag: LoadCursor(nullptr, IDC_SIZENWSE);
+
 		switch(LOWORD(lParam))
 		{
 		case HTCLIENT:
 		{
-			SetCursor(window->m_Style.Cursor.LeftPointer);
+			SetCursor(leftPointer);
 		} break;
 		case HTRIGHT:
 		case HTLEFT:
 		{
-			SetCursor(window->m_Style.Cursor.ResizeHorizontal);
+			SetCursor(resizeHorizontal);
 		} break;
 			
 		case HTTOP:
 		case HTBOTTOM:
 		{
-			SetCursor(window->m_Style.Cursor.ResizeVertical);
+			SetCursor(resizeVertical);
 		} break;
 		case HTTOPRIGHT:
 		case HTBOTTOMLEFT:
 		{
-			SetCursor(window->m_Style.Cursor.ResizeBDiag);
+			SetCursor(resizeBDiag);
 		} break;
 		case HTBOTTOMRIGHT:
 		case HTTOPLEFT:
 		{
-			SetCursor(window->m_Style.Cursor.ResizeFDiag);
+			SetCursor(resizeFDiag);
 		} break;
 		default:
-			SetCursor(window->m_Style.Cursor.LeftPointer);
+			SetCursor(leftPointer);
 		}
 
 		return TRUE;

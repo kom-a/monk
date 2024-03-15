@@ -33,3 +33,4 @@ IncludeDir = {}
 IncludeDir["MWL"]		= string.format("%s/MWL/MWL/include", RootDir)
 IncludeDir["WangMauna"] = string.format("%s/WangMauna/WangMauna/include", RootDir)
 IncludeDir["MOGL"]		= string.format("%s/MOGL/MOGL/include", RootDir)
+IncludeDir["MMath"]		= string.format("%s/MMath/MMath/include", RootDir)

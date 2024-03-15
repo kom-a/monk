@@ -4,6 +4,8 @@
 
 #include <windows.h>
 #include <vector>
+#include <filesystem>
+#include <cstdlib>
 
 namespace mwl
 {

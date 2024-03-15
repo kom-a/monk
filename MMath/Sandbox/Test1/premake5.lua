@@ -11,15 +11,11 @@ project "Test1"
 	}
 
 	includedirs {
-		IncludeDir["MWL"],
-		IncludeDir["MOGL"],
-		IncludeDir["WangMauna"]
+		IncludeDir["MMath"]
 	}
 
 	links {
-		"MWL",
-		"MOGL",
-		"WangMauna"
+		"MMath"
 	}
 
 	filter "configurations:Debug"

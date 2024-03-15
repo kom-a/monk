@@ -3,9 +3,11 @@
 #include <string>
 #include <chrono>
 
-#include "Monk.h"
+#include <MWL/MWL.h>
+#include <MOGL/MOGL.h>
 
-#include <windows.h>
+#include "core/Memory.h"
+#include "core/Log.h"
 
 #define BIND_FUNCTION(fn) std::bind(&fn, this, std::placeholders::_1)
 
@@ -15,136 +17,38 @@ class Application
 {
 public:
 	Application();
-	~Application();
+	~Application() = default;
 
 	void Run();
 
 private:
-	void OnEvent(Event& e);
-	bool OnWindowResize(WindowResizeEvent& e);
-	bool OnButtonDown(MouseButtonDownEvent& e);
-	bool OnButtonUp(MouseButtonUpEvent& e);
 	void Update(float deltaTime);
 
 private:
-	Unique<Window> m_Window;
-	Unique<Renderer2D> m_Renderer2D;
-	Unique<Renderer> m_Renderer;
-
-	Shared<Camera> m_Camera;
-	Shared<CameraController> m_CameraController;
-	Shared<Shader> m_GLTFShader;
-
+	mwl::Window* m_Window;
 };
 
 Application::Application()
 {
-	m_Window = CreateUnique<Window>(1280, 720, "Monk");
-	m_Window->SetEventCallback(BIND_FUNCTION(Application::OnEvent));
-	m_Window->SwapInterval(1);
+	mwl::SetOpenGLVersion(mwl::OpenGLVersion::OPENGL_4_6);
+	m_Window = mwl::Create();
 
-	if (!utils::OpenGLLoader::LoadOpenGL(utils::OpenGLVersion::OPENGL_3_3))
-		DIE("Failed to load OpenGL functions");
+	if (mogl::OpenGLLoader::LoadOpenGL(mogl::OpenGLVersion::OPENGL_4_6) != mogl::OpenGLVersion::OPENGL_4_6)
+		LOG_ERROR("Failed to load opengl");
 	else
-	{
-		LOG_INFO("OpenGL: ");
-		LOG_INFO("	vendor: {0}", glGetString(GL_VENDOR));
-		LOG_INFO("	renderer: {0}", glGetString(GL_RENDERER));
-		LOG_INFO("	version: {0}", glGetString(GL_VERSION));
-	}
-
-	Render::SetClearColor(math::vec4(0.2f, 0.2f, 0.25f, 1.0f));
-	Render::EnableDepthTest(true);
-	Render::EnableBlending(true);
-	Render::EnableCulling(true);
-
-	m_Renderer2D = CreateUnique<Renderer2D>();
-	m_Renderer = CreateUnique<Renderer>();
-	m_Camera = CreateShared<Camera>(45.0f, (float)m_Window->GetWidth() / m_Window->GetHeight(), 0.01f, 100.0f);
-	m_Camera->SetPosition(math::vec3(0.0f, 0.0f, -10.0f));
-	m_Camera->SetTarget(math::vec3(0.0f));
-	m_CameraController = CreateShared<CameraController>(m_Camera);
-	auto vertex_src = FileManager::ReadFile("res/GLTFShader.vert");
-	auto fragment_src = FileManager::ReadFile("res/GLTFShader.frag");
-	m_GLTFShader = CreateShared<Shader>(vertex_src, fragment_src);
-
-	Random::Seed(Time::CurrentTime());
-}
-
-Application::~Application()
-{
-
+		LOG_INFO("\nOpenGL: \n\tvendor: {0}\n\trenderer: {1}\n\tversion: {2}", glGetString(GL_VENDOR), glGetString(GL_RENDERER), glGetString(GL_VERSION));
 }
 
 void Application::Run()
 {
-	Time timer;
-
-	Shared<Model> model = ModelLoader::LoadFromFile("res/models/Lieutenant/lieutenantHead.gltf");
+	glClearColor(0.6f, 0.8f, 1.0f, 1.0f);
 
 	while (!m_Window->Closed())
 	{
-		float deltaTime = timer.Delta();
-		m_Window->PollEvents();
-		m_CameraController->Update(deltaTime);
-
-		Render::Clear();
-
-		m_Renderer->Begin(m_Camera, m_GLTFShader);
-
-		m_Renderer->DrawModel(model);
-
-		m_Renderer->End();
-
-		Update(deltaTime);
-
-		if (Input::IsKeyPressed(Key::Escape))
-			m_Window->Close();
+		glClear(GL_COLOR_BUFFER_BIT);
 
 		m_Window->Update();
-		Input::Update();
 	}
-}
-
-void Application::OnEvent(Event& e)
-{
-	e.Dispatch<WindowResizeEvent>(BIND_FUNCTION(Application::OnWindowResize));
-	e.Dispatch<MouseButtonDownEvent>(BIND_FUNCTION(Application::OnButtonDown));
-	e.Dispatch<MouseButtonUpEvent>(BIND_FUNCTION(Application::OnButtonUp));
-}
-
-bool Application::OnWindowResize(WindowResizeEvent& e)
-{
-	glViewport(0, 0, e.GetWidth(), e.GetHeight());
-
-	return true;
-}
-
-bool Application::OnButtonDown(MouseButtonDownEvent& e)
-{
-	if (e.GetButton() == Mouse::ButtonRight)
-	{
-		m_Window->HideCursor(true);
-		m_Window->LockCursor(true);
-	}
-
-	return true;
-}
-
-bool Application::OnButtonUp(MouseButtonUpEvent& e)
-{
-	if (e.GetButton() == Mouse::ButtonRight)
-	{
-		m_Window->HideCursor(false);
-		m_Window->LockCursor(false);
-	}
-
-	return true;
-}
-
-void Application::Update(float deltaTime)
-{
-
 }
 
 int main()

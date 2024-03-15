@@ -1,6 +1,5 @@
 #pragma once
 
-#include "core/Window.h"
 #include "core/Log.h"
 #include "core/Time.h"
 #include "core/Assert.h"
@@ -12,8 +11,6 @@
 #include "utils/TextureLoader.h"
 #include "utils/ModelLoader.h"
 #include "utils/JSON.h"
-
-#include "math/Math.h"
 
 #include "events/Event.h"
 #include "events/WindowEvent.h"

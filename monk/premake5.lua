@@ -7,15 +7,19 @@ project "Monk"
    SetObjectDir()
 
    files {
-      "monk/src/**",
-      "monk/res/**"
+      "src/**"
    }
 
    includedirs {
-      "./monk/src",
+       IncludeDir["WangMauna"],
+       IncludeDir["MWL"],
+       IncludeDir["MOGL"]
    }
 
    links {
+       "WangMauna",
+       "MWL",
+       "MOGL",
       "opengl32"
    }
 
