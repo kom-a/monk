@@ -1,37 +1,24 @@
 #include "Random.h"
 
-#include <cstdlib>
-
 #include "Time.h"
 #include "Assert.h"
 
 namespace monk
 {
+	std::random_device Random::m_RandomDevice = std::random_device();
 
-	void Random::Seed(uint32_t seed)
-	{
-		std::srand(seed);
-	}
-
-	int Random::Next()
-	{
-		return std::rand();
-	}
-
-	int Random::Next(int min, int max)
+	int Random::RandomInt(int min, int max)
 	{
 		MONK_ASSERT(min < max, "Minimal value can not be greater than maximal");
 
-		return min + std::rand() % (max - min);
+		std::default_random_engine randomEngine(m_RandomDevice());
+		std::uniform_int_distribution uniform_dist(min, max);
+
+		return uniform_dist(randomEngine);
 	}
 
 	float Random::Normalized()
 	{
-		return (float)std::rand() / RAND_MAX;
-	}
-
-	math::vec4 Random::Color()
-	{
-		return math::vec4(Normalized(), Normalized(), Normalized(), 1.0f);
+		return (float)RandomInt(0, RAND_MAX)/ RAND_MAX;
 	}
 }

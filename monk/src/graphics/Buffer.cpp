@@ -1,6 +1,6 @@
 #include "graphics/Buffer.h"
 
-#include "utils/OpenGL.h"
+#include <MOGL/MOGL.h>
 
 #include "core/Log.h"
 #include "core/Assert.h"

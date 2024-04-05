@@ -1,6 +1,6 @@
 #pragma once
 
-#include "math/vec2.h"
+#include <MMath/MMath.h>
 #include "input/KeyCodes.h"
 #include "input/MouseCodes.h"
 
@@ -18,7 +18,7 @@ namespace monk
 		static bool IsMouseButtonPressed(MouseCode button);
 		static bool IsMouseButtonDown(MouseCode button);
 		static bool IsMouseButtonUp(MouseCode button);
-		static math::vec2 GetMousePosition();
+		static mmath::vec2 GetMousePosition();
 		static float GetMouseX();
 		static float GetMouseY();
 

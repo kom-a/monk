@@ -1,7 +1,7 @@
 #pragma once
 
-#include "utils/OpenGL.h"
-#include "Math/Math.h"
+#include <MOGL/MOGL.h>
+#include <MMath/MMath.h>
 
 namespace monk
 {
@@ -24,13 +24,13 @@ namespace monk
 			CounterClockwise = GL_CCW
 		};
 
-		static void SetClearColor(const math::vec4& clearColor);
+		static void SetClearColor(const mmath::vec4& clearColor);
 		static void Clear();
 		static void EnableDepthTest(bool enable = true);
 		static void EnableBlending(bool enable = true);
 		static void EnableCulling(bool enable = true, CullFace cullFace = CullFace::Back, FrontFace frontFace = FrontFace::Clockwise);
 
 	private:
-		static math::vec4 s_ClearColor;
+		static mmath::vec4 s_ClearColor;
 	};
 }

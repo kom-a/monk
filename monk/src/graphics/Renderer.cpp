@@ -1,7 +1,7 @@
 #include "Renderer.h"
 
 #include "core/Assert.h"
-#include "utils/OpenGL.h"
+#include <MOGL/MOGL.h>
 #include "utils/FileManager.h"
 
 namespace monk

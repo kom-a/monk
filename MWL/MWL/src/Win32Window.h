@@ -24,6 +24,8 @@ namespace mwl
 		uint32_t GetWidth()	const override;
 		uint32_t GetHeight() const override;
 
+		void SetCursor(const Cursor& cursor) override;
+
 	private:
 		bool CreateWin32Window();
 		bool CreateOpenGLContext(OpenGLVersion openglVerson);
@@ -35,6 +37,15 @@ namespace mwl
 		std::vector<int> GetOpenGLContextAttribs(OpenGLVersion openglVerson) const;
 		bool SetOpenGLPixelFormat(HWND handle);
 		HGLRC CreateOpenGLRenderingContext(OpenGLVersion openglVerson);
+
+		friend void SpawnWindowResizeEvent			(const Win32Window* window);
+		friend void SpawnMouseMoveEvent				(const Win32Window* window);
+		friend void SpawnMouseButtonDownEvent		(const Win32Window* window, MouseButton button);
+		friend void SpawnMouseButtonUpEvent			(const Win32Window* window, MouseButton button);
+		friend void SpawnMouseButtonClickedEvent	(const Win32Window* window, MouseButton button);
+		friend void SpawnMouseScrollEvent			(const Win32Window* window, int delta);
+		friend void SpawnKeyDownEvent				(const Win32Window* window, KeyCode keyCode, bool repeat);
+		friend void SpawnKeyUpEvent					(const Win32Window* window, KeyCode keyCode);
 
 		friend RECT Win32GetTitlebarRect			(HWND handle);
 
@@ -49,6 +60,8 @@ namespace mwl
 		friend LRESULT Win32HandleWM_NCLBUTTONDOWN	(HWND hWindow, UINT uMessage, WPARAM wParam, LPARAM lParam);
 		friend LRESULT Win32HandleWM_NCLBUTTONUP	(HWND hWindow, UINT uMessage, WPARAM wParam, LPARAM lParam);
 		friend LRESULT Win32HandleWM_SETCURSOR		(HWND hWindow, UINT uMessage, WPARAM wParam, LPARAM lParam);
+
+		friend bool UpdateWindowMousePosition		(Win32Window* window, LPARAM lParam);
 
 		friend LRESULT CALLBACK WindowProc			(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 		friend LRESULT CALLBACK OpenGLPanelProc		(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -71,13 +84,13 @@ namespace mwl
 
 			struct
 			{
-				HCURSOR LeftPointer			= LoadCursorFromFile(L"res/oxy-bluecurve/left_ptr.cur");
-				HCURSOR HandPointer			= LoadCursorFromFile(L"res/oxy-bluecurve/pointing_hand.cur");
-				HCURSOR Text				= LoadCursorFromFile(L"res/oxy-bluecurve/Text.cur");
-				HCURSOR ResizeHorizontal	= LoadCursorFromFile(L"res/oxy-bluecurve/size_hor.cur");
-				HCURSOR ResizeVertical		= LoadCursorFromFile(L"res/oxy-bluecurve/size_ver.cur");
-				HCURSOR ResizeBDiag			= LoadCursorFromFile(L"res/oxy-bluecurve/size_bdiag.cur");
-				HCURSOR ResizeFDiag			= LoadCursorFromFile(L"res/oxy-bluecurve/size_fdiag.cur");
+				HCURSOR LeftPointer			= nullptr;
+				HCURSOR HandPointer			= nullptr;
+				HCURSOR Text				= nullptr;
+				HCURSOR ResizeHorizontal	= nullptr;
+				HCURSOR ResizeVertical		= nullptr;
+				HCURSOR ResizeBDiag			= nullptr;
+				HCURSOR ResizeFDiag			= nullptr;
 			} Cursor;
 		};
 
@@ -102,9 +115,24 @@ namespace mwl
 			HoveredButton CurrentHoveredButton = HoveredButton::None;
 		};
 
+		struct State
+		{
+			std::wstring Title;
+			
+			uint32_t Width;
+			uint32_t Height;
+
+			uint32_t MouseX;
+			uint32_t MouseY;
+			MouseButton MouseClicked;
+
+			bool VSync;
+			bool Closed;
+		};
+
 		friend Win32Window::Titlebar::ButtonRects win32_get_title_bar_button_rects(HWND handle, const RECT* title_bar_rect);
 
-		WindowProps m_WindowData;
+		State		m_State;
 		Win32Data	m_Win32Data;
 
 		Titlebar	m_Titlebar;

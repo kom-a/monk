@@ -1,7 +1,12 @@
 #pragma once
 
 #include <string>
+#include <functional>
 #include <inttypes.h>
+#include <filesystem>
+#include <optional>
+
+#include "Events.h"
 
 namespace mwl
 {
@@ -39,6 +44,27 @@ namespace mwl
 
 	void SetOpenGLVersion(OpenGLVersion openglVersion);
 
+	struct Cursor
+	{
+		explicit Cursor(const std::filesystem::path& filename);
+
+		std::optional<std::wstring> Pointer;
+		std::optional<std::wstring> Help;
+		std::optional<std::wstring> Work;
+		std::optional<std::wstring> Busy;
+		std::optional<std::wstring> Cross;
+		std::optional<std::wstring> Text;
+		std::optional<std::wstring> Hand;
+		std::optional<std::wstring> Unavailiable;
+		std::optional<std::wstring> Vert;
+		std::optional<std::wstring> Horz;
+		std::optional<std::wstring> Dgn1;
+		std::optional<std::wstring> Dgn2;
+		std::optional<std::wstring> Move;
+		std::optional<std::wstring> Alternate;
+		std::optional<std::wstring> Link;
+	};
+
 	class Window
 	{
 	public:
@@ -52,6 +78,34 @@ namespace mwl
 		virtual bool Closed()			const = 0;
 		virtual uint32_t GetWidth()		const = 0;
 		virtual uint32_t GetHeight()	const = 0;
+
+		virtual void SetCursor			(const Cursor& cursor);
+
+		void SetWindowResizeCallback	(const WindowResizeCallbackFn& callback);
+		void SetMouseMovedCallback		(const MouseMovedCallbackFn& callback);
+		void SetMouseButtonDownCallback	(const MouseButtonDownCallbackFn& callback);
+		void SetMouseButtonUpCallback	(const MouseButtonUpCallbackFn& callback);
+		void SetMouseClickedCallback	(const MouseClickedCallbackFn& callback);
+		void SetMouseScrollCalback		(const MouseScrollCallbackFn& callback);
+		void SetKeyDownCallback			(const KeyDownCallbackFn& callback);
+		void SetKeyUpCallback			(const KeyUpCallbackFn& callback);
+
+	protected:
+		struct
+		{
+			WindowResizeCallbackFn WindowResizeCallback			= nullptr;
+
+			MouseMovedCallbackFn MouseMovedCallback				= nullptr;
+			MouseButtonDownCallbackFn MouseButtonDownCallback	= nullptr;
+			MouseButtonUpCallbackFn MouseButtonUpCallback		= nullptr;
+			MouseClickedCallbackFn MouseClickedCallback			= nullptr;
+			MouseScrollCallbackFn MouseScrollCallback			= nullptr;
+
+			KeyDownCallbackFn KeyDownCallback					= nullptr;
+			KeyUpCallbackFn KeyUpCallback						= nullptr;
+		} Callbacks;
+
+		Cursor m_Cursor = Cursor(L"");
 	};
 
 	Window* Create(const WindowProps& windowProps = WindowProps());

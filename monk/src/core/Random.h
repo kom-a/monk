@@ -1,8 +1,9 @@
 #pragma once
 
 #include <inttypes.h>
+#include <random>
 
-#include "math/Math.h"
+#include "MMath/MMath.h"
 
 namespace monk
 {
@@ -12,11 +13,10 @@ namespace monk
 		Random() = delete;
 
 	public:
-		static void Seed(uint32_t seed);
-		static int Next();
-		static int Next(int min, int max);
+		static int RandomInt(int min, int max);
 		static float Normalized();
-		static math::vec4 Color();
+
 	private:
+		static std::random_device m_RandomDevice;
 	};
 }

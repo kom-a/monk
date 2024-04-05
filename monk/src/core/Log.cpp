@@ -1,3 +1,6 @@
 #include "Log.h"
 
-IMPL_LOGGER("Monk");
+namespace monk
+{
+	IMPL_LOGGER("Monk");
+}

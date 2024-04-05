@@ -9,10 +9,64 @@
 #include <MOGL/MOGL.h>
 #include <WangMauna/WangMauna.h>
 
+void resizeCallback(mwl::WindowResizeEvent e)
+{
+	std::cout << e.Width << " " << e.Height << std::endl;
+}
+
+void mouseMove(mwl::MouseMovedEvent e)
+{
+	std::cout << "Mouse " <<  e.X << " " << e.Y << std::endl;
+}
+
+void mouseButtonDown(mwl::MouseButtonDownEvent e)
+{
+	std::cout << "Mouse button down at (" << e.X << ", " << e.Y << ")\t button: " << (int)e.Button << std::endl;;
+}
+
+void mouseButtonUp(mwl::MouseButtonUpEvent e)
+{
+	std::cout << "Mouse button up at (" << e.X << ", " << e.Y << ")\t button: " << (int)e.Button << std::endl;;
+}
+
+void mouseClicked(mwl::MouseClickedEvent e)
+{
+	std::cout << "Mouse clicked at (" << e.X << ", " << e.Y << ")\t button: " << (int)e.Button << std::endl;
+}
+
+void mouseScroll(mwl::MouseScrollEvent e)
+{
+	std::cout << "Scroll: " << e.Delta << std::endl;
+}
+
+void keyDown(mwl::KeyDownEvent e)
+{
+	if (e.Repeat) 
+		return;
+
+	std::cout << "Key down " << (char)e.Key << "   Repeat: " << e.Repeat << std::endl;
+}
+
+void keyUp(mwl::KeyUpEvent e)
+{
+	std::cout << "Key up " << (char)e.Key << std::endl;
+}
+
 int main()
 {
 	mwl::SetOpenGLVersion(mwl::OpenGLVersion::OPENGL_4_6);
 	mwl::Window* window = mwl::Create();
+	//window->SetWindowResizeCallback(resizeCallback);
+	//window->SetMouseMovedCallback(mouseMove);
+	//window->SetMouseButtonDownCallback(mouseButtonDown);
+	//window->SetMouseButtonUpCallback(mouseButtonUp);
+	//window->SetMouseClickedCallback(mouseClicked);
+	//window->SetMouseScrollCalback(mouseScroll);
+	window->SetKeyDownCallback(keyDown);
+//	window->SetKeyUpCallback(keyUp);
+
+	mwl::Cursor cursor(L"res/oxy-bluecurve/oxy-bluecurve.inf");
+	window->SetCursor(cursor);
 
 	if (mogl::OpenGLVersion::OPENGL_4_6 != mogl::OpenGLLoader::LoadOpenGL(mogl::OpenGLVersion::OPENGL_4_6))
 	{

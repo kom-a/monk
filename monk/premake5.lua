@@ -13,13 +13,17 @@ project "Monk"
    includedirs {
        IncludeDir["WangMauna"],
        IncludeDir["MWL"],
-       IncludeDir["MOGL"]
+       IncludeDir["MOGL"],
+       IncludeDir["MMath"],
+
+       "src/"
    }
 
    links {
        "WangMauna",
        "MWL",
        "MOGL",
+       "MMath",
       "opengl32"
    }
 

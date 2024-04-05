@@ -2,4 +2,7 @@
 
 #include <WangMauna/WangMauna.h>
 
-DEFINE_LOGGER();
+namespace mwl
+{
+	DEFINE_LOGGER();
+}

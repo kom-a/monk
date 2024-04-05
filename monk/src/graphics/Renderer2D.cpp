@@ -1,6 +1,6 @@
 #include "graphics/Renderer2D.h"
 
-#include "utils/OpenGL.h"
+#include <MOGL/MOGL.h>
 #include "utils/FileManager.h"
 #include "core/Assert.h"
 
@@ -67,7 +67,7 @@ namespace monk
 		Flush();
 	}
 
-	void Renderer2D::DrawQuad(const math::vec2& position, const math::vec2& size, const math::vec4& color)
+	void Renderer2D::DrawQuad(const mmath::vec2& position, const mmath::vec2& size, const mmath::vec4& color)
 	{
 		MONK_ASSERT(m_VertexBufferData);
 
@@ -81,10 +81,10 @@ namespace monk
 		}
 
 		Vertex& topLeftVertex = m_VertexBufferData[m_BatchStats.Verticies + 0];
-		topLeftVertex.Position = math::vec3(position.x, position.y, 0.0f);
+		topLeftVertex.Position = mmath::vec3(position.x, position.y, 0.0f);
 		topLeftVertex.Color = color;
 		topLeftVertex.TextureID = 0;
-		topLeftVertex.TextureCoords = math::vec2(0.0f);
+		topLeftVertex.TextureCoords = mmath::vec2(0.0f);
 
 		Vertex& topRightVertex = m_VertexBufferData[m_BatchStats.Verticies + 1];
 		topRightVertex = topLeftVertex;
@@ -103,7 +103,7 @@ namespace monk
 		m_BatchStats.Quads += 1;
 	}
 
-	void Renderer2D::DrawTexture(const math::vec2& position, const math::vec2& size, const Texture2D& texture)
+	void Renderer2D::DrawTexture(const mmath::vec2& position, const mmath::vec2& size, const Texture2D& texture)
 	{
 		MONK_ASSERT(m_VertexBufferData);
 
@@ -134,25 +134,25 @@ namespace monk
 		}
 
 		Vertex& topLeftVertex = m_VertexBufferData[m_BatchStats.Verticies + 0];
-		topLeftVertex.Position = math::vec3(position.x, position.y, 0.0f);
-		topLeftVertex.Color = math::vec4(1.0f);
+		topLeftVertex.Position = mmath::vec3(position.x, position.y, 0.0f);
+		topLeftVertex.Color = mmath::vec4(1.0f);
 		topLeftVertex.TextureID = textureID;
-		topLeftVertex.TextureCoords = math::vec2(0.0f, 0.0f);
+		topLeftVertex.TextureCoords = mmath::vec2(0.0f, 0.0f);
 
 		Vertex& topRightVertex = m_VertexBufferData[m_BatchStats.Verticies + 1];
 		topRightVertex = topLeftVertex;
 		topRightVertex.Position.x += size.x;
-		topRightVertex.TextureCoords = math::vec2(1.0f, 0.0f);
+		topRightVertex.TextureCoords = mmath::vec2(1.0f, 0.0f);
 
 		Vertex& bottomRightVertex = m_VertexBufferData[m_BatchStats.Verticies + 2];
 		bottomRightVertex = topRightVertex;
 		bottomRightVertex.Position.y += size.y;
-		bottomRightVertex.TextureCoords = math::vec2(1.0f, 1.0f);
+		bottomRightVertex.TextureCoords = mmath::vec2(1.0f, 1.0f);
 
 		Vertex& bottomLeftVertex = m_VertexBufferData[m_BatchStats.Verticies + 3];
 		bottomLeftVertex = topLeftVertex;
 		bottomLeftVertex.Position.y += size.y;
-		bottomLeftVertex.TextureCoords = math::vec2(0.0f, 1.0f);
+		bottomLeftVertex.TextureCoords = mmath::vec2(0.0f, 1.0f);
 
 		m_BatchStats.Verticies += 4;
 		m_BatchStats.Indices += 6;

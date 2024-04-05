@@ -106,15 +106,23 @@ namespace mwl
 	}
 
 	Win32Window::Win32Window(const WindowProps& windowProps)
-		: m_WindowData(windowProps)
 	{
+		m_State.Title	= windowProps.Title;
+		m_State.Width	= windowProps.Width;
+		m_State.Height	= windowProps.Height;
+		m_State.VSync	= windowProps.VSync;
+		m_State.Closed	= windowProps.Closed;
+		m_State.MouseX	= 0;
+		m_State.MouseY = 0;
+		m_State.MouseClicked = MouseButton::None;
+
 		if (!CreateWin32Window())
 		{
 			LOG_CRITICAL("Could not create window");
 			Close();
 		}
 		else
-			LOG_INFO("Window successfully created");
+			LOG_DEBUG("Window successfully created");
 
 		if (!CreateOpenGLContext(g_OpenglVersion))
 		{
@@ -122,10 +130,10 @@ namespace mwl
 			Close();
 		}
 		else
-			LOG_INFO("OpenGL context successfully created");
+			LOG_DEBUG("OpenGL context successfully created");
 
 		ShowWindow(m_Win32Data.WindowHandle, SW_SHOW);
-		EnableVSync(m_WindowData.VSync);
+		EnableVSync(m_State.VSync);
 
 		SetWindowLongPtr(m_Win32Data.WindowHandle, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
 	}
@@ -145,12 +153,12 @@ namespace mwl
 
 	void Win32Window::Close()
 	{
-		m_WindowData.Closed = true;
+		m_State.Closed = true;
 	}
 
 	void Win32Window::EnableVSync(bool enable)
 	{
-		m_WindowData.VSync = enable;
+		m_State.VSync = enable;
 
 		int interval = enable ? 1 : 0;
 		wglSwapIntervalEXT(interval);
@@ -158,17 +166,30 @@ namespace mwl
 
 	bool Win32Window::Closed() const
 	{
-		return m_WindowData.Closed;
+		return m_State.Closed;
 	}
 
 	uint32_t Win32Window::GetWidth() const
 	{
-		return m_WindowData.Width;
+		return m_State.Width;
 	}
 
 	uint32_t Win32Window::GetHeight() const
 	{
-		return m_WindowData.Height - m_Titlebar.Height;
+		return m_State.Height - m_Titlebar.Height;
+	}
+
+	void Win32Window::SetCursor(const Cursor& cursor)
+	{
+		Window::SetCursor(cursor);
+
+		m_Style.Cursor.LeftPointer			= LoadCursorFromFile(cursor.Pointer.value_or(L"").c_str());
+		m_Style.Cursor.HandPointer			= LoadCursorFromFile(cursor.Hand.value_or(L"").c_str());
+		m_Style.Cursor.Text					= LoadCursorFromFile(cursor.Text.value_or(L"").c_str());
+		m_Style.Cursor.ResizeHorizontal		= LoadCursorFromFile(cursor.Horz.value_or(L"").c_str());
+		m_Style.Cursor.ResizeVertical		= LoadCursorFromFile(cursor.Vert.value_or(L"").c_str());
+		m_Style.Cursor.ResizeFDiag			= LoadCursorFromFile(cursor.Dgn1.value_or(L"").c_str());
+		m_Style.Cursor.ResizeBDiag			= LoadCursorFromFile(cursor.Dgn2.value_or(L"").c_str());
 	}
 
 	bool Win32Window::CreateWin32Window()
@@ -179,24 +200,24 @@ namespace mwl
 		wc.lpfnWndProc		= WindowProc;
 		wc.hInstance		= GetModuleHandle(nullptr);
 		wc.hCursor			= LoadCursor(nullptr, IDC_ARROW);
-		wc.lpszClassName	= m_WindowData.Title.c_str();
+		wc.lpszClassName	= m_State.Title.c_str();
 
 		if (!RegisterClassEx(&wc))
 		{
-			LOG_ERROR("Could not register '{0}' window class", m_WindowData.Title);
+			LOG_ERROR("Could not register '{0}' window class", m_State.Title);
 			return false;
 		}
 		else 
-			LOG_INFO("Window class '{0}' registered", m_WindowData.Title);
+			LOG_DEBUG("Window class '{0}' registered", m_State.Title);
 
 		m_Win32Data.WindowHandle = CreateWindowEx(WS_EX_LEFT,
-			m_WindowData.Title.c_str(),
-			m_WindowData.Title.c_str(),
+			m_State.Title.c_str(),
+			m_State.Title.c_str(),
 			WS_OVERLAPPEDWINDOW,
 			CW_USEDEFAULT,
 			CW_USEDEFAULT,
-			m_WindowData.Width,
-			m_WindowData.Height,
+			m_State.Width,
+			m_State.Height,
 			nullptr,
 			nullptr,
 			GetModuleHandle(nullptr),
@@ -204,8 +225,8 @@ namespace mwl
 
 		RECT clientRect;
 		GetClientRect(m_Win32Data.WindowHandle, &clientRect);
-		m_WindowData.Width = clientRect.right - clientRect.left;
-		m_WindowData.Height = clientRect.bottom - clientRect.top;
+		m_State.Width = clientRect.right - clientRect.left;
+		m_State.Height = clientRect.bottom - clientRect.top;
 
 		return m_Win32Data.WindowHandle != nullptr;
 	}
@@ -292,7 +313,7 @@ namespace mwl
 		if (!RegisterClassA(&wc))
 			LOG_ERROR("Failed to register dummy OpenGL window: '{0}'", wc.lpszClassName);
 		else
-			LOG_INFO("Dummy OpenGL context successfully created: '{0}'", wc.lpszClassName);
+			LOG_DEBUG("Dummy OpenGL context successfully created: '{0}'", wc.lpszClassName);
 
 		HWND window = CreateWindowExA(
 			0,
@@ -311,7 +332,7 @@ namespace mwl
 		if (!window)
 			LOG_ERROR("Failed to create dummy OpenGL window");
 		else
-			LOG_INFO("Dummy OpenGL window successfully created");
+			LOG_DEBUG("Dummy OpenGL window successfully created");
 
 		HDC dc = GetDC(window);
 
@@ -362,7 +383,7 @@ namespace mwl
 			return nullptr;
 		}
 		else
-			LOG_INFO("Window class '{0}' registered", opengl_panel_name.c_str());
+			LOG_DEBUG("Window class '{0}' registered", opengl_panel_name.c_str());
 
 		HWND opengl_panel_handle = CreateWindowEx(WS_EX_LEFT,
 			opengl_panel_name.c_str(),
@@ -370,8 +391,8 @@ namespace mwl
 			WS_CHILD | WS_VISIBLE | CS_OWNDC | CS_HREDRAW | CS_VREDRAW,
 			0,
 			m_Titlebar.Height,
-			m_WindowData.Width,
-			m_WindowData.Height - m_Titlebar.Height,
+			m_State.Width,
+			m_State.Height - m_Titlebar.Height,
 			m_Win32Data.WindowHandle,
 			nullptr,
 			GetModuleHandle(nullptr),
@@ -447,6 +468,182 @@ namespace mwl
 		}
 		
 		return opengl_rendering_context;
+	}
+
+	static void SpawnWindowResizeEvent(const Win32Window* window)
+	{
+		if (!window)
+			return;
+
+		if (!window->Callbacks.WindowResizeCallback)
+			return;
+
+		WindowResizeEvent e;
+		e.Width	 = window->m_State.Width;
+		e.Height = window->m_State.Height;
+
+		window->Callbacks.WindowResizeCallback(e);
+	}
+
+	static void SpawnMouseMoveEvent(const Win32Window* window)
+	{
+		if (!window)
+			return;
+
+		if (!window->Callbacks.MouseMovedCallback)
+			return;
+
+		MouseMovedEvent e;
+		e.X = window->m_State.MouseX;
+		e.Y = window->m_State.MouseY;
+
+		window->Callbacks.MouseMovedCallback(e);
+	}
+
+	static void SpawnMouseButtonDownEvent(const Win32Window* window, MouseButton button)
+	{
+		if (!window)
+			return;
+
+		if (!window->Callbacks.MouseButtonDownCallback)
+			return;
+
+		MouseButtonDownEvent e;
+		e.X = window->m_State.MouseX;
+		e.Y = window->m_State.MouseY;
+		e.Button = button;
+
+		window->Callbacks.MouseButtonDownCallback(e);
+	}
+
+	static void SpawnMouseButtonUpEvent(const Win32Window* window, MouseButton button)
+	{
+		if (!window)
+			return;
+
+		if (!window->Callbacks.MouseButtonUpCallback)
+			return;
+
+		MouseButtonUpEvent e;
+		e.X = window->m_State.MouseX;
+		e.Y = window->m_State.MouseY;
+		e.Button = button;
+
+		window->Callbacks.MouseButtonUpCallback(e);
+	}
+
+	static void SpawnMouseButtonClickedEvent(const Win32Window* window, MouseButton button)
+	{
+		if (!window)
+			return;
+
+		if (!window->Callbacks.MouseClickedCallback)
+			return;
+
+		MouseClickedEvent e;
+		e.X = window->m_State.MouseX;
+		e.Y = window->m_State.MouseY;
+		e.Button = button;
+
+		window->Callbacks.MouseClickedCallback(e);
+	}
+
+	void SpawnMouseScrollEvent(const Win32Window* window, int delta)
+	{
+		if (!window)
+			return;
+
+		if (!window->Callbacks.MouseScrollCallback)
+			return;
+
+		MouseScrollEvent e;
+		e.Delta = delta;
+
+		window->Callbacks.MouseScrollCallback(e);
+	}
+
+	static void SpawnKeyDownEvent(const Win32Window* window, KeyCode keyCode, bool repeat)
+	{
+		if (!window)
+			return;
+
+		if (!window->Callbacks.KeyDownCallback)
+			return;
+
+		KeyDownEvent e;
+		e.Key = keyCode;
+		e.Repeat = repeat;
+
+		if(e.Key != KeyCode::None)
+			window->Callbacks.KeyDownCallback(e);
+	}
+
+	static void SpawnKeyUpEvent(const Win32Window* window, KeyCode keyCode)
+	{
+		if (!window)
+			return;
+
+		if (!window->Callbacks.KeyUpCallback)
+			return;
+
+		KeyUpEvent e;
+		e.Key = keyCode;
+
+		if (e.Key != KeyCode::None)
+			window->Callbacks.KeyUpCallback(e);
+	}
+
+	static KeyCode Win32KeyToKeyCode(WPARAM keyCode)
+	{
+		switch (keyCode)
+		{
+		case '0': return KeyCode::D0;
+		case '1': return KeyCode::D1;
+		case '2': return KeyCode::D2;
+		case '3': return KeyCode::D3;
+		case '4': return KeyCode::D4;
+		case '5': return KeyCode::D5;
+		case '6': return KeyCode::D6;
+		case '7': return KeyCode::D7;
+		case '8': return KeyCode::D8;
+		case '9': return KeyCode::D9;
+
+		case 'A': return KeyCode::A;
+		case 'B': return KeyCode::B;
+		case 'C': return KeyCode::C;
+		case 'D': return KeyCode::D;
+		case 'E': return KeyCode::E;
+		case 'F': return KeyCode::F;
+		case 'G': return KeyCode::G;
+		case 'H': return KeyCode::H;
+		case 'I': return KeyCode::I;
+		case 'J': return KeyCode::J;
+		case 'K': return KeyCode::K;
+		case 'L': return KeyCode::L;
+		case 'M': return KeyCode::M;
+		case 'N': return KeyCode::N;
+		case 'O': return KeyCode::O;
+		case 'P': return KeyCode::P;
+		case 'Q': return KeyCode::Q;
+		case 'R': return KeyCode::R;
+		case 'S': return KeyCode::S;
+		case 'T': return KeyCode::T;
+		case 'U': return KeyCode::U;
+		case 'V': return KeyCode::V;
+		case 'W': return KeyCode::W;
+		case 'X': return KeyCode::X;
+		case 'Y': return KeyCode::Y;
+		case 'Z': return KeyCode::Z;
+
+		case VK_ESCAPE:		return KeyCode::Escape;
+		case VK_RETURN:		return KeyCode::Enter;
+		case VK_SPACE:		return KeyCode::Space;
+		case VK_LCONTROL:	return KeyCode::LeftControl;
+
+		default: return KeyCode::None;
+		}
+
+		return KeyCode::None;
 	}
 
 	static int Win32DpiScale(int value, UINT dpi)
@@ -780,8 +977,8 @@ namespace mwl
 		uint32_t width = LOWORD(lParam);
 		uint32_t height = HIWORD(lParam);
 
-		window->m_WindowData.Width = width;
-		window->m_WindowData.Height = height;
+		window->m_State.Width = width;
+		window->m_State.Height = height;
 
 		auto titlebar_height = window->m_Titlebar.Height;
 
@@ -952,6 +1149,8 @@ namespace mwl
 
 	static LRESULT CALLBACK WindowProc(HWND hWindow, UINT uMessage, WPARAM wParam, LPARAM lParam)
 	{
+		auto window = (const Win32Window*)(GetWindowLongPtr(hWindow, GWLP_USERDATA));
+
 		switch (uMessage) 
 		{
 		case WM_NCCALCSIZE: 
@@ -976,7 +1175,9 @@ namespace mwl
 		} break;
 		case WM_SIZE:
 		{
-			return Win32HandleWM_SIZE(hWindow, uMessage, wParam, lParam);
+			auto res = Win32HandleWM_SIZE(hWindow, uMessage, wParam, lParam);
+			SpawnWindowResizeEvent(window);
+			return res;
 		} break;
 		case WM_NCMOUSEMOVE:
 		{
@@ -1009,6 +1210,19 @@ namespace mwl
 			PostQuitMessage(0);
 			return 0;
 		}
+		case WM_KEYDOWN:
+		{
+			KeyCode keyCode = Win32KeyToKeyCode(wParam);
+			uint32_t repeat = lParam & (1 << 30);
+
+			SpawnKeyDownEvent(window, keyCode, repeat);
+		} break;
+		case WM_KEYUP:
+		{
+			KeyCode keyCode = Win32KeyToKeyCode(wParam);
+
+			SpawnKeyUpEvent(window, keyCode);
+		} break;
 		default:
 		{
 			return DefWindowProc(hWindow, uMessage, wParam, lParam);
@@ -1016,6 +1230,25 @@ namespace mwl
 		}
 
 		return DefWindowProc(hWindow, uMessage, wParam, lParam);
+	}
+
+	static bool UpdateWindowMousePosition(Win32Window* window, LPARAM lParam)
+	{
+		if (!window)
+			return false;
+
+		auto mouse_x = GET_X_LPARAM(lParam);
+		auto mouse_y = GET_Y_LPARAM(lParam);
+
+		if (window->m_State.MouseX != mouse_x && window->m_State.MouseY != mouse_y)
+		{
+			window->m_State.MouseX = mouse_x;
+			window->m_State.MouseY = mouse_y;
+
+			return true;
+		}
+
+		return false;
 	}
 
 	static LRESULT CALLBACK OpenGLPanelProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -1030,6 +1263,63 @@ namespace mwl
 		{
 			window->m_Titlebar.CurrentHoveredButton = Win32Window::Titlebar::HoveredButton::None;
 			InvalidateRect(window->m_Win32Data.WindowHandle, &Win32GetTitlebarRect(window->m_Win32Data.WindowHandle), FALSE);
+
+			if (UpdateWindowMousePosition(window, lParam))
+			{
+				window->m_State.MouseClicked = MouseButton::None;
+
+				SpawnMouseMoveEvent(window);
+			}
+		} break;
+		case WM_LBUTTONDOWN:
+		{
+			window->m_State.MouseClicked = MouseButton::Left;
+
+			UpdateWindowMousePosition(window, lParam);
+			SpawnMouseButtonDownEvent(window, MouseButton::Left);
+		} break;
+		case WM_LBUTTONUP:
+		{
+			UpdateWindowMousePosition(window, lParam);
+			SpawnMouseButtonUpEvent(window, MouseButton::Left);
+
+			if (window->m_State.MouseClicked == MouseButton::Left)
+				SpawnMouseButtonClickedEvent(window, MouseButton::Left);
+		} break;
+		case WM_RBUTTONDOWN:
+		{
+			window->m_State.MouseClicked = MouseButton::Right;
+
+			UpdateWindowMousePosition(window, lParam);
+			SpawnMouseButtonDownEvent(window, MouseButton::Right);
+		} break;
+		case WM_RBUTTONUP:
+		{
+			UpdateWindowMousePosition(window, lParam);
+			SpawnMouseButtonUpEvent(window, MouseButton::Right);
+
+			if (window->m_State.MouseClicked == MouseButton::Right)
+				SpawnMouseButtonClickedEvent(window, MouseButton::Right);
+		} break;
+		case WM_MBUTTONDOWN:
+		{
+			window->m_State.MouseClicked = MouseButton::Middle;
+
+			UpdateWindowMousePosition(window, lParam);
+			SpawnMouseButtonDownEvent(window, MouseButton::Middle);
+		} break;
+		case WM_MBUTTONUP:
+		{
+			UpdateWindowMousePosition(window, lParam);
+			SpawnMouseButtonUpEvent(window, MouseButton::Middle);
+
+			if (window->m_State.MouseClicked == MouseButton::Middle)
+				SpawnMouseButtonClickedEvent(window, MouseButton::Middle);
+		} break;
+		case WM_MOUSEWHEEL:
+		{
+			int delta = GET_WHEEL_DELTA_WPARAM(wParam) / WHEEL_DELTA;
+			SpawnMouseScrollEvent(window, delta);
 		} break;
 		default:
 			return DefWindowProc(hWnd, uMsg, wParam, lParam);

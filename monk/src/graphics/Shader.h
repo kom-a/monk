@@ -3,7 +3,7 @@
 #include <inttypes.h>
 #include <string>
 
-#include "math/Mat4.h"
+#include <MMath/MMath.h>
 
 namespace monk
 {
@@ -17,7 +17,7 @@ namespace monk
 		void Unbind() const;
 
 		void SetInt(const std::string& name, int value);
-		void SetMatrix4(const std::string& name, const math::mat4& matrix);
+		void SetMatrix4(const std::string& name, const mmath::mat4& matrix);
 
 	private:
 		uint32_t CompileShader(const std::string& shaderSource, uint32_t type);

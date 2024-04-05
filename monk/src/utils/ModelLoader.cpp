@@ -145,7 +145,7 @@ namespace monk
 			else
 			{
 				// TODO: Get Translation, Rotation and Scale and use them
-				gltfNode.Matrix = math::mat4(1.0f);
+				gltfNode.Matrix = mmath::mat4(1.0f);
 				gltfNode.UseMatrix = false;
 			}
 			gltfNode.Mesh = (*node).TryGetNumber("mesh", -1);
@@ -185,7 +185,7 @@ namespace monk
 		return attributes;
 	}
 
-	std::vector<Mesh> ModelLoader::ProcessNode(const GLTF& gltf, uint32_t node, const std::vector<FileData>& buffers, const math::mat4& parentMatrix)
+	std::vector<Mesh> ModelLoader::ProcessNode(const GLTF& gltf, uint32_t node, const std::vector<FileData>& buffers, const mmath::mat4& parentMatrix)
 	{
 		std::vector<Mesh> meshes;
 
@@ -262,9 +262,9 @@ namespace monk
 			fileData.Free();
 	}
 
-	math::mat4 ModelLoader::GetMatrixFromJSONList(const JSONList& list)
+	mmath::mat4 ModelLoader::GetMatrixFromJSONList(const JSONList& list)
 	{
-		return math::Transpose(math::mat4(
+		return mmath::Transpose(mmath::mat4(
 			list[0 * 4 + 0]->GetNumber(),
 			list[0 * 4 + 1]->GetNumber(),
 			list[0 * 4 + 2]->GetNumber(),

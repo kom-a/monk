@@ -2,7 +2,7 @@
 
 #include "core/Log.h"
 #include "core/Assert.h"
-#include "utils/OpenGL.h"
+#include <MOGL/MOGL.h>
 #include "utils/TextureLoader.h"
 
 #include <fstream>

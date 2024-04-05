@@ -8,7 +8,7 @@
 
 #include "graphics/Renderer2D.h"
 #include "graphics/OrthographicCamera.h"
-#include "math/Math.h"
+#include <MMath/MMath.h>
 
 #include "events/MouseEvent.h"
 

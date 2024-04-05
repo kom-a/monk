@@ -1,8 +1,8 @@
 #pragma once
 
-#include "core/Log.h"
-
 #include <filesystem>
+
+#include "Log.h"
 
 #define MONK_EXPAND_MACRO(x) x
 #define MONK_STRINGIFY_MACRO(x) #x

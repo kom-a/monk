@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core/Memory.h"
-#include "math/Math.h"
+#include <MMath/MMath.h>
 #include "graphics/Buffer.h"
 #include "graphics/Shader.h"
 #include "graphics/Texture2D.h"
@@ -18,10 +18,10 @@ namespace monk
 	public:
 		struct Vertex
 		{
-			math::vec3 Position;
-			math::vec4 Color;
+			mmath::vec3 Position;
+			mmath::vec4 Color;
 			float TextureID;
-			math::vec2 TextureCoords;
+			mmath::vec2 TextureCoords;
 
 			static BufferLayout GetLayout()
 			{
@@ -38,8 +38,8 @@ namespace monk
 		void Begin(const OrthographicCamera& camera);
 		void End();
 
-		void DrawQuad(const math::vec2& position, const math::vec2& size, const math::vec4& color);
-		void DrawTexture(const math::vec2& position, const math::vec2& size, const Texture2D& texture);
+		void DrawQuad(const mmath::vec2& position, const mmath::vec2& size, const mmath::vec4& color);
+		void DrawTexture(const mmath::vec2& position, const mmath::vec2& size, const Texture2D& texture);
 
 	private:
 		void BeginBatch();

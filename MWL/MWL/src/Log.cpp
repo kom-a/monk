@@ -1,3 +1,6 @@
 #include "Log.h"
 
-IMPL_LOGGER("MWL");
+namespace mwl
+{
+	IMPL_LOGGER("MWL");
+}

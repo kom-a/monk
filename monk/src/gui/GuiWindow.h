@@ -2,7 +2,7 @@
 
 #include <string>
 
-#include "math/Math.h"
+#include <MMath/MMath.h>
 
 namespace monk
 {

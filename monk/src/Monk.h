@@ -6,7 +6,7 @@
 #include "core/Random.h"
 #include "core/Memory.h"
 
-#include "utils/OpenGL.h"
+#include <MOGL/MOGL.h>
 #include "utils/FileManager.h"
 #include "utils/TextureLoader.h"
 #include "utils/ModelLoader.h"

@@ -41,9 +41,9 @@ namespace monk
 		return s_MouseButtonUp[button];
 	}
 
-	math::vec2 Input::GetMousePosition()
+	mmath::vec2 Input::GetMousePosition()
 	{
-		return math::vec2(s_MouseX, s_MouseY);
+		return mmath::vec2(s_MouseX, s_MouseY);
 	}
 
 	float Input::GetMouseX()

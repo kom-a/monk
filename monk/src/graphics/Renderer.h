@@ -3,7 +3,7 @@
 #include "core/Memory.h"
 #include "Buffer.h"
 #include "Shader.h"
-#include "Math/Math.h"
+#include <MMath/MMath.h>
 #include "graphics/Model.h"
 #include "graphics/Camera.h"
 

@@ -2,9 +2,9 @@
 
 namespace monk
 {
-	math::vec4 Render::s_ClearColor = math::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+	mmath::vec4 Render::s_ClearColor = mmath::vec4(0.0f, 0.0f, 0.0f, 1.0f);
 
-	void Render::SetClearColor(const math::vec4& clearColor)
+	void Render::SetClearColor(const mmath::vec4& clearColor)
 	{
 		s_ClearColor = clearColor;
 	}

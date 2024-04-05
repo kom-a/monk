@@ -2,4 +2,8 @@
 
 #include <WangMauna/WangMauna.h>
 
-DEFINE_LOGGER();
+namespace monk
+{
+	DEFINE_LOGGER();
+}
+

@@ -5,7 +5,7 @@
 #include <memory>
 
 #include "core/Memory.h"
-#include "math/Math.h"
+#include <MMath/MMath.h>
 #include "utils/TextureLoader.h"
 
 namespace monk
@@ -16,7 +16,6 @@ namespace monk
 		static Shared<Texture2D> Create(const std::string& filename, TextureFormat format = TextureFormat::INTERNAL);
 		static Shared<Texture2D> Create(int width, int height, TextureFormat format = TextureFormat::RGBA, uint8_t* data = nullptr);
 
-
 		Texture2D(int width, int height, int channels, uint8_t* data);
 		~Texture2D();
 		
@@ -25,7 +24,7 @@ namespace monk
 		void Unbind();
 
 	public:
-		inline math::vec2 Size() const { return math::vec2(m_Width, m_Height); }
+		inline mmath::vec2 Size() const { return mmath::vec2(m_Width, m_Height); }
 		inline unsigned GetID() const { return m_TextureID; }
 
 	private:
