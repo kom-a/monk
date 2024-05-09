@@ -9,19 +9,12 @@ project "MWL"
 	SetTargetDir()
 	SetObjectDir()
 
-	environmentVariables = {
-		"MYAPP_DATA=%{wks.location}"
-	}
-
-	debugenvs(environmentVariables)
-
 	files {
 		"src/**",
 	}
 
 	includedirs {
-		IncludeDir["WangMauna"],
-		"./monk/src",
+		IncludeDir["WangMauna"]
 	}
 
 	links {

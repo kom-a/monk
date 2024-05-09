@@ -12,7 +12,7 @@ namespace wm
 	class Logger
 	{
 	public:
-		Logger(std::string_view name, std::string_view pattern = "[%t] | %n | %l: %v");
+		Logger(std::string_view name, std::string_view pattern = "[%t] | %l [%n]:  %v");
 		~Logger() = default;
 
 	public:

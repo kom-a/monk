@@ -13,6 +13,10 @@
 #include "graphics/Renderer2D.h"
 #include "core/Time.h"
 
+#include "input/Input.h"
+
+#include "gui/Gui.h"
+
 #define BIND_FUNCTION(fn) std::bind(&fn, this, std::placeholders::_1)
 
 using namespace monk;
@@ -31,6 +35,7 @@ private:
 	void Update(float deltaTime);
 
 	void OnWindowResize(mwl::WindowResizeEvent e);
+	void OnMouseMove(mwl::MouseMovedEvent e);
 
 private:
 	monk::Unique<mwl::Window> m_Window;
@@ -41,6 +46,8 @@ Application::Application()
 {
 	InitWindow();
 	LoadOpenGL();
+
+	Gui::Init();
 
 	m_Renderer2D = monk::CreateUnique<Renderer2D>();
 }
@@ -55,11 +62,15 @@ void Application::Run()
 
 	while (!m_Window->Closed())
 	{
+		Input::Update();
+
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		m_Renderer2D->Begin(camera);
 
-		float k = 5.0f;
+		Gui::NewFrame();
+
+		float k = 50.0f;
 
 		float step = 1.0f / k;
 
@@ -71,8 +82,18 @@ void Application::Run()
 			}
 		}
 
-		m_Renderer2D->End();
+		Gui::Begin("Hello world");
+		Gui::End();
 
+		Gui::Begin("Hello");
+		Gui::End();
+
+		Gui::Begin("world");
+		Gui::End();
+
+		Gui::EndFrame();
+
+		m_Renderer2D->End();
 		m_Window->Update();
 	}
 }
@@ -87,6 +108,7 @@ void Application::InitWindow()
 	m_Window.reset(mwl::Create(windowProps));
 
 	m_Window->SetWindowResizeCallback(BIND_FUNCTION(Application::OnWindowResize));
+	m_Window->SetMouseMovedCallback(BIND_FUNCTION(Application::OnMouseMove));
 
 	m_Window->SetCursor(mwl::Cursor(L"res/oxy-bluecurve/oxy-bluecurve.inf"));
 }
@@ -102,6 +124,11 @@ void Application::LoadOpenGL()
 void Application::OnWindowResize(mwl::WindowResizeEvent e)
 {
 	glViewport(0, 0, e.Width, e.Height);
+}
+
+void Application::OnMouseMove(mwl::MouseMovedEvent e)
+{
+	Input::SetMousePosition(e.X, e.Y);
 }
 
 int main()

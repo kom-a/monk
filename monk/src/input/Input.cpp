@@ -56,6 +56,12 @@ namespace monk
 		return s_MouseY;
 	}
 
+	void Input::SetMousePosition(int x, int y)
+	{
+		s_MouseX = x;
+		s_MouseY = y;
+	}
+
 	void Input::Update()
 	{
 		for (int i = 0; i < Key::MaxCount; i++)

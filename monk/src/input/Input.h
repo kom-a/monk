@@ -22,10 +22,11 @@ namespace monk
 		static float GetMouseX();
 		static float GetMouseY();
 
+		static void SetMousePosition(int x, int y);
+
 		static void Update();
 
 	private:
-		friend LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 		static float s_MouseX, s_MouseY;
 
 		static bool s_KeyDown[Key::MaxCount];

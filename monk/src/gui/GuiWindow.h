@@ -9,18 +9,18 @@ namespace monk
 	struct GuiWindowCacheData
 	{
 		std::string DebugName;
-		math::vec2 Position;
-		math::vec2 Size;
+		mmath::vec2 Position;
+		mmath::vec2 Size;
 		uint32_t ZOrder;
 		bool Collapsed;
 	};
 
 	struct GuiRect
 	{
-		math::vec2 Position;
-		math::vec2 Size;
+		mmath::vec2 Position;
+		mmath::vec2 Size;
 
-		bool IsInside(const math::vec2 point) const
+		bool IsInside(const mmath::vec2 point) const
 		{
 			const float& x = point.x;
 			const float& y = point.y;
@@ -36,10 +36,10 @@ namespace monk
 
 	struct GuiCircle
 	{
-		math::vec2 Center;
+		mmath::vec2 Center;
 		float Radius;
 
-		bool IsInside(const math::vec2& point) const 
+		bool IsInside(const mmath::vec2& point) const 
 		{
 			return (Center - point).length2() <= Radius * 2;
 		}
@@ -50,9 +50,9 @@ namespace monk
 		std::string Name;
 		uint32_t ID;
 
-		math::vec2 Position;
-		math::vec2 Size;
-		math::vec2 CursorPosition;
+		mmath::vec2 Position;
+		mmath::vec2 Size;
+		mmath::vec2 CursorPosition;
 		uint32_t ZOrder;
 		bool Collapsed;
 		bool* Open;

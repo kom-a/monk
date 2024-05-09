@@ -821,7 +821,7 @@ namespace mwl
 		cursor_point.x = GET_X_LPARAM(lParam);
 		cursor_point.y = GET_Y_LPARAM(lParam);
 		ScreenToClient(hWindow, &cursor_point);
-		if (cursor_point.y > 0 && cursor_point.y < frame_y + padding)
+		if (cursor_point.y > 0 && cursor_point.y < frame_y + padding && !Win32IsWindowMaximized(hWindow))
 			return HTTOP;
 
 		// Since we are drawing our own caption, this needs to be a custom test

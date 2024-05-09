@@ -32,7 +32,7 @@ namespace monk
 		uint32_t CollapsedWindowID;
 		uint32_t ClosedWindowID;
 
-		math::vec2 LastMouse;
+		mmath::vec2 LastMouse;
 
 		void Reset()
 		{
@@ -221,7 +221,7 @@ namespace monk
 			{
 				GuiStyle& style = Gui::GetStyle();
 				current->Size += Input::GetMousePosition() - GuiState.LastMouse;
-				current->Size = math::Clamp(current->Size, style.MinWindowSize, current->Size);
+				current->Size = mmath::Clamp(current->Size, style.MinWindowSize, current->Size);
 			}
 			else if (current->ID == GuiState.MovingWindowID)
 				current->Position += Input::GetMousePosition() - GuiState.LastMouse;
@@ -233,7 +233,6 @@ namespace monk
 
 			s_WindowCache[current->ID] = current->GetCacheData();
 
-			
 			DrawWindow(current);
 			current = current->Next;
 		}
@@ -270,17 +269,17 @@ namespace monk
 		GuiState.CurrentWindow = nullptr;
 	}
 
-	void Gui::Button(const std::string& text, const math::vec2& size)
+	void Gui::Button(const std::string& text, const mmath::vec2& size)
 	{
 		MONK_ASSERT(GuiState.CurrentWindow, "No current window. Use 'Begin' before calling 'Button'");
 
 		const auto& style = GetStyle();
 
-		math::vec2 position = GuiState.CurrentWindow->Position + GuiState.CurrentWindow->CursorPosition + math::vec2(0.0f, style.Padding.y);
+		mmath::vec2 position = GuiState.CurrentWindow->Position + GuiState.CurrentWindow->CursorPosition + mmath::vec2(0.0f, style.Padding.y);
 
 		s_Renderer->DrawQuad(position, size, style.Colors[GuiColor::Button]);
 
-		GuiState.CurrentWindow->CursorPosition += math::vec2(0.0f, size.y + style.Padding.y);
+		GuiState.CurrentWindow->CursorPosition += mmath::vec2(0.0f, size.y + style.Padding.y);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -291,13 +290,13 @@ namespace monk
 	{
 		GuiStyle& style = Gui::GetStyle();
 
-		style.Padding = math::vec2(5.0f, 5.0f);
+		style.Padding = mmath::vec2(5.0f, 5.0f);
 		style.HeaderHeight = 24.0f;
 		style.HeaderPadding = 6.0f;
 		style.HeaderContentSize = 0.8f;
-		style.MinWindowSize = math::vec2(100, 25);
-		style.WindowBorderSize = math::vec2(1.0f);
-		style.WindowResizeCornerSize = math::vec2(14.0f);
+		style.MinWindowSize = mmath::vec2(100, 25);
+		style.WindowBorderSize = mmath::vec2(1.0f);
+		style.WindowResizeCornerSize = mmath::vec2(14.0f);
 
 		Gui::DefaultColorTheme();
 	}
@@ -307,30 +306,30 @@ namespace monk
 		GuiStyle& style = Gui::GetStyle();
 		auto& colors = style.Colors;
 
-		colors[GuiColor::None] = math::vec4(0.0f);
+		colors[GuiColor::None] = mmath::vec4(0.0f);
 		
-		colors[GuiColor::Header] = math::vec4(0.1f, 0.1f, 0.1f, 1.0f);
-		colors[GuiColor::HotHeader] = math::vec4(0.1f, 0.1f, 0.1f, 1.0f);
-		colors[GuiColor::ActiveHeader] = math::vec4(0.1f, 0.1f, 0.1f, 1.0f);
+		colors[GuiColor::Header] = mmath::vec4(0.1f, 0.1f, 0.1f, 1.0f);
+		colors[GuiColor::HotHeader] = mmath::vec4(0.1f, 0.1f, 0.1f, 1.0f);
+		colors[GuiColor::ActiveHeader] = mmath::vec4(0.1f, 0.1f, 0.1f, 1.0f);
 		
-		colors[GuiColor::Window] = math::vec4(0.15f, 0.15f, 0.15f, 1.0f);
-		colors[GuiColor::HotWindow] = math::vec4(0.15f, 0.15f, 0.15f, 1.0f);
-		colors[GuiColor::ActiveWindow] = math::vec4(0.15f, 0.15f, 0.15f, 1.0f);
+		colors[GuiColor::Window] = mmath::vec4(0.15f, 0.15f, 0.15f, 1.0f);
+		colors[GuiColor::HotWindow] = mmath::vec4(0.15f, 0.15f, 0.15f, 1.0f);
+		colors[GuiColor::ActiveWindow] = mmath::vec4(0.15f, 0.15f, 0.15f, 1.0f);
 
-		colors[GuiColor::WindowTitle] = math::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-		colors[GuiColor::WindowBorder] = math::vec4(0.35f, 0.35f, 0.35f, 1.0f);
+		colors[GuiColor::WindowTitle] = mmath::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+		colors[GuiColor::WindowBorder] = mmath::vec4(0.35f, 0.35f, 0.35f, 1.0f);
 		
-		colors[GuiColor::WindowCollapseButton] = math::vec4(0.8f, 0.8f, 0.8f, 1.0f);
-		colors[GuiColor::HotWindowCollapseButton] = math::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+		colors[GuiColor::WindowCollapseButton] = mmath::vec4(0.8f, 0.8f, 0.8f, 1.0f);
+		colors[GuiColor::HotWindowCollapseButton] = mmath::vec4(1.0f, 1.0f, 1.0f, 1.0f);
 
-		colors[GuiColor::WindowCloseButton] = math::vec4(0.1f, 0.1f, 0.1f, 1.0f);
-		colors[GuiColor::HotWindowCloseButton] = math::vec4(0.85f, 0.3f, 0.3f, 1.0f);
+		colors[GuiColor::WindowCloseButton] = mmath::vec4(0.1f, 0.1f, 0.1f, 1.0f);
+		colors[GuiColor::HotWindowCloseButton] = mmath::vec4(0.85f, 0.3f, 0.3f, 1.0f);
 
-		colors[GuiColor::WindowResizeCorner] = math::vec4(0.1f, 0.2f, 0.3f, 1.0f);
-		colors[GuiColor::HotWindowResizeCorner] = math::vec4(0.3f, 0.7f, 0.2f, 1.0f);
-		colors[GuiColor::ActiveWindowResizeCorner] = math::vec4(0.2f, 0.4f, 0.1f, 1.0f);
+		colors[GuiColor::WindowResizeCorner] = mmath::vec4(0.1f, 0.2f, 0.3f, 1.0f);
+		colors[GuiColor::HotWindowResizeCorner] = mmath::vec4(0.3f, 0.7f, 0.2f, 1.0f);
+		colors[GuiColor::ActiveWindowResizeCorner] = mmath::vec4(0.2f, 0.4f, 0.1f, 1.0f);
 
-		colors[GuiColor::Button] = math::vec4(0.8f, 0.8f, 0.8f, 1.0f);
+		colors[GuiColor::Button] = mmath::vec4(0.8f, 0.8f, 0.8f, 1.0f);
 	}
 
 	bool Gui::RestoreWindow(GuiWindow* window)
@@ -400,18 +399,18 @@ namespace monk
 	void Gui::DrawWindowHeader(const GuiWindow* window)
 	{
 		GuiStyle& style = Gui::GetStyle();
-		const math::vec2 headerSize = math::vec2(window->Size.x, style.HeaderHeight);
+		const mmath::vec2 headerSize = mmath::vec2(window->Size.x, style.HeaderHeight);
 		GuiRect collapseButtonRect = window->GetCollapseButton();
 		GuiRect closeButtonRect = window->GetCloseButton();
 		GuiRect border;
 		border.Size = headerSize + style.WindowBorderSize * 2;
 		border.Position = window->Position - style.WindowBorderSize;
-		math::vec2 titlePosition = collapseButtonRect.Position + collapseButtonRect.Size + math::vec2(style.HeaderPadding * 2, 0.0f);
+		mmath::vec2 titlePosition = collapseButtonRect.Position + collapseButtonRect.Size + mmath::vec2(style.HeaderPadding * 2, 0.0f);
 
-		math::vec4 headerColor;
+		mmath::vec4 headerColor;
 		
-		math::vec4 collapseButtonColor = window->IsCollapseHot() ? style.Colors[GuiColor::HotWindowCollapseButton] : style.Colors[GuiColor::WindowCollapseButton];
-		math::vec4 closeButtonColor = window->IsCloseHot() ? style.Colors[GuiColor::HotWindowCloseButton] : style.Colors[GuiColor::WindowCloseButton];
+		mmath::vec4 collapseButtonColor = window->IsCollapseHot() ? style.Colors[GuiColor::HotWindowCollapseButton] : style.Colors[GuiColor::WindowCollapseButton];
+		mmath::vec4 closeButtonColor = window->IsCloseHot() ? style.Colors[GuiColor::HotWindowCloseButton] : style.Colors[GuiColor::WindowCloseButton];
 
 		if (window->ID == GuiState.ActiveWindowID)
 		{
@@ -441,16 +440,16 @@ namespace monk
 	{
 		GuiStyle& style = Gui::GetStyle();
 
-		const math::vec2& headerPosition = window->Position;
-		math::vec2 headerSize = math::vec2(window->Size.x, style.HeaderHeight);
-		math::vec2 windowBodyPosition = math::vec2(window->Position.x, window->Position.y + style.HeaderHeight);
-		const math::vec2& windowBodySize = window->Size;
-		math::vec2 borderPosition = window->Position + math::vec2(0, style.HeaderHeight) - math::vec2(style.WindowBorderSize.y, 0.0f);
-		math::vec2 borderSize = window->Size + math::vec2(style.WindowBorderSize.x * 2, style.WindowBorderSize.y);
-		math::vec2 resizeCornerPosition = window->GetResizeCorner().Position;
+		const mmath::vec2& headerPosition = window->Position;
+		mmath::vec2 headerSize = mmath::vec2(window->Size.x, style.HeaderHeight);
+		mmath::vec2 windowBodyPosition = mmath::vec2(window->Position.x, window->Position.y + style.HeaderHeight);
+		const mmath::vec2& windowBodySize = window->Size;
+		mmath::vec2 borderPosition = window->Position + mmath::vec2(0, style.HeaderHeight) - mmath::vec2(style.WindowBorderSize.y, 0.0f);
+		mmath::vec2 borderSize = window->Size + mmath::vec2(style.WindowBorderSize.x * 2, style.WindowBorderSize.y);
+		mmath::vec2 resizeCornerPosition = window->GetResizeCorner().Position;
 
-		math::vec4 headerColor;
-		math::vec4 windowColor;
+		mmath::vec4 headerColor;
+		mmath::vec4 windowColor;
 
 		if (window->ID == GuiState.ActiveWindowID)
 		{
