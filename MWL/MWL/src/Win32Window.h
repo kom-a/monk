@@ -21,10 +21,12 @@ namespace mwl
 		void EnableVSync(bool enable) override;
 
 		bool Closed() const override;
+		bool IsFullscreen() const override;
 		uint32_t GetWidth()	const override;
 		uint32_t GetHeight() const override;
 
 		void SetCursor(const Cursor& cursor) override;
+		void SetFullscreen(bool fullscreen) override;
 
 	private:
 		bool CreateWin32Window();
@@ -128,9 +130,12 @@ namespace mwl
 
 			bool VSync;
 			bool Closed;
+
+			bool IsFullscreen;
+			RECT FullscreenRecoverRect;
 		};
 
-		friend Win32Window::Titlebar::ButtonRects win32_get_title_bar_button_rects(HWND handle, const RECT* title_bar_rect);
+		friend Win32Window::Titlebar::ButtonRects Win32GetTitlebarButtonRects(HWND handle, const RECT* title_bar_rect);
 
 		State		m_State;
 		Win32Data	m_Win32Data;

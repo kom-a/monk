@@ -76,10 +76,13 @@ namespace mwl
 		virtual void EnableVSync(bool enable)	= 0;
 
 		virtual bool Closed()			const = 0;
+		virtual bool IsFullscreen()		const = 0;
 		virtual uint32_t GetWidth()		const = 0;
 		virtual uint32_t GetHeight()	const = 0;
+		
 
 		virtual void SetCursor			(const Cursor& cursor);
+		virtual void SetFullscreen		(bool fullscreen) = 0;
 
 		void SetWindowResizeCallback	(const WindowResizeCallbackFn& callback);
 		void SetMouseMovedCallback		(const MouseMovedCallbackFn& callback);

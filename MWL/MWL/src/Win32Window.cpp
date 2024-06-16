@@ -115,6 +115,8 @@ namespace mwl
 		m_State.MouseX	= 0;
 		m_State.MouseY = 0;
 		m_State.MouseClicked = MouseButton::None;
+		m_State.FullscreenRecoverRect = { 0 };
+		m_State.IsFullscreen = false;
 
 		if (!CreateWin32Window())
 		{
@@ -169,6 +171,11 @@ namespace mwl
 		return m_State.Closed;
 	}
 
+	bool Win32Window::IsFullscreen() const
+	{
+		return m_State.IsFullscreen;
+	}
+
 	uint32_t Win32Window::GetWidth() const
 	{
 		return m_State.Width;
@@ -190,6 +197,38 @@ namespace mwl
 		m_Style.Cursor.ResizeVertical		= LoadCursorFromFile(cursor.Vert.value_or(L"").c_str());
 		m_Style.Cursor.ResizeFDiag			= LoadCursorFromFile(cursor.Dgn1.value_or(L"").c_str());
 		m_Style.Cursor.ResizeBDiag			= LoadCursorFromFile(cursor.Dgn2.value_or(L"").c_str());
+	}
+
+	void Win32Window::SetFullscreen(bool fullscreen)
+	{
+		auto hwnd = m_Win32Data.WindowHandle;
+
+		if (GetWindowLongPtr(hwnd, GWL_STYLE) & WS_POPUP)
+		{
+			SetWindowLongPtr(hwnd, GWL_STYLE, WS_VISIBLE | WS_OVERLAPPEDWINDOW);
+			SetWindowPos(hwnd, 
+				nullptr, 
+				m_State.FullscreenRecoverRect.left, 
+				m_State.FullscreenRecoverRect.top,
+				m_State.FullscreenRecoverRect.right - m_State.FullscreenRecoverRect.left,
+				m_State.FullscreenRecoverRect.bottom - m_State.FullscreenRecoverRect.top,
+				SWP_FRAMECHANGED);
+
+			m_State.IsFullscreen = false;
+		}
+		else
+		{
+			GetWindowRect(hwnd, &m_State.FullscreenRecoverRect);
+			
+			int w = GetSystemMetrics(SM_CXSCREEN);
+			int h = GetSystemMetrics(SM_CYSCREEN);
+			SetWindowLongPtr(hwnd, GWL_STYLE, WS_VISIBLE | WS_POPUP);
+			SetWindowPos(hwnd, HWND_TOP, 0, 0, w, h, SWP_FRAMECHANGED);
+			SetWindowPos(m_Win32Data.OpenGLHandle, HWND_TOP, 0, 0, w, h, SWP_FRAMECHANGED);
+			
+
+			m_State.IsFullscreen = true;
+		}
 	}
 
 	bool Win32Window::CreateWin32Window()
@@ -635,6 +674,31 @@ namespace mwl
 		case 'Y': return KeyCode::Y;
 		case 'Z': return KeyCode::Z;
 
+		case 0x70: return KeyCode::F1;
+		case 0x71: return KeyCode::F2;
+		case 0x72: return KeyCode::F3;
+		case 0x73: return KeyCode::F4;
+		case 0x74: return KeyCode::F5;
+		case 0x75: return KeyCode::F6;
+		case 0x76: return KeyCode::F7;
+		case 0x77: return KeyCode::F8;
+		case 0x78: return KeyCode::F9;
+		case 0x79: return KeyCode::F10;
+		case 0x7A: return KeyCode::F11;
+		case 0x7B: return KeyCode::F12;
+		case 0x7C: return KeyCode::F13;
+		case 0x7D: return KeyCode::F14;
+		case 0x7E: return KeyCode::F15;
+		case 0x7F: return KeyCode::F16;
+		case 0x80: return KeyCode::F17;
+		case 0x81: return KeyCode::F18;
+		case 0x82: return KeyCode::F19;
+		case 0x83: return KeyCode::F20;
+		case 0x84: return KeyCode::F21;
+		case 0x85: return KeyCode::F22;
+		case 0x86: return KeyCode::F23;
+		case 0x87: return KeyCode::F24;
+
 		case VK_ESCAPE:		return KeyCode::Escape;
 		case VK_RETURN:		return KeyCode::Enter;
 		case VK_SPACE:		return KeyCode::Space;
@@ -651,7 +715,7 @@ namespace mwl
 		return (int)((float)value * (float)dpi / 96.0f);
 	}
 
-	static Win32Window::Titlebar::ButtonRects win32_get_title_bar_button_rects(HWND handle, const RECT* title_bar_rect) 
+	static Win32Window::Titlebar::ButtonRects Win32GetTitlebarButtonRects(HWND handle, const RECT* title_bar_rect)
 	{
 		auto window = (Win32Window*)GetWindowLongPtr(handle, GWLP_USERDATA);
 		if (!window)
@@ -872,7 +936,7 @@ namespace mwl
 		HBRUSH button_icon_brush = CreateSolidBrush(title_bar_item_color);
 		HPEN button_icon_pen = CreatePen(PS_SOLID, 1, title_bar_item_color);
 
-		Win32Window::Titlebar::ButtonRects button_rects = win32_get_title_bar_button_rects(hWindow, &title_bar_rect);
+		Win32Window::Titlebar::ButtonRects button_rects = Win32GetTitlebarButtonRects(hWindow, &title_bar_rect);
 
 		UINT dpi = GetDpiForWindow(hWindow);
 		int icon_dimension = Win32DpiScale(9, dpi);
@@ -1007,7 +1071,7 @@ namespace mwl
 		ScreenToClient(hWindow, &cursor_point);
 
 		RECT title_bar_rect = Win32GetTitlebarRect(hWindow);
-		Win32Window::Titlebar::ButtonRects button_rects = win32_get_title_bar_button_rects(hWindow, &title_bar_rect);
+		Win32Window::Titlebar::ButtonRects button_rects = Win32GetTitlebarButtonRects(hWindow, &title_bar_rect);
 
 		Win32Window::Titlebar::HoveredButton new_hovered_button = Win32Window::Titlebar::HoveredButton::None;
 		if (PtInRect(&button_rects.Close, cursor_point)) 
@@ -1167,10 +1231,14 @@ namespace mwl
 		} break;
 		case WM_NCHITTEST: 
 		{
+			if (window->m_State.IsFullscreen)
+				return DefWindowProc(hWindow, uMessage, wParam, lParam);
 			return Win32HandleWM_NCHITTEST(hWindow, uMessage, wParam, lParam);
 		} break;
 		case WM_PAINT: 
 		{
+			if (window->m_State.IsFullscreen)
+				return DefWindowProc(hWindow, uMessage, wParam, lParam);
 			return Win32HandleWM_PAINT(hWindow, uMessage, wParam, lParam);
 		} break;
 		case WM_SIZE:
@@ -1181,6 +1249,8 @@ namespace mwl
 		} break;
 		case WM_NCMOUSEMOVE:
 		{
+			if (window->m_State.IsFullscreen)
+				return DefWindowProc(hWindow, uMessage, wParam, lParam);
 			return Win32HandleWM_NCMOUSEMOVE(hWindow, uMessage, wParam, lParam);
 		} break;
 		case WM_MOUSEMOVE: 
@@ -1189,10 +1259,14 @@ namespace mwl
 		} break;
 		case WM_NCLBUTTONDOWN: 
 		{
+			if (window->m_State.IsFullscreen)
+				return DefWindowProc(hWindow, uMessage, wParam, lParam);
 			return Win32HandleWM_NCLBUTTONDOWN(hWindow, uMessage, wParam, lParam);
 		} break;
 		case WM_NCLBUTTONUP: 
 		{
+			if (window->m_State.IsFullscreen)
+				return DefWindowProc(hWindow, uMessage, wParam, lParam);
 			return Win32HandleWM_NCLBUTTONUP(hWindow, uMessage, wParam, lParam);
 		} break;
 		case WM_SETCURSOR: 
@@ -1262,7 +1336,14 @@ namespace mwl
 		case WM_MOUSEMOVE:
 		{
 			window->m_Titlebar.CurrentHoveredButton = Win32Window::Titlebar::HoveredButton::None;
-			InvalidateRect(window->m_Win32Data.WindowHandle, &Win32GetTitlebarRect(window->m_Win32Data.WindowHandle), FALSE);
+
+			RECT titlebar_rect = Win32GetTitlebarRect(window->m_Win32Data.WindowHandle);
+			Win32Window::Titlebar::ButtonRects titlebar_button_rects = Win32GetTitlebarButtonRects(window->m_Win32Data.WindowHandle, &titlebar_rect);
+			RECT titlebuttons_rect = { 0 };
+			titlebuttons_rect = titlebar_button_rects.Minimize;
+			titlebuttons_rect.right = titlebar_button_rects.Close.right;
+
+			InvalidateRect(window->m_Win32Data.WindowHandle, &titlebuttons_rect, FALSE);
 
 			if (UpdateWindowMousePosition(window, lParam))
 			{
