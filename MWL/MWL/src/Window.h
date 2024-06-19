@@ -72,15 +72,18 @@ namespace mwl
 
 	public:
 		virtual void Update()					= 0;
+		virtual void SwapBuffers()				= 0;
 		virtual void Close()					= 0;
 		virtual void EnableVSync(bool enable)	= 0;
+		virtual void MakeContextCurrent()		= 0;
 
 		virtual bool Closed()			const = 0;
 		virtual bool IsFullscreen()		const = 0;
 		virtual uint32_t GetWidth()		const = 0;
 		virtual uint32_t GetHeight()	const = 0;
-		
 
+		virtual void* GetNative() = 0;
+		
 		virtual void SetCursor			(const Cursor& cursor);
 		virtual void SetFullscreen		(bool fullscreen) = 0;
 

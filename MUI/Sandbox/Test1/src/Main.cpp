@@ -8,35 +8,107 @@
 DEFINE_LOGGER();
 IMPL_LOGGER("Mui Sandbox");
 
+mwl::Window* window;
+
+int mouseX = 0;
+int mouseY = 0;
+bool mouseDown = false;
+bool show_demo_window = false;
+
+void OnWindowResize(const mwl::WindowResizeEvent& e)
+{
+	glViewport(0, 0, e.Width, e.Height);
+}
+
+void OnKeyDown(const mwl::KeyDownEvent& e)
+{
+	if (e.Key == mwl::KeyCode::F11)
+		window->SetFullscreen(!window->IsFullscreen());
+
+	show_demo_window = true;
+}
+
+void OnKeyUp(const mwl::KeyUpEvent& e)
+{
+	show_demo_window = false;
+}
+
+void OnMouseMove(const mwl::MouseMovedEvent& e)
+{
+	mui::Input& input = mui::GetInput();
+
+	mouseX = e.X;
+	mouseY = e.Y;
+
+	input.MouseX = mouseX;
+	input.MouseY = mouseY;
+}
+
+void OnButtonDown(const mwl::MouseButtonDownEvent& e)
+{
+	mouseDown = true;
+	mui::Input& input = mui::GetInput();
+	input.MouseLeftDown = true;
+}
+
+void OnButtonUp(const mwl::MouseButtonUpEvent& e)
+{
+	mouseDown = false;
+	mui::Input& input = mui::GetInput();
+	input.MouseLeftDown = false;
+}
+
 int main()
 {
-	mwl::Window* window = mwl::Create();
+	mwl::WindowProps windowProps;
+	windowProps.VSync = true;
+	windowProps.Width = 1600;
+	windowProps.Height = 900;
+	windowProps.Title = L"MUI";
 
-	mogl::OpenGLLoader::LoadOpenGL(mogl::OpenGLVersion::OPENGL_3_3);
+	window = mwl::Create(windowProps);
 
-	using namespace mui;
+	window->SetWindowResizeCallback(OnWindowResize);
+	window->SetKeyDownCallback(OnKeyDown);
+	window->SetKeyUpCallback(OnKeyUp);
+	window->SetMouseMovedCallback(OnMouseMove);
+	window->SetMouseButtonDownCallback(OnButtonDown);
+	window->SetMouseButtonUpCallback(OnButtonUp);
 
-	Mui::Init();
+	mogl::OpenGLLoader::LoadOpenGL(mogl::OpenGLVersion::OPENGL_4_6);
 
-	glClearColor(0.5f, 0.6f, 0.8f, 1.0f);
+	mui::InitForWin32((HWND)window->GetNative());
+
+	
 	while (!window->Closed())
 	{
+		window->Update();
+		window->MakeContextCurrent();
+
+		glClearColor((float)mouseX / window->GetWidth(), (float)mouseY / window->GetHeight(), 0.8f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		Mui::NewFrame(mui::Viewport(0, 0, window->GetWidth(), window->GetHeight()));
+		mui::NewFrame();
 
-		Mui::Begin("Hello world");
+		mui::Begin("Demo");
+		mui::End();
 
-		if (Mui::Button("Click me"))
-		{
-			LOG_INFO("Button clicked");
-		}
-		Mui::End();
+		mui::Begin("Demo1");
+		mui::End();
 
-		Mui::EndFrame();
+		mui::Begin("Demo2");
+		mui::End();
 
-		window->Update();
+		mui::Begin("Hello");
+		mui::End();
 
+		mui::Begin("world");
+		mui::End();
+		
+		mui::EndFrame();
+		mui::Render();
+
+		window->SwapBuffers();
 	}
 
 

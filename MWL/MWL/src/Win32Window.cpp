@@ -8,35 +8,35 @@
 
 #define UNUSED(name) (void)name
 
-constexpr auto GL_FALSE	= 0;
-constexpr auto GL_TRUE	= 1;
-
-constexpr auto WGL_DRAW_TO_WINDOW_ARB			= 0x2001;
-constexpr auto WGL_ACCELERATION_ARB				= 0x2003;
-constexpr auto WGL_SUPPORT_OPENGL_ARB			= 0x2010;
-constexpr auto WGL_DOUBLE_BUFFER_ARB			= 0x2011;
-constexpr auto WGL_PIXEL_TYPE_ARB				= 0x2013;
-constexpr auto WGL_COLOR_BITS_ARB				= 0x2014;
-constexpr auto WGL_DEPTH_BITS_ARB				= 0x2022;
-constexpr auto WGL_STENCIL_BITS_ARB				= 0x2023;
-constexpr auto WGL_FULL_ACCELERATION_ARB		= 0x2027;
-constexpr auto WGL_TYPE_RGBA_ARB				= 0x202B;
-constexpr auto WGL_CONTEXT_MAJOR_VERSION_ARB	= 0x2091;
-constexpr auto WGL_CONTEXT_MINOR_VERSION_ARB	= 0x2092;
-constexpr auto WGL_CONTEXT_PROFILE_MASK_ARB		= 0x9126;
-constexpr auto WGL_CONTEXT_CORE_PROFILE_BIT_ARB = 0x00000001;
-
-typedef BOOL(WINAPI* PFNWGLCHOOSEPIXELFOTMATARBPROC)(HDC hdc, const int* piAttribIList, const FLOAT* pfAttribFList, UINT nMaxFormats, int* piFormats, UINT* nNumFormats);
-PFNWGLCHOOSEPIXELFOTMATARBPROC wglChoosePixelFormatARB;
-
-typedef HGLRC(WINAPI* PFNWGLCREATECONTEXTATTRIBSARBPROC)(HDC hdc, HGLRC hShareContext, const int* attribList);
-PFNWGLCREATECONTEXTATTRIBSARBPROC wglCreateContextAttribsARB;
-
-typedef BOOL(WINAPI* PFNWGLSWAPINTERVALEXTPROC)(int interval);
-PFNWGLSWAPINTERVALEXTPROC wglSwapIntervalEXT;
-
 namespace mwl
 {
+	constexpr auto GL_FALSE = 0;
+	constexpr auto GL_TRUE = 1;
+
+	constexpr auto WGL_DRAW_TO_WINDOW_ARB = 0x2001;
+	constexpr auto WGL_ACCELERATION_ARB = 0x2003;
+	constexpr auto WGL_SUPPORT_OPENGL_ARB = 0x2010;
+	constexpr auto WGL_DOUBLE_BUFFER_ARB = 0x2011;
+	constexpr auto WGL_PIXEL_TYPE_ARB = 0x2013;
+	constexpr auto WGL_COLOR_BITS_ARB = 0x2014;
+	constexpr auto WGL_DEPTH_BITS_ARB = 0x2022;
+	constexpr auto WGL_STENCIL_BITS_ARB = 0x2023;
+	constexpr auto WGL_FULL_ACCELERATION_ARB = 0x2027;
+	constexpr auto WGL_TYPE_RGBA_ARB = 0x202B;
+	constexpr auto WGL_CONTEXT_MAJOR_VERSION_ARB = 0x2091;
+	constexpr auto WGL_CONTEXT_MINOR_VERSION_ARB = 0x2092;
+	constexpr auto WGL_CONTEXT_PROFILE_MASK_ARB = 0x9126;
+	constexpr auto WGL_CONTEXT_CORE_PROFILE_BIT_ARB = 0x00000001;
+
+	typedef BOOL(WINAPI* PFNWGLCHOOSEPIXELFOTMATARBPROC)(HDC hdc, const int* piAttribIList, const FLOAT* pfAttribFList, UINT nMaxFormats, int* piFormats, UINT* nNumFormats);
+	PFNWGLCHOOSEPIXELFOTMATARBPROC wglChoosePixelFormatARB;
+
+	typedef HGLRC(WINAPI* PFNWGLCREATECONTEXTATTRIBSARBPROC)(HDC hdc, HGLRC hShareContext, const int* attribList);
+	PFNWGLCREATECONTEXTATTRIBSARBPROC wglCreateContextAttribsARB;
+
+	typedef BOOL(WINAPI* PFNWGLSWAPINTERVALEXTPROC)(int interval);
+	PFNWGLSWAPINTERVALEXTPROC wglSwapIntervalEXT;
+
 	static OpenGLVersion g_OpenglVersion = OpenGLVersion::OPENGL_3_3;
 
 	static int GetMajorOpenGLVersion(OpenGLVersion openglVersion)
@@ -149,8 +149,11 @@ namespace mwl
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 		}
+	}
 
-		SwapBuffers(GetDC(m_Win32Data.OpenGLHandle));
+	void Win32Window::SwapBuffers()
+	{
+		::SwapBuffers(GetDC(m_Win32Data.OpenGLHandle));
 	}
 
 	void Win32Window::Close()
@@ -164,6 +167,11 @@ namespace mwl
 
 		int interval = enable ? 1 : 0;
 		wglSwapIntervalEXT(interval);
+	}
+
+	void Win32Window::MakeContextCurrent()
+	{
+		wglMakeCurrent(GetDC(m_Win32Data.OpenGLHandle), m_Win32Data.OpenGLRenderingContext);
 	}
 
 	bool Win32Window::Closed() const
@@ -184,6 +192,11 @@ namespace mwl
 	uint32_t Win32Window::GetHeight() const
 	{
 		return m_State.Height - m_Titlebar.Height;
+	}
+
+	void* Win32Window::GetNative()
+	{
+		return (void*)m_Win32Data.OpenGLHandle;
 	}
 
 	void Win32Window::SetCursor(const Cursor& cursor)
@@ -413,7 +426,6 @@ namespace mwl
 		wc.style = CS_OWNDC | CS_HREDRAW | CS_VREDRAW;
 		wc.lpfnWndProc = OpenGLPanelProc;
 		wc.hInstance = GetModuleHandle(nullptr);
-		wc.hCursor = LoadCursorFromFile(L"cross.cur");
 		wc.lpszClassName = opengl_panel_name.c_str();
 
 		if (!RegisterClassEx(&wc))
@@ -1314,7 +1326,7 @@ namespace mwl
 		auto mouse_x = GET_X_LPARAM(lParam);
 		auto mouse_y = GET_Y_LPARAM(lParam);
 
-		if (window->m_State.MouseX != mouse_x && window->m_State.MouseY != mouse_y)
+		if (window->m_State.MouseX != mouse_x || window->m_State.MouseY != mouse_y)
 		{
 			window->m_State.MouseX = mouse_x;
 			window->m_State.MouseY = mouse_y;

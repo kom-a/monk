@@ -62,6 +62,7 @@ void Application::Run()
 
 	while (!m_Window->Closed())
 	{
+		m_Window->Update();
 		Input::Update();
 
 		glClear(GL_COLOR_BUFFER_BIT);
@@ -82,6 +83,10 @@ void Application::Run()
 			}
 		}
 
+		GLint last_viewport[4]; 
+		glGetIntegerv(GL_VIEWPORT, last_viewport);
+
+		glViewport(0, 0, 1600, 900);
 		Gui::Begin("Hello world");
 		Gui::End();
 
@@ -93,8 +98,10 @@ void Application::Run()
 
 		Gui::EndFrame();
 
+		glViewport(last_viewport[0], last_viewport[1], last_viewport[2], last_viewport[3]);
+
 		m_Renderer2D->End();
-		m_Window->Update();
+		m_Window->SwapBuffers();
 	}
 }
 
