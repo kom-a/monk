@@ -30,7 +30,7 @@ void OnKeyDown(const mwl::KeyDownEvent& e)
 
 void OnKeyUp(const mwl::KeyUpEvent& e)
 {
-	show_demo_window = false;
+	
 }
 
 void OnMouseMove(const mwl::MouseMovedEvent& e)
@@ -61,7 +61,7 @@ void OnButtonUp(const mwl::MouseButtonUpEvent& e)
 int main()
 {
 	mwl::WindowProps windowProps;
-	windowProps.VSync = true;
+	windowProps.VSync = false;
 	windowProps.Width = 1600;
 	windowProps.Height = 900;
 	windowProps.Title = L"MUI";
@@ -78,7 +78,6 @@ int main()
 	mogl::OpenGLLoader::LoadOpenGL(mogl::OpenGLVersion::OPENGL_4_6);
 
 	mui::InitForWin32((HWND)window->GetNative());
-
 	
 	while (!window->Closed())
 	{
@@ -90,20 +89,19 @@ int main()
 
 		mui::NewFrame();
 
-		mui::Begin("Demo");
+		mui::Begin("Demo", &show_demo_window);
 		mui::End();
-
+		
 		mui::Begin("Demo1");
+		if (mui::Button("Open demo window"))
+		{
+			show_demo_window = true;
+		}
 		mui::End();
 
 		mui::Begin("Demo2");
 		mui::End();
 
-		mui::Begin("Hello");
-		mui::End();
-
-		mui::Begin("world");
-		mui::End();
 		
 		mui::EndFrame();
 		mui::Render();

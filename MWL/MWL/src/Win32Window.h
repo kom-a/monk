@@ -84,8 +84,11 @@ namespace mwl
 		{
 			struct
 			{
-				COLORREF Background = RGB(30, 30, 35);
-				COLORREF Titlebar	= RGB(30, 30, 35);
+				COLORREF Background				= RGB(30, 30, 35);
+				COLORREF Titlebar				= RGB(20, 20, 30);
+				COLORREF TitlebarButtonHover	= RGB(10, 10, 20);
+				COLORREF TitlebarItem			= RGB(255, 255, 255);
+				COLORREF TitlebarItemNoFocus	= RGB(100, 100, 100);
 			} Colors;
 
 			struct
@@ -117,7 +120,7 @@ namespace mwl
 				Minimize
 			};
 
-			uint32_t Height = 25;
+			uint32_t Height = 32;
 			HoveredButton CurrentHoveredButton = HoveredButton::None;
 		};
 
@@ -136,7 +139,7 @@ namespace mwl
 			bool Closed;
 
 			bool IsFullscreen;
-			RECT FullscreenRecoverRect;
+			WINDOWPLACEMENT FullscreenRecoverPlacement;
 		};
 
 		friend Win32Window::Titlebar::ButtonRects Win32GetTitlebarButtonRects(HWND handle, const RECT* title_bar_rect);

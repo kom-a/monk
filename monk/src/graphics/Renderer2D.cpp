@@ -192,7 +192,6 @@ namespace monk
 			glBindTexture(GL_TEXTURE_2D, m_BatchStats.Textures[i]);
 			m_Shader->SetInt(std::string("u_Texture") + std::to_string(i), i);
 		}
-			
 
 		glDrawElements(GL_TRIANGLES, m_BatchStats.Indices, GL_UNSIGNED_INT, nullptr);
 	}

@@ -6,6 +6,7 @@
 #include <MWL/MWL.h>
 #include <MOGL/MOGL.h>
 #include <MMath/MMath.h>
+#include <MUI/MUI.h>
 
 #include "core/Memory.h"
 #include "core/Log.h"
@@ -15,7 +16,7 @@
 
 #include "input/Input.h"
 
-#include "gui/Gui.h"
+
 
 #define BIND_FUNCTION(fn) std::bind(&fn, this, std::placeholders::_1)
 
@@ -36,10 +37,15 @@ private:
 
 	void OnWindowResize(mwl::WindowResizeEvent e);
 	void OnMouseMove(mwl::MouseMovedEvent e);
+	void OnButtonDown(mwl::MouseButtonDownEvent& e);
+	void OnButtonUp(mwl::MouseButtonUpEvent& e);
+	void OnKeyDown(mwl::KeyDownEvent& e);
 
 private:
 	monk::Unique<mwl::Window> m_Window;
 	monk::Unique<monk::Renderer2D> m_Renderer2D;
+
+	bool m_ShowGUI = true;
 };
 
 Application::Application()
@@ -47,9 +53,9 @@ Application::Application()
 	InitWindow();
 	LoadOpenGL();
 
-	Gui::Init();
-
 	m_Renderer2D = monk::CreateUnique<Renderer2D>();
+
+	mui::InitForWin32((HWND)m_Window->GetNative());
 }
 
 void Application::Run()
@@ -63,15 +69,12 @@ void Application::Run()
 	while (!m_Window->Closed())
 	{
 		m_Window->Update();
-		Input::Update();
 
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		m_Renderer2D->Begin(camera);
 
-		Gui::NewFrame();
-
-		float k = 50.0f;
+		float k = 10.0f;
 
 		float step = 1.0f / k;
 
@@ -83,25 +86,30 @@ void Application::Run()
 			}
 		}
 
-		GLint last_viewport[4]; 
-		glGetIntegerv(GL_VIEWPORT, last_viewport);
-
-		glViewport(0, 0, 1600, 900);
-		Gui::Begin("Hello world");
-		Gui::End();
-
-		Gui::Begin("Hello");
-		Gui::End();
-
-		Gui::Begin("world");
-		Gui::End();
-
-		Gui::EndFrame();
-
-		glViewport(last_viewport[0], last_viewport[1], last_viewport[2], last_viewport[3]);
-
 		m_Renderer2D->End();
+
+		mui::NewFrame();
+
+		if (m_ShowGUI)
+		{
+
+			mui::Begin("Hello world");
+			mui::End();
+
+			mui::Begin("Hello");
+			mui::End();
+
+			mui::Begin("world");
+			mui::End();
+		}
+
+		mui::EndFrame();
+		mui::Render();
+
 		m_Window->SwapBuffers();
+		
+
+		Input::Update();
 	}
 }
 
@@ -111,11 +119,17 @@ void Application::InitWindow()
 
 	auto windowProps = mwl::WindowProps();
 	windowProps.Title = L"Monk";
+	windowProps.VSync = false;
+	windowProps.Width = 800;
+	windowProps.Height = 450;
 
 	m_Window.reset(mwl::Create(windowProps));
 
 	m_Window->SetWindowResizeCallback(BIND_FUNCTION(Application::OnWindowResize));
 	m_Window->SetMouseMovedCallback(BIND_FUNCTION(Application::OnMouseMove));
+	m_Window->SetMouseButtonDownCallback(BIND_FUNCTION(Application::OnButtonDown));
+	m_Window->SetMouseButtonUpCallback(BIND_FUNCTION(Application::OnButtonUp));
+	m_Window->SetKeyDownCallback(BIND_FUNCTION(Application::OnKeyDown));
 
 	m_Window->SetCursor(mwl::Cursor(L"res/oxy-bluecurve/oxy-bluecurve.inf"));
 }
@@ -130,12 +144,32 @@ void Application::LoadOpenGL()
 
 void Application::OnWindowResize(mwl::WindowResizeEvent e)
 {
+	LOG_INFO("{0}, {1}", e.Width, e.Height);
 	glViewport(0, 0, e.Width, e.Height);
 }
 
 void Application::OnMouseMove(mwl::MouseMovedEvent e)
 {
-	Input::SetMousePosition(e.X, e.Y);
+	mui::GetInput().MouseX = e.X;
+	mui::GetInput().MouseY = e.Y;
+}
+
+void Application::OnButtonDown(mwl::MouseButtonDownEvent& e)
+{
+	mui::GetInput().MouseLeftDown = true;
+}
+
+void Application::OnButtonUp(mwl::MouseButtonUpEvent& e)
+{
+	mui::GetInput().MouseLeftDown = false;
+}
+
+void Application::OnKeyDown(mwl::KeyDownEvent& e)
+{
+	if(e.Key == mwl::KeyCode::Space)
+		m_ShowGUI = !m_ShowGUI;
+	if (e.Key == mwl::KeyCode::F11)
+		m_Window->SetFullscreen(!m_Window->IsFullscreen());
 }
 
 int main()

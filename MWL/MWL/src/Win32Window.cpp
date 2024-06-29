@@ -115,7 +115,7 @@ namespace mwl
 		m_State.MouseX	= 0;
 		m_State.MouseY = 0;
 		m_State.MouseClicked = MouseButton::None;
-		m_State.FullscreenRecoverRect = { 0 };
+		m_State.FullscreenRecoverPlacement = { 0 };
 		m_State.IsFullscreen = false;
 
 		if (!CreateWin32Window())
@@ -214,33 +214,37 @@ namespace mwl
 
 	void Win32Window::SetFullscreen(bool fullscreen)
 	{
-		auto hwnd = m_Win32Data.WindowHandle;
+		m_State.IsFullscreen = fullscreen;
 
-		if (GetWindowLongPtr(hwnd, GWL_STYLE) & WS_POPUP)
+		DWORD dwStyle = GetWindowLong(m_Win32Data.WindowHandle, GWL_STYLE);
+
+		if (fullscreen)
 		{
-			SetWindowLongPtr(hwnd, GWL_STYLE, WS_VISIBLE | WS_OVERLAPPEDWINDOW);
-			SetWindowPos(hwnd, 
-				nullptr, 
-				m_State.FullscreenRecoverRect.left, 
-				m_State.FullscreenRecoverRect.top,
-				m_State.FullscreenRecoverRect.right - m_State.FullscreenRecoverRect.left,
-				m_State.FullscreenRecoverRect.bottom - m_State.FullscreenRecoverRect.top,
-				SWP_FRAMECHANGED);
+			GetWindowPlacement(m_Win32Data.WindowHandle, &m_State.FullscreenRecoverPlacement);
 
-			m_State.IsFullscreen = false;
+			DWORD style = GetWindowLong(m_Win32Data.WindowHandle, GWL_STYLE);
+			style &= ~WS_OVERLAPPEDWINDOW;
+			SetWindowLong(m_Win32Data.WindowHandle, GWL_STYLE, style);
+
+			RECT fullscreenWindowRect = {
+				0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN)
+			};
+			AdjustWindowRectEx(&fullscreenWindowRect, 0, false, 0);
+
+			const auto& x		= fullscreenWindowRect.left;
+			const auto& y		= fullscreenWindowRect.top;
+			const auto width	= fullscreenWindowRect.right - fullscreenWindowRect.left;
+			const auto height	= fullscreenWindowRect.bottom - fullscreenWindowRect.top;
+
+			MoveWindow(m_Win32Data.WindowHandle, x, y, width, height, TRUE);
 		}
 		else
 		{
-			GetWindowRect(hwnd, &m_State.FullscreenRecoverRect);
-			
-			int w = GetSystemMetrics(SM_CXSCREEN);
-			int h = GetSystemMetrics(SM_CYSCREEN);
-			SetWindowLongPtr(hwnd, GWL_STYLE, WS_VISIBLE | WS_POPUP);
-			SetWindowPos(hwnd, HWND_TOP, 0, 0, w, h, SWP_FRAMECHANGED);
-			SetWindowPos(m_Win32Data.OpenGLHandle, HWND_TOP, 0, 0, w, h, SWP_FRAMECHANGED);
-			
+			DWORD style = GetWindowLong(m_Win32Data.WindowHandle, GWL_STYLE);
+			style |= WS_OVERLAPPEDWINDOW;
+			SetWindowLong(m_Win32Data.WindowHandle, GWL_STYLE, style);
 
-			m_State.IsFullscreen = true;
+			SetWindowPlacement(m_Win32Data.WindowHandle, &m_State.FullscreenRecoverPlacement);
 		}
 	}
 
@@ -262,21 +266,30 @@ namespace mwl
 		else 
 			LOG_DEBUG("Window class '{0}' registered", m_State.Title);
 
-		m_Win32Data.WindowHandle = CreateWindowEx(WS_EX_LEFT,
+		DWORD style = WS_CLIPCHILDREN | WS_THICKFRAME | WS_OVERLAPPEDWINDOW;
+		DWORD exStyle = WS_EX_LEFT;
+
+		RECT desired_window_rect = { 0, 0, m_State.Width, m_State.Height };
+		AdjustWindowRectEx(&desired_window_rect, style, false, exStyle);
+		desired_window_rect.bottom += m_Titlebar.Height;
+
+		int width = desired_window_rect.right - desired_window_rect.left;
+		int height = desired_window_rect.bottom - desired_window_rect.top;
+
+		m_Win32Data.WindowHandle = CreateWindowEx(exStyle,
 			m_State.Title.c_str(),
 			m_State.Title.c_str(),
-			WS_OVERLAPPEDWINDOW,
-			CW_USEDEFAULT,
-			CW_USEDEFAULT,
-			m_State.Width,
-			m_State.Height,
+			style,
+			CW_USEDEFAULT, CW_USEDEFAULT,
+			width, height,
 			nullptr,
 			nullptr,
 			GetModuleHandle(nullptr),
 			nullptr);
 
-		RECT clientRect;
+		RECT clientRect = { 0 };
 		GetClientRect(m_Win32Data.WindowHandle, &clientRect);
+		clientRect.bottom -= m_Titlebar.Height;
 		m_State.Width = clientRect.right - clientRect.left;
 		m_State.Height = clientRect.bottom - clientRect.top;
 
@@ -334,7 +347,7 @@ namespace mwl
 			return false;
 		}
 
-		if (!wglMakeCurrent(dummyDC, dummyContext))
+		if (!wglMakeCurrent(dummyDC,  dummyContext))
 		{
 			LOG_ERROR("Failed to activate dummy OpenGL rendering context.");
 			wglMakeCurrent(dummyDC, nullptr);
@@ -443,11 +456,18 @@ namespace mwl
 			0,
 			m_Titlebar.Height,
 			m_State.Width,
-			m_State.Height - m_Titlebar.Height,
+			m_State.Height,
 			m_Win32Data.WindowHandle,
 			nullptr,
 			GetModuleHandle(nullptr),
 			nullptr);
+
+		RECT rect;
+		GetClientRect(m_Win32Data.WindowHandle, &rect);
+		rect.top += m_Titlebar.Height;
+
+		// Set the position and size of the child window to cover the entire parent window
+		//MoveWindow(opengl_panel_handle, rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top, TRUE);
 
 		return opengl_panel_handle;
 	}
@@ -857,7 +877,7 @@ namespace mwl
 	{
 		RECT title_bar_rect = Win32GetTitlebarRect(hWindow);
 		InvalidateRect(hWindow, &title_bar_rect, FALSE);
-		return DefWindowProc(hWindow, uMessage, wParam, lParam);
+		return Win32HandleWM_CREATE(hWindow, uMessage, wParam, lParam);
 	}
 
 	static LRESULT Win32HandleWM_NCHITTEST(HWND hWindow, UINT uMessage, WPARAM wParam, LPARAM lParam)
@@ -933,17 +953,15 @@ namespace mwl
 		// Paint Title Bar
 		HTHEME theme = OpenThemeData(hWindow, L"WINDOW");
 
-		const auto& title_bar_color = style.Colors.Titlebar;
-		HBRUSH title_bar_brush = CreateSolidBrush(title_bar_color);
-		COLORREF title_bar_hover_color = RGB(45, 45, 50);
-		HBRUSH title_bar_hover_brush = CreateSolidBrush(title_bar_hover_color);
+		HBRUSH title_bar_brush = CreateSolidBrush(style.Colors.Titlebar);
+		HBRUSH title_bar_hover_brush = CreateSolidBrush(style.Colors.TitlebarButtonHover);
 
 		RECT title_bar_rect = Win32GetTitlebarRect(hWindow);
 
 		// Title Bar Background
 		FillRect(hdc, &title_bar_rect, title_bar_brush);
 
-		COLORREF title_bar_item_color = has_focus ? RGB(220, 220, 220) : RGB(127, 127, 127);
+		COLORREF title_bar_item_color = has_focus ? style.Colors.TitlebarItem : style.Colors.TitlebarItemNoFocus;
 
 		HBRUSH button_icon_brush = CreateSolidBrush(title_bar_item_color);
 		HPEN button_icon_pen = CreatePen(PS_SOLID, 1, title_bar_item_color);
@@ -951,7 +969,7 @@ namespace mwl
 		Win32Window::Titlebar::ButtonRects button_rects = Win32GetTitlebarButtonRects(hWindow, &title_bar_rect);
 
 		UINT dpi = GetDpiForWindow(hWindow);
-		int icon_dimension = Win32DpiScale(9, dpi);
+		int icon_dimension = Win32DpiScale(8, dpi);
 		
 		const auto title_bar_hovered_button = window->m_Titlebar.CurrentHoveredButton;
 
@@ -988,7 +1006,7 @@ namespace mwl
 			HPEN custom_pen = 0;
 			bool const is_hovered = title_bar_hovered_button == Win32Window::Titlebar::HoveredButton::Close;
 			if (is_hovered) {
-				HBRUSH fill_brush = CreateSolidBrush(RGB(0xCC, 0, 0));
+				HBRUSH fill_brush = CreateSolidBrush(RGB(0xAA, 0, 0));
 				FillRect(hdc, &button_rects.Close, fill_brush);
 				DeleteObject(fill_brush);
 				custom_pen = CreatePen(PS_SOLID, 1, RGB(0xFF, 0xFF, 0xFF));
@@ -1010,16 +1028,13 @@ namespace mwl
 		DeleteObject(title_bar_brush);
 
 		// Draw window title
-		LOGFONT logical_font;
-		HFONT old_font = NULL;
-		if (SUCCEEDED(SystemParametersInfoForDpi(SPI_GETICONTITLELOGFONT, sizeof(logical_font), &logical_font, false, dpi))) {
-			HFONT theme_font = CreateFontIndirect(&logical_font);
-			old_font = (HFONT)SelectObject(hdc, theme_font);
-		}
+		//LOGFONT logical_font;
+		//HFONT old_font = NULL;
+		//if (SUCCEEDED(SystemParametersInfoForDpi(SPI_GETICONTITLELOGFONT, sizeof(logical_font), &logical_font, false, dpi))) {
+		//	HFONT theme_font = CreateFontIndirect(&logical_font);
+		//	old_font = (HFONT)SelectObject(hdc, theme_font);
+		//}
 
-		wchar_t title_text_buffer[255] = { 0 };
-		int buffer_length = sizeof(title_text_buffer) / sizeof(title_text_buffer[0]);
-		GetWindowText(hWindow, title_text_buffer, buffer_length);
 		RECT title_bar_text_rect = title_bar_rect;
 		// Add padding on the right for the buttons
 		//title_bar_text_rect.right = button_rects.Minimize.left;
@@ -1030,13 +1045,14 @@ namespace mwl
 			theme,
 			hdc,
 			0, 0,
-			title_text_buffer,
+			window->m_State.Title.c_str(),
 			-1,
 			DT_VCENTER | DT_CENTER | DT_SINGLELINE | DT_WORD_ELLIPSIS,
 			&title_bar_text_rect,
 			&draw_theme_options
 		);
-		if (old_font) SelectObject(hdc, old_font);
+
+		//if (old_font) SelectObject(hdc, old_font);
 		CloseThemeData(theme);
 
 		EndPaint(hWindow, &ps);
@@ -1050,23 +1066,20 @@ namespace mwl
 		if (!window)
 			return DefWindowProc(hWindow, uMessage, wParam, lParam);
 
-		uint32_t width = LOWORD(lParam);
-		uint32_t height = HIWORD(lParam);
+		RECT rect;
+		GetWindowRect(window->m_Win32Data.WindowHandle, &rect);
+		auto titlebar_height = window->IsFullscreen() ? 0 : window->m_Titlebar.Height;
+		rect.top += titlebar_height;
+
+		int width = LOWORD(lParam);
+		int height = HIWORD(lParam) - titlebar_height;
 
 		window->m_State.Width = width;
 		window->m_State.Height = height;
 
-		auto titlebar_height = window->m_Titlebar.Height;
+		MoveWindow(window->m_Win32Data.OpenGLHandle, 0, titlebar_height, width, height, TRUE);
 
-		SetWindowPos(window->m_Win32Data.OpenGLHandle,
-			nullptr,
-			0,
-			titlebar_height,
-			width,
-			height - titlebar_height,
-			0);
-
-		return DefWindowProc(hWindow, uMessage, wParam, lParam);
+		return 0;
 	}
 
 	LRESULT Win32HandleWM_NCMOUSEMOVE(HWND hWindow, UINT uMessage, WPARAM wParam, LPARAM lParam)
@@ -1177,6 +1190,304 @@ namespace mwl
 		return DefWindowProc(hWindow, uMessage, wParam, lParam);
 	}
 
+
+	std::unordered_map<uint32_t, std::string> xmsglist =
+	{
+	  { 0, "WM_NULL"},
+	  { 1, "WM_CREATE" },
+	  { 2, "WM_DESTROY" },
+	  { 3, "WM_MOVE" },
+	  { 5, "WM_SIZE" },
+	  { 6, "WM_ACTIVATE" },
+	  { 7, "WM_SETFOCUS" },
+	  { 8, "WM_KILLFOCUS" },
+	  { 10, "WM_ENABLE" },
+	  { 11, "WM_SETREDRAW" },
+	  { 12, "WM_SETTEXT" },
+	  { 13, "WM_GETTEXT" },
+	  { 14, "WM_GETTEXTLENGTH" },
+	  { 15, "WM_PAINT" },
+	  { 16, "WM_CLOSE" },
+	  { 17, "WM_QUERYENDSESSION" },
+	  { 18, "WM_QUIT" },
+	  { 19, "WM_QUERYOPEN" },
+	  { 20, "WM_ERASEBKGND" },
+	  { 21, "WM_SYSCOLORCHANGE" },
+	  { 22, "WM_ENDSESSION" },
+	  { 24, "WM_SHOWWINDOW" },
+	  { 25, "WM_CTLCOLOR" },
+	  { 26, "WM_WININICHANGE" },
+	  { 27, "WM_DEVMODECHANGE" },
+	  { 28, "WM_ACTIVATEAPP" },
+	  { 29, "WM_FONTCHANGE" },
+	  { 30, "WM_TIMECHANGE" },
+	  { 31, "WM_CANCELMODE" },
+	  { 32, "WM_SETCURSOR" },
+	  { 33, "WM_MOUSEACTIVATE" },
+	  { 34, "WM_CHILDACTIVATE" },
+	  { 35, "WM_QUEUESYNC" },
+	  { 36, "WM_GETMINMAXINFO" },
+	  { 38, "WM_PAINTICON" },
+	  { 39, "WM_ICONERASEBKGND" },
+	  { 40, "WM_NEXTDLGCTL" },
+	  { 42, "WM_SPOOLERSTATUS" },
+	  { 43, "WM_DRAWITEM" },
+	  { 44, "WM_MEASUREITEM" },
+	  { 45, "WM_DELETEITEM" },
+	  { 46, "WM_VKEYTOITEM" },
+	  { 47, "WM_CHARTOITEM" },
+	  { 48, "WM_SETFONT" },
+	  { 49, "WM_GETFONT" },
+	  { 50, "WM_SETHOTKEY" },
+	  { 51, "WM_GETHOTKEY" },
+	  { 55, "WM_QUERYDRAGICON" },
+	  { 57, "WM_COMPAREITEM" },
+	  { 61, "WM_GETOBJECT" },
+	  { 65, "WM_COMPACTING" },
+	  { 68, "WM_COMMNOTIFY" },
+	  { 70, "WM_WINDOWPOSCHANGING" },
+	  { 71, "WM_WINDOWPOSCHANGED" },
+	  { 72, "WM_POWER" },
+	  { 73, "WM_COPYGLOBALDATA" },
+	  { 74, "WM_COPYDATA" },
+	  { 75, "WM_CANCELJOURNAL" },
+	  { 78, "WM_NOTIFY" },
+	  { 80, "WM_INPUTLANGCHANGEREQUEST" },
+	  { 81, "WM_INPUTLANGCHANGE" },
+	  { 82, "WM_TCARD" },
+	  { 83, "WM_HELP" },
+	  { 84, "WM_USERCHANGED" },
+	  { 85, "WM_NOTIFYFORMAT" },
+	  { 123, "WM_CONTEXTMENU" },
+	  { 124, "WM_STYLECHANGING" },
+	  { 125, "WM_STYLECHANGED" },
+	  { 126, "WM_DISPLAYCHANGE" },
+	  { 127, "WM_GETICON" },
+	  { 128, "WM_SETICON" },
+	  { 129, "WM_NCCREATE" },
+	  { 130, "WM_NCDESTROY" },
+	  { 131, "WM_NCCALCSIZE" },
+	  { 132, "WM_NCHITTEST" },
+	  { 133, "WM_NCPAINT" },
+	  { 134, "WM_NCACTIVATE" },
+	  { 135, "WM_GETDLGCODE" },
+	  { 136, "WM_SYNCPAINT" },
+	  { 160, "WM_NCMOUSEMOVE" },
+	  { 161, "WM_NCLBUTTONDOWN" },
+	  { 162, "WM_NCLBUTTONUP" },
+	  { 163, "WM_NCLBUTTONDBLCLK" },
+	  { 164, "WM_NCRBUTTONDOWN" },
+	  { 165, "WM_NCRBUTTONUP" },
+	  { 166, "WM_NCRBUTTONDBLCLK" },
+	  { 167, "WM_NCMBUTTONDOWN" },
+	  { 168, "WM_NCMBUTTONUP" },
+	  { 169, "WM_NCMBUTTONDBLCLK" },
+	  { 171, "WM_NCXBUTTONDOWN" },
+	  { 172, "WM_NCXBUTTONUP" },
+	  { 173, "WM_NCXBUTTONDBLCLK" },
+	  { 176, "EM_GETSEL" },
+	  { 177, "EM_SETSEL" },
+	  { 178, "EM_GETRECT" },
+	  { 179, "EM_SETRECT" },
+	  { 180, "EM_SETRECTNP" },
+	  { 181, "EM_SCROLL" },
+	  { 182, "EM_LINESCROLL" },
+	  { 183, "EM_SCROLLCARET" },
+	  { 185, "EM_GETMODIFY" },
+	  { 187, "EM_SETMODIFY" },
+	  { 188, "EM_GETLINECOUNT" },
+	  { 189, "EM_LINEINDEX" },
+	  { 190, "EM_SETHANDLE" },
+	  { 191, "EM_GETHANDLE" },
+	  { 192, "EM_GETTHUMB" },
+	  { 193, "EM_LINELENGTH" },
+	  { 194, "EM_REPLACESEL" },
+	  { 195, "EM_SETFONT" },
+	  { 196, "EM_GETLINE" },
+	  { 197, "EM_LIMITTEXT" },
+	  { 197, "EM_SETLIMITTEXT" },
+	  { 198, "EM_CANUNDO" },
+	  { 199, "EM_UNDO" },
+	  { 200, "EM_FMTLINES" },
+	  { 201, "EM_LINEFROMCHAR" },
+	  { 202, "EM_SETWORDBREAK" },
+	  { 203, "EM_SETTABSTOPS" },
+	  { 204, "EM_SETPASSWORDCHAR" },
+	  { 205, "EM_EMPTYUNDOBUFFER" },
+	  { 206, "EM_GETFIRSTVISIBLELINE" },
+	  { 207, "EM_SETREADONLY" },
+	  { 209, "EM_SETWORDBREAKPROC" },
+	  { 209, "EM_GETWORDBREAKPROC" },
+	  { 210, "EM_GETPASSWORDCHAR" },
+	  { 211, "EM_SETMARGINS" },
+	  { 212, "EM_GETMARGINS" },
+	  { 213, "EM_GETLIMITTEXT" },
+	  { 214, "EM_POSFROMCHAR" },
+	  { 215, "EM_CHARFROMPOS" },
+	  { 216, "EM_SETIMESTATUS" },
+	  { 217, "EM_GETIMESTATUS" },
+	  { 224, "SBM_SETPOS" },
+	  { 225, "SBM_GETPOS" },
+	  { 226, "SBM_SETRANGE" },
+	  { 227, "SBM_GETRANGE" },
+	  { 228, "SBM_ENABLE_ARROWS" },
+	  { 230, "SBM_SETRANGEREDRAW" },
+	  { 233, "SBM_SETSCROLLINFO" },
+	  { 234, "SBM_GETSCROLLINFO" },
+	  { 235, "SBM_GETSCROLLBARINFO" },
+	  { 240, "BM_GETCHECK" },
+	  { 241, "BM_SETCHECK" },
+	  { 242, "BM_GETSTATE" },
+	  { 243, "BM_SETSTATE" },
+	  { 244, "BM_SETSTYLE" },
+	  { 245, "BM_CLICK" },
+	  { 246, "BM_GETIMAGE" },
+	  { 247, "BM_SETIMAGE" },
+	  { 248, "BM_SETDONTCLICK" },
+	  { 255, "WM_INPUT" },
+	  { 256, "WM_KEYDOWN" },
+	  { 256, "WM_KEYFIRST" },
+	  { 257, "WM_KEYUP" },
+	  { 258, "WM_CHAR" },
+	  { 259, "WM_DEADCHAR" },
+	  { 260, "WM_SYSKEYDOWN" },
+	  { 261, "WM_SYSKEYUP" },
+	  { 262, "WM_SYSCHAR" },
+	  { 263, "WM_SYSDEADCHAR" },
+	  { 264, "WM_KEYLAST" },
+	  { 265, "WM_UNICHAR" },
+	  { 265, "WM_WNT_CONVERTREQUESTEX" },
+	  { 266, "WM_CONVERTREQUEST" },
+	  { 267, "WM_CONVERTRESULT" },
+	  { 268, "WM_INTERIM" },
+	  { 269, "WM_IME_STARTCOMPOSITION" },
+	  { 270, "WM_IME_ENDCOMPOSITION" },
+	  { 271, "WM_IME_COMPOSITION" },
+	  { 271, "WM_IME_KEYLAST" },
+	  { 272, "WM_INITDIALOG" },
+	  { 273, "WM_COMMAND" },
+	  { 274, "WM_SYSCOMMAND" },
+	  { 275, "WM_TIMER" },
+	  { 276, "WM_HSCROLL" },
+	  { 277, "WM_VSCROLL" },
+	  { 278, "WM_INITMENU" },
+	  { 279, "WM_INITMENUPOPUP" },
+	  { 280, "WM_SYSTIMER" },
+	  { 287, "WM_MENUSELECT" },
+	  { 288, "WM_MENUCHAR" },
+	  { 289, "WM_ENTERIDLE" },
+	  { 290, "WM_MENURBUTTONUP" },
+	  { 291, "WM_MENUDRAG" },
+	  { 292, "WM_MENUGETOBJECT" },
+	  { 293, "WM_UNINITMENUPOPUP" },
+	  { 294, "WM_MENUCOMMAND" },
+	  { 295, "WM_CHANGEUISTATE" },
+	  { 296, "WM_UPDATEUISTATE" },
+	  { 297, "WM_QUERYUISTATE" },
+	  { 306, "WM_CTLCOLORMSGBOX" },
+	  { 307, "WM_CTLCOLOREDIT" },
+	  { 308, "WM_CTLCOLORLISTBOX" },
+	  { 309, "WM_CTLCOLORBTN" },
+	  { 310, "WM_CTLCOLORDLG" },
+	  { 311, "WM_CTLCOLORSCROLLBAR" },
+	  { 312, "WM_CTLCOLORSTATIC" },
+	  { 512, "WM_MOUSEFIRST" },
+	  { 512, "WM_MOUSEMOVE" },
+	  { 513, "WM_LBUTTONDOWN" },
+	  { 514, "WM_LBUTTONUP" },
+	  { 515, "WM_LBUTTONDBLCLK" },
+	  { 516, "WM_RBUTTONDOWN" },
+	  { 517, "WM_RBUTTONUP" },
+	  { 518, "WM_RBUTTONDBLCLK" },
+	  { 519, "WM_MBUTTONDOWN" },
+	  { 520, "WM_MBUTTONUP" },
+	  { 521, "WM_MBUTTONDBLCLK" },
+	  { 521, "WM_MOUSELAST" },
+	  { 522, "WM_MOUSEWHEEL" },
+	  { 523, "WM_XBUTTONDOWN" },
+	  { 524, "WM_XBUTTONUP" },
+	  { 525, "WM_XBUTTONDBLCLK" },
+	  { 528, "WM_PARENTNOTIFY" },
+	  { 529, "WM_ENTERMENULOOP" },
+	  { 530, "WM_EXITMENULOOP" },
+	  { 531, "WM_NEXTMENU" },
+	  { 532, "WM_SIZING" },
+	  { 533, "WM_CAPTURECHANGED" },
+	  { 534, "WM_MOVING" },
+	  { 536, "WM_POWERBROADCAST" },
+	  { 537, "WM_DEVICECHANGE" },
+	  { 544, "WM_MDICREATE" },
+	  { 545, "WM_MDIDESTROY" },
+	  { 546, "WM_MDIACTIVATE" },
+	  { 547, "WM_MDIRESTORE" },
+	  { 548, "WM_MDINEXT" },
+	  { 549, "WM_MDIMAXIMIZE" },
+	  { 550, "WM_MDITILE" },
+	  { 551, "WM_MDICASCADE" },
+	  { 552, "WM_MDIICONARRANGE" },
+	  { 553, "WM_MDIGETACTIVE" },
+	  { 560, "WM_MDISETMENU" },
+	  { 561, "WM_ENTERSIZEMOVE" },
+	  { 562, "WM_EXITSIZEMOVE" },
+	  { 563, "WM_DROPFILES" },
+	  { 564, "WM_MDIREFRESHMENU" },
+	  { 640, "WM_IME_REPORT" },
+	  { 641, "WM_IME_SETCONTEXT" },
+	  { 642, "WM_IME_NOTIFY" },
+	  { 643, "WM_IME_CONTROL" },
+	  { 644, "WM_IME_COMPOSITIONFULL" },
+	  { 645, "WM_IME_SELECT" },
+	  { 646, "WM_IME_CHAR" },
+	  { 648, "WM_IME_REQUEST" },
+	  { 656, "WM_IMEKEYDOWN" },
+	  { 656, "WM_IME_KEYDOWN" },
+	  { 657, "WM_IMEKEYUP" },
+	  { 657, "WM_IME_KEYUP" },
+	  { 672, "WM_NCMOUSEHOVER" },
+	  { 673, "WM_MOUSEHOVER" },
+	  { 674, "WM_NCMOUSELEAVE" },
+	  { 675, "WM_MOUSELEAVE" },
+	  { 768, "WM_CUT" },
+	  { 769, "WM_COPY" },
+	  { 770, "WM_PASTE" },
+	  { 771, "WM_CLEAR" },
+	  { 772, "WM_UNDO" },
+	  { 773, "WM_RENDERFORMAT" },
+	  { 774, "WM_RENDERALLFORMATS" },
+	  { 775, "WM_DESTROYCLIPBOARD" },
+	  { 776, "WM_DRAWCLIPBOARD" },
+	  { 777, "WM_PAINTCLIPBOARD" },
+	  { 778, "WM_VSCROLLCLIPBOARD" },
+	  { 779, "WM_SIZECLIPBOARD" },
+	  { 780, "WM_ASKCBFORMATNAME" },
+	  { 781, "WM_CHANGECBCHAIN" },
+	  { 782, "WM_HSCROLLCLIPBOARD" },
+	  { 783, "WM_QUERYNEWPALETTE" },
+	  { 784, "WM_PALETTEISCHANGING" },
+	  { 785, "WM_PALETTECHANGED" },
+	  { 786, "WM_HOTKEY" },
+	  { 791, "WM_PRINT" },
+	  { 792, "WM_PRINTCLIENT" },
+	  { 793, "WM_APPCOMMAND" },
+	  { 856, "WM_HANDHELDFIRST" },
+	  { 863, "WM_HANDHELDLAST" },
+	  { 864, "WM_AFXFIRST" },
+	  { 895, "WM_AFXLAST" },
+	  { 896, "WM_PENWINFIRST" },
+	  { 897, "WM_RCRESULT" },
+	  { 898, "WM_HOOKRCRESULT" },
+	  { 899, "WM_GLOBALRCCHANGE" },
+	  { 899, "WM_PENMISCINFO" },
+	  { 900, "WM_SKB" },
+	  { 901, "WM_HEDITCTL" },
+	  { 901, "WM_PENCTL" },
+	  { 902, "WM_PENMISC" },
+	  { 903, "WM_CTLINIT" },
+	  { 904, "WM_PENEVENT" },
+	  { 911, "WM_PENWINLAST" },
+	  { 1024, "WM_USER" }
+	};
+
 	static LRESULT Win32HandleWM_SETCURSOR(HWND hWindow, UINT uMessage, WPARAM wParam, LPARAM lParam)
 	{
 		auto window = (const Win32Window*)(GetWindowLongPtr(hWindow, GWLP_USERDATA));
@@ -1226,6 +1537,10 @@ namespace mwl
 	static LRESULT CALLBACK WindowProc(HWND hWindow, UINT uMessage, WPARAM wParam, LPARAM lParam)
 	{
 		auto window = (const Win32Window*)(GetWindowLongPtr(hWindow, GWLP_USERDATA));
+
+		//auto logIt = xmsglist.find(uMessage);
+		//if(logIt != xmsglist.end())
+		//	LOG_DEBUG("Window message {0}", logIt->second);
 
 		switch (uMessage) 
 		{
@@ -1343,26 +1658,35 @@ namespace mwl
 		if (!window)
 			return DefWindowProc(hWnd, uMsg, wParam, lParam);
 
+		//auto logIt = xmsglist.find(uMsg);
+		//if (logIt != xmsglist.end())
+		//	LOG_WARNING("OpenGL panel {0}", logIt->second);
+
 		switch (uMsg)
 		{
 		case WM_MOUSEMOVE:
 		{
-			window->m_Titlebar.CurrentHoveredButton = Win32Window::Titlebar::HoveredButton::None;
+			if (window->m_Titlebar.CurrentHoveredButton != Win32Window::Titlebar::HoveredButton::None)
+			{
+				window->m_Titlebar.CurrentHoveredButton = Win32Window::Titlebar::HoveredButton::None;
 
-			RECT titlebar_rect = Win32GetTitlebarRect(window->m_Win32Data.WindowHandle);
-			Win32Window::Titlebar::ButtonRects titlebar_button_rects = Win32GetTitlebarButtonRects(window->m_Win32Data.WindowHandle, &titlebar_rect);
-			RECT titlebuttons_rect = { 0 };
-			titlebuttons_rect = titlebar_button_rects.Minimize;
-			titlebuttons_rect.right = titlebar_button_rects.Close.right;
+				RECT titlebar_rect = Win32GetTitlebarRect(window->m_Win32Data.WindowHandle);
+				Win32Window::Titlebar::ButtonRects titlebar_button_rects = Win32GetTitlebarButtonRects(window->m_Win32Data.WindowHandle, &titlebar_rect);
+				RECT titlebuttons_rect = { 0 };
+				titlebuttons_rect = titlebar_button_rects.Minimize;
+				titlebuttons_rect.right = titlebar_button_rects.Close.right;
 
-			InvalidateRect(window->m_Win32Data.WindowHandle, &titlebuttons_rect, FALSE);
-
+				InvalidateRect(window->m_Win32Data.WindowHandle, &titlebuttons_rect, FALSE);
+			}
+			
 			if (UpdateWindowMousePosition(window, lParam))
 			{
 				window->m_State.MouseClicked = MouseButton::None;
 
 				SpawnMouseMoveEvent(window);
 			}
+
+			return 0;
 		} break;
 		case WM_LBUTTONDOWN:
 		{
@@ -1370,6 +1694,8 @@ namespace mwl
 
 			UpdateWindowMousePosition(window, lParam);
 			SpawnMouseButtonDownEvent(window, MouseButton::Left);
+
+			return 0;
 		} break;
 		case WM_LBUTTONUP:
 		{
@@ -1378,6 +1704,8 @@ namespace mwl
 
 			if (window->m_State.MouseClicked == MouseButton::Left)
 				SpawnMouseButtonClickedEvent(window, MouseButton::Left);
+
+			return 0;
 		} break;
 		case WM_RBUTTONDOWN:
 		{
@@ -1385,6 +1713,8 @@ namespace mwl
 
 			UpdateWindowMousePosition(window, lParam);
 			SpawnMouseButtonDownEvent(window, MouseButton::Right);
+
+			return 0;
 		} break;
 		case WM_RBUTTONUP:
 		{
@@ -1393,6 +1723,8 @@ namespace mwl
 
 			if (window->m_State.MouseClicked == MouseButton::Right)
 				SpawnMouseButtonClickedEvent(window, MouseButton::Right);
+
+			return 0;
 		} break;
 		case WM_MBUTTONDOWN:
 		{
@@ -1400,6 +1732,8 @@ namespace mwl
 
 			UpdateWindowMousePosition(window, lParam);
 			SpawnMouseButtonDownEvent(window, MouseButton::Middle);
+
+			return 0;
 		} break;
 		case WM_MBUTTONUP:
 		{
@@ -1408,11 +1742,15 @@ namespace mwl
 
 			if (window->m_State.MouseClicked == MouseButton::Middle)
 				SpawnMouseButtonClickedEvent(window, MouseButton::Middle);
+
+			return 0;
 		} break;
 		case WM_MOUSEWHEEL:
 		{
 			int delta = GET_WHEEL_DELTA_WPARAM(wParam) / WHEEL_DELTA;
 			SpawnMouseScrollEvent(window, delta);
+
+			return 0;
 		} break;
 		default:
 			return DefWindowProc(hWnd, uMsg, wParam, lParam);

@@ -70,14 +70,27 @@ namespace mui
 
 	struct Style
 	{
-		Vec4f WindowBackgroudColor		= Vec4f(0.20f, 0.20f, 0.20f, 1.0f);
-		Vec4f WindowBackgroudHotColor	= Vec4f(0.20f, 0.20f, 0.20f, 1.0f);
-		Vec4f WindowTitlebarColor		= Vec4f(0.10f, 0.10f, 0.10f, 1.0f);
-		Vec4f WindowTitlebarHotColor	= Vec4f(0.10f, 0.10f, 0.20f, 1.0f);
-		Vec4f WindowBorderColor			= Vec4f(0.10f, 0.10f, 0.10f, 1.0f);
+		Vec4f WindowBackgroudColor			= Vec4f(0.20f, 0.20f, 0.20f, 0.8f);
+		Vec4f WindowBackgroudHotColor		= Vec4f(0.20f, 0.20f, 0.20f, 0.8f);
+		Vec4f WindowTitlebarColor			= Vec4f(0.10f, 0.10f, 0.10f, 1.0f);
+		Vec4f WindowTitlebarHotColor		= Vec4f(0.10f, 0.10f, 0.20f, 1.0f);
+		Vec4f WindowBorderColor				= Vec4f(0.10f, 0.10f, 0.10f, 1.0f);
+		Vec4f WindowResizeColor				= Vec4f(0.80f, 0.80f, 0.80f, 1.0f);
+		Vec4f WindowCloseButtonColor		= Vec4f(0.60f, 0.10f, 0.10f, 1.0f);
+		Vec4f WindowCloseButtonHotColor		= Vec4f(0.70f, 0.20f, 0.20f, 1.0f);
+		Vec4f WindowCollapseButtonColor		= Vec4f(0.50f, 0.50f, 0.50f, 1.0f);
+		Vec4f WindowCollapseButtonHotColor	= Vec4f(0.60f, 0.60f, 0.60f, 1.0f);
 
-		float WindowTitlebarHeight	= 24.0f;
-		float WindowBorderThickness = 2.0f;
+		Vec4f ButtonColor					= Vec4f(0.10f, 0.10f, 0.30f, 1.0f);
+
+		Vec2f ButtonSize					= Vec2f(100.0f, 25.0f);
+
+		float WindowTitlebarHeight			= 24.0f;
+		float WindowTitlebarItem			= 0.6f;
+		float WindowTitlebarItemPaddings	= 4.0f;
+		float WindowBorderThickness			= 2.0f;
+		float WindowResizeThickness			= 16.0f;
+		float Padding						= 8.0f;
 	};
 
 	struct Window
@@ -85,15 +98,19 @@ namespace mui
 		std::string	Name;
 		bool Active;
 		bool Collapsed;
+		bool* Open;
 
 		uint32_t Order;
 
 		Vec2f Position	= Vec2f(100, 100);
 		Vec2f Size		= Vec2f(400, 400);
 
-		bool TitlebarHot() const;
-		bool BodyHot() const;
-		bool Hot() const;
+		bool TitlebarHot()	const;
+		bool BodyHot()		const;
+		bool ResizeHot()	const;
+		bool CollapseHot()	const;
+		bool CloseHot()		const;
+		bool Hot()			const;
 	};
 
 	struct Context
@@ -113,6 +130,7 @@ namespace mui
 		std::list<Window*> WindowsDrawOrder;
 		Window* CurrentWindow	= nullptr;
 		Window* DraggingWindow	= nullptr;
+		Window* ResizingWindow	= nullptr;
 		Window* HotWindow		= nullptr;
 
 		std::vector<Vertex> DrawBuffer;
@@ -172,6 +190,9 @@ namespace mui
 
 	bool Window::BodyHot() const
 	{
+		if (Collapsed)
+			return false;
+
 		const auto& x = g_Input.MouseX;
 		const auto& y = g_Input.MouseY;
 
@@ -180,6 +201,61 @@ namespace mui
 
 		return x >= Position.X && x <= mx && 
 			y >= Position.Y + g_Style.WindowTitlebarHeight && y <= my + g_Style.WindowTitlebarHeight;
+	}
+
+	bool Window::ResizeHot() const
+	{
+		const auto& x = g_Input.MouseX;
+		const auto& y = g_Input.MouseY;
+
+		const auto rx = Position.X + Size.X - g_Style.WindowResizeThickness;
+		const auto ry = Position.Y + Size.Y + g_Style.WindowTitlebarHeight - g_Style.WindowResizeThickness;
+
+		return x >= rx && x <= rx + g_Style.WindowResizeThickness && y >= ry && y <= ry + g_Style.WindowResizeThickness;
+	}
+
+	bool Window::CollapseHot() const
+	{
+		const Vec2f itemSize = Vec2f(
+			g_Style.WindowTitlebarItem * g_Style.WindowTitlebarHeight, 
+			g_Style.WindowTitlebarItem * g_Style.WindowTitlebarHeight);
+
+		Vec2f position = Vec2f(
+			Position.X + Size.X - g_Style.WindowTitlebarItemPaddings - itemSize.X,
+			Position.Y + (g_Style.WindowTitlebarHeight - itemSize.Y) * 0.5f);
+
+		if (Open)
+			position.X -= itemSize.X + g_Style.WindowTitlebarItemPaddings;
+
+		const auto& x = g_Input.MouseX;
+		const auto& y = g_Input.MouseY;
+
+		const auto rx = position.X + itemSize.X;
+		const auto ry = position.Y + itemSize.Y;
+
+		return x >= position.X && x <= rx && y >= position.Y && y <= ry;
+	}
+
+	bool Window::CloseHot() const
+	{
+		if (!Open)
+			return false;
+
+		const Vec2f itemSize = Vec2f(
+			g_Style.WindowTitlebarItem * g_Style.WindowTitlebarHeight,
+			g_Style.WindowTitlebarItem * g_Style.WindowTitlebarHeight);
+
+		Vec2f position = Vec2f(
+			Position.X + Size.X - g_Style.WindowTitlebarItemPaddings - itemSize.X,
+			Position.Y + (g_Style.WindowTitlebarHeight - itemSize.Y) * 0.5f);
+
+		const auto& x = g_Input.MouseX;
+		const auto& y = g_Input.MouseY;
+
+		const auto rx = position.X + itemSize.X;
+		const auto ry = position.Y + itemSize.Y;
+
+		return x >= position.X && x <= rx && y >= position.Y && y <= ry;
 	}
 
 	bool Window::Hot() const
@@ -336,11 +412,27 @@ namespace mui
 		g_Context.VBO		= CreateVertexBufferObject();
 	}
 
+	static void ClampWindowInDisplayView(Window* window)
+	{
+		if (g_Context.DisplayHeight == 0)
+			return;
+
+		const float padding = 25;
+
+		if (window->Position.X > g_Context.DisplayWidth)
+			window->Position.X = g_Context.DisplayWidth - padding;
+
+		if (window->Position.Y > g_Context.DisplayHeight)
+			window->Position.Y = g_Context.DisplayHeight - padding;
+
+	}
+
 	void InitForWin32(HWND handle)
 	{
 		g_Context.Handle = handle;
 
 		InitRenderData();
+		SetupRenderState();
 	}
 
 	Input& GetInput()
@@ -362,8 +454,12 @@ namespace mui
 
 	void EndFrame()
 	{
-		Window* clickedWindow = nullptr;
-		Window* hotWindow = nullptr;
+		Window* clickedWindow	= nullptr;
+		Window* hotWindow		= nullptr;
+		Window* draggingWindow	= nullptr;
+		Window* resizeingWidnow = nullptr;
+		Window* collapsingWindow = nullptr;
+		Window* closingWindow	= nullptr;
 
 		for (auto& [name, window] : g_Context.Windows)
 		{
@@ -391,24 +487,52 @@ namespace mui
 				return left->Order < right->Order;
 			});
 
-		clickedWindow = nullptr;
 		uint32_t order = 0;
 		for (auto window : g_Context.WindowsDrawOrder)
 		{
+			ClampWindowInDisplayView(window);
+
 			if (window->TitlebarHot() && g_Input.MouseLeftClicked)
-				clickedWindow = window;
+				draggingWindow = window;
+
+			if (window->ResizeHot() && g_Input.MouseLeftClicked)
+				resizeingWidnow = window;
+
+			if (window->CollapseHot() && g_Input.MouseLeftClicked)
+				collapsingWindow = window;
+
+			if (window->CloseHot() && g_Input.MouseLeftClicked)
+				closingWindow = window;
 
 			if (window->Hot())
 				hotWindow = window;
 
 			window->Order = order++;
 		}
-			
+
 		g_Context.HotWindow = hotWindow;
 
 		if (!g_Input.MouseLeftDown)
+		{
 			g_Context.DraggingWindow = nullptr;
+			g_Context.ResizingWindow = nullptr;
+		}
 
+		if (clickedWindow != draggingWindow)
+			draggingWindow = nullptr;
+		if (clickedWindow != resizeingWidnow)
+			resizeingWidnow = nullptr;
+		if (clickedWindow != collapsingWindow)
+			collapsingWindow = nullptr;
+
+		if (g_Context.DraggingWindow && g_Context.ResizingWindow)
+		{
+			if (g_Context.DraggingWindow->Order > g_Context.ResizingWindow->Order)
+				g_Context.ResizingWindow = nullptr;
+			else
+				g_Context.DraggingWindow = nullptr;
+		}
+		
 		if (g_Context.DraggingWindow)
 		{
 			int dx = g_Input.MouseX - g_Input.LastMouseX;
@@ -418,15 +542,40 @@ namespace mui
 				g_Context.DraggingWindow->Position.Y + dy);
 		}
 
-		if (clickedWindow && !g_Context.DraggingWindow)
-			g_Context.DraggingWindow = clickedWindow;
+		if (g_Context.ResizingWindow && !g_Context.ResizingWindow->Collapsed)
+		{
+			int dx = g_Input.MouseX - g_Input.LastMouseX;
+			int dy = g_Input.MouseY - g_Input.LastMouseY;
+
+			g_Context.ResizingWindow->Size = Vec2f(g_Context.ResizingWindow->Size.X + dx,
+				g_Context.ResizingWindow->Size.Y + dy);
+
+			if (g_Context.ResizingWindow->Size.X < g_Style.WindowResizeThickness * 4)
+				g_Context.ResizingWindow->Size.X = g_Style.WindowResizeThickness * 4;
+				
+			if (g_Context.ResizingWindow->Size.Y < g_Style.WindowResizeThickness * 2)
+				g_Context.ResizingWindow->Size.Y = g_Style.WindowResizeThickness * 2;
+		}
+
+		if (collapsingWindow)
+			collapsingWindow->Collapsed = !collapsingWindow->Collapsed;
+		else if (closingWindow)
+			*closingWindow->Open = false;
+		else
+		{
+			if (draggingWindow && !g_Context.DraggingWindow)
+				g_Context.DraggingWindow = draggingWindow;
+
+			if (resizeingWidnow && !g_Context.ResizingWindow)
+				g_Context.ResizingWindow = resizeingWidnow;
+		}
 
 		g_Input.LastMouseLeftDown = g_Input.MouseLeftDown;
 		g_Input.LastMouseX = g_Input.MouseX;
 		g_Input.LastMouseY = g_Input.MouseY;
 	}
 
-	void Begin(const std::string& name)
+	void Begin(const std::string& name, bool* open)
 	{
 		auto itWnd = g_Context.Windows.find(name);
 		if (itWnd != g_Context.Windows.end())
@@ -440,8 +589,9 @@ namespace mui
 			Window newWindow;
 			newWindow.Name = name;
 			newWindow.Position = g_Context.NextFirstWindowCreationPosition;
-			newWindow.Size = Vec2f(400, 400);
+			newWindow.Size = Vec2f(300, 300);
 			newWindow.Order = g_Context.Windows.size() + 1;
+			newWindow.Collapsed = false;
 			g_Context.Windows.try_emplace(name, newWindow);
 
 			g_Context.CurrentWindow = &g_Context.Windows.find(name)->second;
@@ -451,12 +601,21 @@ namespace mui
 				g_Context.NextFirstWindowCreationPosition.Y + 50);
 		}
 
-		g_Context.CurrentWindow->Active = true;
+		g_Context.CurrentWindow->Active = open ? *open : true;
+		g_Context.CurrentWindow->Open	= open;
 	}
 
 	void End()
 	{
 		//
+	}
+
+	bool Button(const std::string& text)
+	{
+		
+
+
+		return false;
 	}
 
 	void Showdown()
@@ -491,6 +650,37 @@ namespace mui
 		g_Context.DrawBuffer.push_back(v3);
 	}
 
+	void DrawWindowTitlebar(const Window& window)
+	{
+		const Vec2f titlebarSize = Vec2f(window.Size.X, g_Style.WindowTitlebarHeight);
+		const Vec4f titlebarColor = (g_Context.HotWindow && g_Context.HotWindow == &window) ? g_Style.WindowTitlebarHotColor : g_Style.WindowTitlebarColor;
+		
+		// Draw titlebar background
+		DrawQuad(window.Position, titlebarSize, titlebarColor);
+
+		const float itemSize = titlebarSize.Y * g_Style.WindowTitlebarItem;
+		const Vec2f titlebarItemSize = Vec2f(itemSize, itemSize);
+
+		// Draw close button
+		const Vec2f closeButtonPosition = Vec2f(
+			window.Position.X + window.Size.X - g_Style.WindowTitlebarItemPaddings - itemSize,
+			window.Position.Y + (titlebarSize.Y - itemSize) * 0.5f);
+		
+		if (window.Open != nullptr)
+		{
+			const Vec4f closeButtonColor = window.CloseHot() ? g_Style.WindowCloseButtonHotColor : g_Style.WindowCloseButtonColor;
+			DrawQuad(closeButtonPosition, titlebarItemSize, closeButtonColor);
+		}
+			
+
+		// Draw collapse button
+		Vec4f collapseButtonColor = window.CollapseHot() ? g_Style.WindowCollapseButtonHotColor : g_Style.WindowCollapseButtonColor;
+		Vec2f collapseButtonPosition = closeButtonPosition;
+		if(window.Open != nullptr)
+			collapseButtonPosition.X -= titlebarItemSize.X + g_Style.WindowTitlebarItemPaddings;
+		DrawQuad(collapseButtonPosition, titlebarItemSize, collapseButtonColor);
+	}
+
 	void Render()
 	{
 		SetupRenderState();
@@ -502,17 +692,24 @@ namespace mui
 			if(!window.Active)
  				continue;
 
-			Vec2f titlebarSize = Vec2f(window.Size.X, g_Style.WindowTitlebarHeight);
-			Vec2f windowClientPosition = Vec2f(window.Position.X, window.Position.Y + titlebarSize.Y);
+			DrawWindowTitlebar(window);
 
-			Vec4f titlebarColor = (g_Context.HotWindow && g_Context.HotWindow == &window) ? g_Style.WindowTitlebarHotColor : g_Style.WindowTitlebarColor;
-			Vec4f backgroundColor = (g_Context.HotWindow && g_Context.HotWindow == &window) ? g_Style.WindowBackgroudHotColor : g_Style.WindowBackgroudColor;
+			if(window.Collapsed)
+				continue;
 
-			// Draw titlebar
-			DrawQuad(window.Position, titlebarSize, titlebarColor);
+			const Vec2f titlebarSize = Vec2f(window.Size.X, g_Style.WindowTitlebarHeight);
 
 			// Draw window backgroud
+			const Vec2f windowClientPosition = Vec2f(window.Position.X, window.Position.Y + titlebarSize.Y);
+			const Vec4f backgroundColor = (g_Context.HotWindow && g_Context.HotWindow == &window) ? g_Style.WindowBackgroudHotColor : g_Style.WindowBackgroudColor;
 			DrawQuad(windowClientPosition, window.Size, backgroundColor);
+
+			// Draw window resize
+			Vec2f resizePosition = Vec2f(
+				window.Position.X + window.Size.X - g_Style.WindowResizeThickness,
+				window.Position.Y + window.Size.Y + g_Style.WindowTitlebarHeight - g_Style.WindowResizeThickness);
+			Vec2f resizeSize = Vec2f(g_Style.WindowResizeThickness, g_Style.WindowResizeThickness);
+			DrawQuad(resizePosition, resizeSize, g_Style.WindowResizeColor);
 
 			// Draw window borders
 			const Vec2f leftBorderPosition = Vec2f(window.Position.X, window.Position.Y + titlebarSize.Y);
@@ -535,6 +732,12 @@ namespace mui
 
 		glBindVertexArray(g_Context.VAO);
 		glBindBuffer(GL_ARRAY_BUFFER, g_Context.VBO);
+
+		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, Position));
+		glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, Color));
+
+		glEnableVertexAttribArray(0);
+		glEnableVertexAttribArray(1);
 
 		glUseProgram(g_Context.ShaderID);
 		int projectionMatrixLocation = glGetUniformLocation(g_Context.ShaderID, "u_ProjectionMatrix");

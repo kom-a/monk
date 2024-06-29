@@ -6,6 +6,8 @@
 
 #include <windows.h>
 
+class Application;
+
 namespace monk
 {
 	class Input
@@ -33,5 +35,7 @@ namespace monk
 		static bool s_KeyUp[Key::MaxCount];
 		static bool s_MouseButtonDown[Mouse::MaxCount];
 		static bool s_MouseButtonUp[Mouse::MaxCount];
+
+		friend class Application;
 	};
 }
