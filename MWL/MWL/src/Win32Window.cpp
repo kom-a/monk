@@ -216,35 +216,25 @@ namespace mwl
 	{
 		m_State.IsFullscreen = fullscreen;
 
-		DWORD dwStyle = GetWindowLong(m_Win32Data.WindowHandle, GWL_STYLE);
-
 		if (fullscreen)
 		{
-			GetWindowPlacement(m_Win32Data.WindowHandle, &m_State.FullscreenRecoverPlacement);
-
-			DWORD style = GetWindowLong(m_Win32Data.WindowHandle, GWL_STYLE);
-			style &= ~WS_OVERLAPPEDWINDOW;
+			LONG style = GetWindowLong(m_Win32Data.WindowHandle, GWL_STYLE);
+			style &= ~WS_MAXIMIZEBOX;
 			SetWindowLong(m_Win32Data.WindowHandle, GWL_STYLE, style);
-
-			RECT fullscreenWindowRect = {
-				0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN)
-			};
-			AdjustWindowRectEx(&fullscreenWindowRect, 0, false, 0);
-
-			const auto& x		= fullscreenWindowRect.left;
-			const auto& y		= fullscreenWindowRect.top;
-			const auto width	= fullscreenWindowRect.right - fullscreenWindowRect.left;
-			const auto height	= fullscreenWindowRect.bottom - fullscreenWindowRect.top;
-
-			MoveWindow(m_Win32Data.WindowHandle, x, y, width, height, TRUE);
+			
+			WINDOWPLACEMENT wp = { sizeof(WINDOWPLACEMENT) };
+			GetWindowPlacement(m_Win32Data.WindowHandle, &wp);
+			if (wp.showCmd == SW_MAXIMIZE)
+				ShowWindow(m_Win32Data.WindowHandle, SW_RESTORE);
+			
+			ShowWindow(m_Win32Data.WindowHandle, SW_MAXIMIZE);
 		}
 		else
 		{
-			DWORD style = GetWindowLong(m_Win32Data.WindowHandle, GWL_STYLE);
-			style |= WS_OVERLAPPEDWINDOW;
+			LONG style = GetWindowLong(m_Win32Data.WindowHandle, GWL_STYLE);
+			style |= WS_MAXIMIZEBOX;
 			SetWindowLong(m_Win32Data.WindowHandle, GWL_STYLE, style);
-
-			SetWindowPlacement(m_Win32Data.WindowHandle, &m_State.FullscreenRecoverPlacement);
+			ShowWindow(m_Win32Data.WindowHandle, SW_RESTORE);
 		}
 	}
 
@@ -266,7 +256,7 @@ namespace mwl
 		else 
 			LOG_DEBUG("Window class '{0}' registered", m_State.Title);
 
-		DWORD style = WS_CLIPCHILDREN | WS_THICKFRAME | WS_OVERLAPPEDWINDOW;
+		DWORD style = WS_CLIPCHILDREN | WS_THICKFRAME | WS_MAXIMIZEBOX;
 		DWORD exStyle = WS_EX_LEFT;
 
 		RECT desired_window_rect = { 0, 0, m_State.Width, m_State.Height };
@@ -1057,7 +1047,7 @@ namespace mwl
 
 		EndPaint(hWindow, &ps);
 
-		return DefWindowProc(hWindow, uMessage, wParam, lParam);
+		return 0;
 	}
 
 	static LRESULT Win32HandleWM_SIZE(HWND hWindow, UINT uMessage, WPARAM wParam, LPARAM lParam)
@@ -1066,11 +1056,7 @@ namespace mwl
 		if (!window)
 			return DefWindowProc(hWindow, uMessage, wParam, lParam);
 
-		RECT rect;
-		GetWindowRect(window->m_Win32Data.WindowHandle, &rect);
 		auto titlebar_height = window->IsFullscreen() ? 0 : window->m_Titlebar.Height;
-		rect.top += titlebar_height;
-
 		int width = LOWORD(lParam);
 		int height = HIWORD(lParam) - titlebar_height;
 
@@ -1189,7 +1175,6 @@ namespace mwl
 
 		return DefWindowProc(hWindow, uMessage, wParam, lParam);
 	}
-
 
 	std::unordered_map<uint32_t, std::string> xmsglist =
 	{
@@ -1533,7 +1518,7 @@ namespace mwl
 
 		return TRUE;
 	}
-
+	
 	static LRESULT CALLBACK WindowProc(HWND hWindow, UINT uMessage, WPARAM wParam, LPARAM lParam)
 	{
 		auto window = (const Win32Window*)(GetWindowLongPtr(hWindow, GWLP_USERDATA));
@@ -1558,14 +1543,10 @@ namespace mwl
 		} break;
 		case WM_NCHITTEST: 
 		{
-			if (window->m_State.IsFullscreen)
-				return DefWindowProc(hWindow, uMessage, wParam, lParam);
 			return Win32HandleWM_NCHITTEST(hWindow, uMessage, wParam, lParam);
 		} break;
 		case WM_PAINT: 
 		{
-			if (window->m_State.IsFullscreen)
-				return DefWindowProc(hWindow, uMessage, wParam, lParam);
 			return Win32HandleWM_PAINT(hWindow, uMessage, wParam, lParam);
 		} break;
 		case WM_SIZE:
@@ -1576,8 +1557,6 @@ namespace mwl
 		} break;
 		case WM_NCMOUSEMOVE:
 		{
-			if (window->m_State.IsFullscreen)
-				return DefWindowProc(hWindow, uMessage, wParam, lParam);
 			return Win32HandleWM_NCMOUSEMOVE(hWindow, uMessage, wParam, lParam);
 		} break;
 		case WM_MOUSEMOVE: 
@@ -1586,14 +1565,10 @@ namespace mwl
 		} break;
 		case WM_NCLBUTTONDOWN: 
 		{
-			if (window->m_State.IsFullscreen)
-				return DefWindowProc(hWindow, uMessage, wParam, lParam);
 			return Win32HandleWM_NCLBUTTONDOWN(hWindow, uMessage, wParam, lParam);
 		} break;
 		case WM_NCLBUTTONUP: 
 		{
-			if (window->m_State.IsFullscreen)
-				return DefWindowProc(hWindow, uMessage, wParam, lParam);
 			return Win32HandleWM_NCLBUTTONUP(hWindow, uMessage, wParam, lParam);
 		} break;
 		case WM_SETCURSOR: 
@@ -1664,96 +1639,102 @@ namespace mwl
 
 		switch (uMsg)
 		{
-		case WM_MOUSEMOVE:
-		{
-			if (window->m_Titlebar.CurrentHoveredButton != Win32Window::Titlebar::HoveredButton::None)
+			case WM_MOUSEMOVE:
 			{
-				window->m_Titlebar.CurrentHoveredButton = Win32Window::Titlebar::HoveredButton::None;
+				if (window->m_Titlebar.CurrentHoveredButton != Win32Window::Titlebar::HoveredButton::None)
+				{
+					window->m_Titlebar.CurrentHoveredButton = Win32Window::Titlebar::HoveredButton::None;
 
-				RECT titlebar_rect = Win32GetTitlebarRect(window->m_Win32Data.WindowHandle);
-				Win32Window::Titlebar::ButtonRects titlebar_button_rects = Win32GetTitlebarButtonRects(window->m_Win32Data.WindowHandle, &titlebar_rect);
-				RECT titlebuttons_rect = { 0 };
-				titlebuttons_rect = titlebar_button_rects.Minimize;
-				titlebuttons_rect.right = titlebar_button_rects.Close.right;
+					RECT titlebar_rect = Win32GetTitlebarRect(window->m_Win32Data.WindowHandle);
+					Win32Window::Titlebar::ButtonRects titlebar_button_rects = Win32GetTitlebarButtonRects(window->m_Win32Data.WindowHandle, &titlebar_rect);
+					RECT titlebuttons_rect = { 0 };
+					titlebuttons_rect = titlebar_button_rects.Minimize;
+					titlebuttons_rect.right = titlebar_button_rects.Close.right;
 
-				InvalidateRect(window->m_Win32Data.WindowHandle, &titlebuttons_rect, FALSE);
-			}
+					InvalidateRect(window->m_Win32Data.WindowHandle, &titlebuttons_rect, FALSE);
+				}
 			
-			if (UpdateWindowMousePosition(window, lParam))
+				if (UpdateWindowMousePosition(window, lParam))
+				{
+					window->m_State.MouseClicked = MouseButton::None;
+
+					SpawnMouseMoveEvent(window);
+				}
+
+				return 0;
+			} break;
+			case WM_LBUTTONDOWN:
 			{
-				window->m_State.MouseClicked = MouseButton::None;
+				window->m_State.MouseClicked = MouseButton::Left;
 
-				SpawnMouseMoveEvent(window);
+				UpdateWindowMousePosition(window, lParam);
+				SpawnMouseButtonDownEvent(window, MouseButton::Left);
+
+				return 0;
+			} break;
+			case WM_LBUTTONUP:
+			{
+				UpdateWindowMousePosition(window, lParam);
+				SpawnMouseButtonUpEvent(window, MouseButton::Left);
+
+				if (window->m_State.MouseClicked == MouseButton::Left)
+					SpawnMouseButtonClickedEvent(window, MouseButton::Left);
+
+				return 0;
+			} break;
+			case WM_RBUTTONDOWN:
+			{
+				window->m_State.MouseClicked = MouseButton::Right;
+
+				UpdateWindowMousePosition(window, lParam);
+				SpawnMouseButtonDownEvent(window, MouseButton::Right);
+
+				return 0;
+			} break;
+			case WM_RBUTTONUP:
+			{
+				UpdateWindowMousePosition(window, lParam);
+				SpawnMouseButtonUpEvent(window, MouseButton::Right);
+
+				if (window->m_State.MouseClicked == MouseButton::Right)
+					SpawnMouseButtonClickedEvent(window, MouseButton::Right);
+
+				return 0;
+			} break;
+			case WM_MBUTTONDOWN:
+			{
+				window->m_State.MouseClicked = MouseButton::Middle;
+
+				UpdateWindowMousePosition(window, lParam);
+				SpawnMouseButtonDownEvent(window, MouseButton::Middle);
+
+				return 0;
+			} break;
+			case WM_MBUTTONUP:
+			{
+				UpdateWindowMousePosition(window, lParam);
+				SpawnMouseButtonUpEvent(window, MouseButton::Middle);
+
+				if (window->m_State.MouseClicked == MouseButton::Middle)
+					SpawnMouseButtonClickedEvent(window, MouseButton::Middle);
+
+				return 0;
+			} break;
+			case WM_MOUSEWHEEL:
+			{
+				int delta = GET_WHEEL_DELTA_WPARAM(wParam) / WHEEL_DELTA;
+				SpawnMouseScrollEvent(window, delta);
+
+				return 0;
+			} break;
+			case WM_SETCURSOR:
+			{
+				return Win32HandleWM_SETCURSOR(hWnd, uMsg, wParam, lParam);
+			} break;
+			default:
+			{
+				return DefWindowProc(hWnd, uMsg, wParam, lParam);
 			}
-
-			return 0;
-		} break;
-		case WM_LBUTTONDOWN:
-		{
-			window->m_State.MouseClicked = MouseButton::Left;
-
-			UpdateWindowMousePosition(window, lParam);
-			SpawnMouseButtonDownEvent(window, MouseButton::Left);
-
-			return 0;
-		} break;
-		case WM_LBUTTONUP:
-		{
-			UpdateWindowMousePosition(window, lParam);
-			SpawnMouseButtonUpEvent(window, MouseButton::Left);
-
-			if (window->m_State.MouseClicked == MouseButton::Left)
-				SpawnMouseButtonClickedEvent(window, MouseButton::Left);
-
-			return 0;
-		} break;
-		case WM_RBUTTONDOWN:
-		{
-			window->m_State.MouseClicked = MouseButton::Right;
-
-			UpdateWindowMousePosition(window, lParam);
-			SpawnMouseButtonDownEvent(window, MouseButton::Right);
-
-			return 0;
-		} break;
-		case WM_RBUTTONUP:
-		{
-			UpdateWindowMousePosition(window, lParam);
-			SpawnMouseButtonUpEvent(window, MouseButton::Right);
-
-			if (window->m_State.MouseClicked == MouseButton::Right)
-				SpawnMouseButtonClickedEvent(window, MouseButton::Right);
-
-			return 0;
-		} break;
-		case WM_MBUTTONDOWN:
-		{
-			window->m_State.MouseClicked = MouseButton::Middle;
-
-			UpdateWindowMousePosition(window, lParam);
-			SpawnMouseButtonDownEvent(window, MouseButton::Middle);
-
-			return 0;
-		} break;
-		case WM_MBUTTONUP:
-		{
-			UpdateWindowMousePosition(window, lParam);
-			SpawnMouseButtonUpEvent(window, MouseButton::Middle);
-
-			if (window->m_State.MouseClicked == MouseButton::Middle)
-				SpawnMouseButtonClickedEvent(window, MouseButton::Middle);
-
-			return 0;
-		} break;
-		case WM_MOUSEWHEEL:
-		{
-			int delta = GET_WHEEL_DELTA_WPARAM(wParam) / WHEEL_DELTA;
-			SpawnMouseScrollEvent(window, delta);
-
-			return 0;
-		} break;
-		default:
-			return DefWindowProc(hWnd, uMsg, wParam, lParam);
 		}
 
 		return DefWindowProc(hWnd, uMsg, wParam, lParam);

@@ -26,7 +26,6 @@ namespace mwl
 		bool IsFullscreen() const override;
 		uint32_t GetWidth()	const override;
 		uint32_t GetHeight() const override;
-
 		void* GetNative() override;
 
 		void SetCursor(const Cursor& cursor) override;
