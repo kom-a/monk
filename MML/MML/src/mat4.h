@@ -3,7 +3,7 @@
 #include "vec3.h"
 #include "vec4.h"
 
-namespace mmath
+namespace mml
 {
 	class mat4
 	{

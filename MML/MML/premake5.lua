@@ -1,4 +1,4 @@
-project "MMath"
+project "MML"
 	kind "StaticLib"
 	language "C++"
 	cppdialect "C++17"

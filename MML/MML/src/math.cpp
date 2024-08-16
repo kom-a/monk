@@ -5,7 +5,7 @@
 
 #define TO_RADIANS(deg) (deg * M_PI / 180.0f)
 
-namespace mmath
+namespace mml
 {
 	float Dot(const vec2& left, const vec2& right)
 	{
@@ -151,7 +151,7 @@ namespace mmath
 
 	float ToRadians(float degrees)
 	{
-		return TO_RADIANS(degrees);
+		return (float)TO_RADIANS(degrees);
 	}
 
 	mat4 Transpose(const mat4& mat)

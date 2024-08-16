@@ -2,7 +2,7 @@
 
 #include <cmath>
 
-namespace mmath
+namespace mml
 {
 	vec3::vec3()
 		: x(0), y(0), z(0)

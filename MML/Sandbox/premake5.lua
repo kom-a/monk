@@ -6,4 +6,4 @@ include "../../Common.lua"
 
 include "Test1"
 
-include "../MMath"
+include "../MML"
