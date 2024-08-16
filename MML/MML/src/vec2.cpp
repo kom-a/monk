@@ -2,7 +2,7 @@
 
 #include <cmath>
 
-namespace mmath
+namespace mml
 {
 	vec2::vec2()
 		: x(0), y(0)

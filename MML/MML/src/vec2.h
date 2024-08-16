@@ -1,6 +1,6 @@
 #pragma once
 
-namespace mmath
+namespace mml
 {
 	struct vec2
 	{

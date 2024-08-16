@@ -4,7 +4,7 @@
 #include"vec3.h"
 #include"mat4.h"
 
-namespace mmath
+namespace mml
 {
 	float Dot(const vec2& left, const vec2& right);
 	float Dot(const vec3& left, const vec3& right);

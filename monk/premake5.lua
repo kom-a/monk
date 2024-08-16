@@ -14,7 +14,7 @@ project "Monk"
        IncludeDir["WangMauna"],
        IncludeDir["MWL"],
        IncludeDir["MOGL"],
-       IncludeDir["MMath"],
+       IncludeDir["MML"],
        IncludeDir["MUI"],
 
        "src/"
@@ -24,7 +24,7 @@ project "Monk"
        "WangMauna",
        "MWL",
        "MOGL",
-       "MMath",
+       "MML",
        "MUI",
       "opengl32"
    }

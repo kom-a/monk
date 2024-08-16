@@ -5,7 +5,7 @@
 
 #define TO_RADIANS(deg) (deg * M_PI / 180.0f)
 
-namespace mmath
+namespace mml
 {
 	mat4::mat4()
 	{

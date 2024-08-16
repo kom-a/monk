@@ -16,8 +16,6 @@
 
 #include "input/Input.h"
 
-
-
 #define BIND_FUNCTION(fn) std::bind(&fn, this, std::placeholders::_1)
 
 using namespace monk;
