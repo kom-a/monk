@@ -10,15 +10,6 @@
 
 namespace mwl
 {
-	struct WindowProps
-	{
-		std::wstring Title	= L"MWL Window";
-		uint32_t Width		= 1600;
-		uint32_t Height		= 900;
-		bool VSync			= true;
-		bool Closed			= false;
-	};
-
 	enum class OpenGLVersion
 	{
 		OPENGL_1_0,
@@ -42,7 +33,16 @@ namespace mwl
 		OPENGL_4_6
 	};
 
-	void SetOpenGLVersion(OpenGLVersion openglVersion);
+	struct WindowProps
+	{
+		std::wstring Title					= L"MWL Window";
+		uint32_t Width						= 1600;
+		uint32_t Height						= 900;
+		bool VSync							= true;
+		bool Closed							= false;
+
+		OpenGLVersion OpenGLContextVersion	= OpenGLVersion::OPENGL_3_3;
+	};
 
 	struct Cursor
 	{

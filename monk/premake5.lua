@@ -1,5 +1,5 @@
 project "Monk"
-   kind "ConsoleApp"
+   kind "StaticLib"
    language "C++"
    cppdialect "C++17"
 
@@ -16,6 +16,8 @@ project "Monk"
        IncludeDir["MOGL"],
        IncludeDir["MML"],
        IncludeDir["MUI"],
+       IncludeDir["MFL"],
+       IncludeDir["Scriptorium"],
 
        "src/"
    }
@@ -26,6 +28,8 @@ project "Monk"
        "MOGL",
        "MML",
        "MUI",
+       "MFL",
+       "Scriptorium",
       "opengl32"
    }
 

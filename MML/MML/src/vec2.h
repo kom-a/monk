@@ -27,6 +27,8 @@ namespace mml
 		vec2& operator*=(float scalar);
 		vec2& operator/=(float scalar);
 
+		vec2 operator-() const;
+
 		bool operator==(const vec2& other) const;
 		bool operator!=(const vec2& other) const;
 

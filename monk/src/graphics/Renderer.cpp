@@ -16,7 +16,7 @@ namespace monk
 		glDeleteVertexArrays(1, &m_VAO);
 	}
 
-	void Renderer::Begin(Shared<Camera> camera, Shared<Shader> shader)
+	void Renderer::Begin(Ref<Camera> camera, Ref<Shader> shader)
 	{
 		MONK_ASSERT(!m_Camera, "Call Renderer::End first");
 		MONK_ASSERT(!m_Shader, "Call Renderer::End first");
@@ -44,7 +44,7 @@ namespace monk
 		glDrawElements(GL_TRIANGLES, indices.Count(), GL_UNSIGNED_INT, nullptr);
 	}
 
-	void Renderer::DrawModel(Shared<Model> model)
+	void Renderer::DrawModel(Ref<Model> model)
 	{
 		MONK_ASSERT(m_Shader, "Call Renderer::Begin first");
 		MONK_ASSERT(m_Camera, "Call Renderer::Begin first");

@@ -2,9 +2,14 @@
 
 namespace monk
 {
-	mmath::vec4 Render::s_ClearColor = mmath::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+	mml::vec4 Render::s_ClearColor = mml::vec4(0.0f, 0.0f, 0.0f, 1.0f);
 
-	void Render::SetClearColor(const mmath::vec4& clearColor)
+	void Render::SetClearColor(float r, float g, float b, float w)
+	{
+		s_ClearColor = mml::vec4(r, g, b, w);
+	}
+
+	void Render::SetClearColor(const mml::vec4& clearColor)
 	{
 		s_ClearColor = clearColor;
 	}
@@ -46,4 +51,23 @@ namespace monk
 			glDisable(GL_CULL_FACE);
 	}
 
+	void Render::Viewport(float x, float y, float width, float height)
+	{
+		glViewport(x, y, width, height);
+	}
+
+	void Render::Viewport(float width, float height)
+	{
+		glViewport(0, 0, width, height);
+	}
+
+	void Render::Viewport(const mml::vec2& size)
+	{
+		glViewport(0, 0, size.x, size.y);
+	}
+
+	void Render::Viewport(const mml::vec4& viewport)
+	{
+		glViewport(viewport.x, viewport.y, viewport.z, viewport.w);
+	}
 }

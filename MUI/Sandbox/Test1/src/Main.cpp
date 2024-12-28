@@ -84,7 +84,7 @@ int main()
 		window->Update();
 		window->MakeContextCurrent();
 
-		glClearColor((float)mouseX / window->GetWidth(), (float)mouseY / window->GetHeight(), 0.8f, 1.0f);
+		//glClearColor((float)mouseX / window->GetWidth(), (float)mouseY / window->GetHeight(), 0.8f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		mui::NewFrame();

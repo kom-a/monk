@@ -43,7 +43,7 @@ namespace monk
 			LOG_WARNING("Failed to set uniform: {0}", name);
 	}
 	
-	void Shader::SetMatrix4(const std::string& name, const mmath::mat4& matrix)
+	void Shader::SetMatrix4(const std::string& name, const mml::mat4& matrix)
 	{
 		glUseProgram(m_ShaderID);
 		int location = glGetUniformLocation(m_ShaderID, name.c_str());
@@ -51,6 +51,11 @@ namespace monk
 			glUniformMatrix4fv(location, 1, GL_TRUE, &matrix[0][0]);
 		else
 			LOG_WARNING("Failed to set uniform: {0}", name);
+	}
+
+	Ref<Shader> Shader::Create(const std::string& vertexSource, const std::string& fragmentSource)
+	{
+		return CreateRef<Shader>(vertexSource, fragmentSource);
 	}
 
 	uint32_t Shader::CompileShader(const std::string& shaderSource, uint32_t type)

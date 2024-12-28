@@ -45,6 +45,11 @@ namespace mml
 		return vec2(x - other.x, y - other.y);
 	}
 
+	vec2 vec2::operator-() const
+	{
+		return vec2(-x, -y);
+	}
+
 	float vec2::operator*(const vec2& other) const
 	{
 		return x * other.x + y * other.y;

@@ -38,10 +38,10 @@ namespace monk
 	{
 		switch (Type)
 		{
-		case BufferLayout::AttribType::Float:  return 4 * 1;
-		case BufferLayout::AttribType::Float2: return 4 * 2;
-		case BufferLayout::AttribType::Float3: return 4 * 3;
-		case BufferLayout::AttribType::Float4: return 4 * 4;
+			case BufferLayout::AttribType::Float	: return 4 * 1;
+			case BufferLayout::AttribType::Float2	: return 4 * 2;
+			case BufferLayout::AttribType::Float3	: return 4 * 3;
+			case BufferLayout::AttribType::Float4	: return 4 * 4;
 		}
 	}
 
@@ -60,14 +60,42 @@ namespace monk
 	{
 		switch (Type)
 		{
-		case BufferLayout::AttribType::Float:  return GL_FLOAT;
-		case BufferLayout::AttribType::Float2: return GL_FLOAT;
-		case BufferLayout::AttribType::Float3: return GL_FLOAT;
-		case BufferLayout::AttribType::Float4: return GL_FLOAT;
+			case BufferLayout::AttribType::Float: 
+			case BufferLayout::AttribType::Float2:
+			case BufferLayout::AttribType::Float3:
+			case BufferLayout::AttribType::Float4: return GL_FLOAT;
 		}
 
 		LOG_ERROR("Invalid attrib pointer type");
 		return -1;
+	}
+
+	// Vertex Array ///////////////////////////////////////////////////
+
+	VertexArray::VertexArray()
+	{
+		glGenVertexArrays(1, &m_ID);
+	}
+
+	VertexArray::~VertexArray()
+	{
+		glDeleteVertexArrays(1, &m_ID);
+		m_ID = (uint32_t)-1;
+	}
+
+	void VertexArray::Bind() const 
+	{
+		glBindVertexArray(m_ID);
+	}
+
+	void VertexArray::Unbind() const
+	{
+		glBindVertexArray(0);
+	}
+
+	Ref<VertexArray> VertexArray::Create()
+	{
+		return CreateRef<VertexArray>();
 	}
 
 	// Vertex Buffer ///////////////////////////////////////////////////
@@ -91,6 +119,7 @@ namespace monk
 	VertexBuffer::~VertexBuffer()
 	{
 		glDeleteBuffers(1, &m_ID);
+		m_ID = (uint32_t) -1;
 	}
 
 	void VertexBuffer::Bind() const
@@ -114,6 +143,16 @@ namespace monk
 	{
 		Bind();
 		glUnmapBuffer(GL_ARRAY_BUFFER);
+	}
+
+	Ref<VertexBuffer> VertexBuffer::Create(float* data, size_t size, const BufferLayout& layout)
+	{
+		return CreateRef<VertexBuffer>(data, size, layout);
+	}
+
+	Ref<VertexBuffer> VertexBuffer::Create(size_t size, const BufferLayout& layout)
+	{
+		return CreateRef<VertexBuffer>(size, layout);
 	}
 
 	// Index Buffer ///////////////////////////////////////////////////
@@ -174,6 +213,16 @@ namespace monk
 		return 0;
 	}
 
+	Ref<IndexBuffer> IndexBuffer::Create(void* data, size_t count, IndexType indexType /*= IndexType::UNSIGNED_INT*/, IndexUsage indexUsage /*= IndexUsage::STATIC*/)
+	{
+		return CreateRef<IndexBuffer>(data, count, indexType, indexUsage);
+	}
+
+	Ref<IndexBuffer> IndexBuffer::Create(size_t count, IndexType indexType)
+	{
+		return CreateRef<IndexBuffer>(count, indexType);
+	}
+
 	uint32_t IndexBuffer::IndexTypeToSize(IndexType indexType)
 	{
 		switch (indexType)
@@ -197,5 +246,4 @@ namespace monk
 
 		return 0;
 	}
-
 }

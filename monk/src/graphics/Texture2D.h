@@ -4,31 +4,39 @@
 #include <inttypes.h>
 #include <memory>
 
-#include "core/Memory.h"
-#include <MMath/MMath.h>
-#include "utils/TextureLoader.h"
+#include <MML/MML.h>
+
+#include "../core/Memory.h"
+#include "../utils/TextureLoader.h"
 
 namespace monk
 {
+	enum class TextureFormat
+	{
+		INTERNAL,
+		RED,
+		RGB,
+		RGBA,
+	};
+
 	class Texture2D
 	{
 	public:
-		static Shared<Texture2D> Create(const std::string& filename, TextureFormat format = TextureFormat::INTERNAL);
-		static Shared<Texture2D> Create(int width, int height, TextureFormat format = TextureFormat::RGBA, uint8_t* data = nullptr);
-
-		Texture2D(int width, int height, int channels, uint8_t* data);
+		Texture2D(int width, int height, TextureFormat format, const uint8_t* data);
 		~Texture2D();
 		
-	public:
 		void Bind(int unit) const;
 		void Unbind();
 
-	public:
-		inline mmath::vec2 Size() const { return mmath::vec2(m_Width, m_Height); }
+		inline mml::vec2 Size() const { return mml::vec2(m_Width, m_Height); }
 		inline unsigned GetID() const { return m_TextureID; }
+
+		static Ref<Texture2D> Create(int width, int height, TextureFormat format = TextureFormat::RGBA, const uint8_t* data = nullptr);
 
 	private:
 		unsigned m_TextureID = (unsigned)-1;
-		int m_Width = 0, m_Height = 0, m_Channels = 0;
+		int m_Width = 0;
+		int m_Height = 0;
+		TextureFormat m_Format;
 	};
 }

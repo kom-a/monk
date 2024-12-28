@@ -67,11 +67,11 @@ namespace monk
 	{
 		uint32_t Camera = -1;
 		std::vector<uint32_t> Children;
-		mmath::mat4 Matrix;
+		mml::mat4 Matrix;
 		uint32_t Mesh;
-		mmath::vec3 Translation;
-		mmath::vec4 Rotation;
-		mmath::vec3 Scale;
+		mml::vec3 Translation;
+		mml::vec4 Rotation;
+		mml::vec3 Scale;
 		std::string Name;
 
 		bool UseMatrix;
@@ -101,7 +101,7 @@ namespace monk
 		~ModelLoader() = delete;
 
 	public:
-		static Shared<Model> LoadFromFile(const Filepath& filename);
+		static Ref<Model> LoadFromFile(const Filepath& filename);
 
 	private:
 		static GLTF LoadGLTF(const Filepath& filename);
@@ -114,7 +114,7 @@ namespace monk
 		static std::vector<GLTFPrimitive> GetGLTFPrimitives(const JSONList& list);
 		static GLTFAttributes GetGLTFAttributes(const JSONNode& json);
 
-		static std::vector<Mesh> ProcessNode(const GLTF& gltf, uint32_t node, const std::vector<FileData>& buffers, const mmath::mat4& parentMatrix = mmath::mat4(1.0f));
+		static std::vector<Mesh> ProcessNode(const GLTF& gltf, uint32_t node, const std::vector<FileData>& buffers, const mml::mat4& parentMatrix = mml::mat4(1.0f));
 
 		static std::vector<FileData> LoadBuffers(const std::vector<GLTFBuffer>& gltfBuffers);
 		static void FreeBuffers(const std::vector<FileData> buffers);
@@ -122,7 +122,7 @@ namespace monk
 		template <typename T>
 		static std::vector<T> GetNumbersFromJSONList(const JSONList& list);
 
-		static mmath::mat4 GetMatrixFromJSONList(const JSONList& list);
+		static mml::mat4 GetMatrixFromJSONList(const JSONList& list);
 	};
 
 	template <typename T>

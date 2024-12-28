@@ -2,25 +2,25 @@
 
 #include <string>
 
-#include <MMath/MMath.h>
+#include <MML/MML.h>
 
 namespace monk
 {
 	struct GuiWindowCacheData
 	{
 		std::string DebugName;
-		mmath::vec2 Position;
-		mmath::vec2 Size;
+		mml::vec2 Position;
+		mml::vec2 Size;
 		uint32_t ZOrder;
 		bool Collapsed;
 	};
 
 	struct GuiRect
 	{
-		mmath::vec2 Position;
-		mmath::vec2 Size;
+		mml::vec2 Position;
+		mml::vec2 Size;
 
-		bool IsInside(const mmath::vec2 point) const
+		bool IsInside(const mml::vec2 point) const
 		{
 			const float& x = point.x;
 			const float& y = point.y;
@@ -36,10 +36,10 @@ namespace monk
 
 	struct GuiCircle
 	{
-		mmath::vec2 Center;
+		mml::vec2 Center;
 		float Radius;
 
-		bool IsInside(const mmath::vec2& point) const 
+		bool IsInside(const mml::vec2& point) const 
 		{
 			return (Center - point).length2() <= Radius * 2;
 		}
@@ -50,9 +50,9 @@ namespace monk
 		std::string Name;
 		uint32_t ID;
 
-		mmath::vec2 Position;
-		mmath::vec2 Size;
-		mmath::vec2 CursorPosition;
+		mml::vec2 Position;
+		mml::vec2 Size;
+		mml::vec2 CursorPosition;
 		uint32_t ZOrder;
 		bool Collapsed;
 		bool* Open;

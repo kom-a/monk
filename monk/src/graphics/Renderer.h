@@ -1,11 +1,11 @@
 #pragma once
 
-#include "core/Memory.h"
+#include "../core/Memory.h"
 #include "Buffer.h"
 #include "Shader.h"
-#include <MMath/MMath.h>
-#include "graphics/Model.h"
-#include "graphics/Camera.h"
+#include <MML/MML.h>
+#include "Model.h"
+#include "Camera.h"
 
 namespace monk
 {
@@ -15,14 +15,14 @@ namespace monk
 		Renderer();
 		~Renderer();
 
-		void Begin(Shared<Camera> camera, Shared<Shader> shader);
+		void Begin(Ref<Camera> camera, Ref<Shader> shader);
 		void End();
 
 		void DrawIndexed(const VertexBuffer& buffer, const IndexBuffer& indices);
-		void DrawModel(Shared<Model> model);
+		void DrawModel(Ref<Model> model);
 	private:
 		uint32_t m_VAO = 0;
-		Shared<Shader> m_Shader = nullptr;
-		Shared<Camera> m_Camera = nullptr;
+		Ref<Shader> m_Shader = nullptr;
+		Ref<Camera> m_Camera = nullptr;
 	};
 }

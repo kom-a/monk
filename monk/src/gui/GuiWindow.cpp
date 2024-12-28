@@ -10,8 +10,8 @@ namespace monk
 	GuiWindow::GuiWindow(const std::string& name, bool* open)
 		:
 		Name(name),
-		Position(mmath::vec2(100, 100)),
-		Size(mmath::vec2(150, 50)),
+		Position(mml::vec2(100, 100)),
+		Size(mml::vec2(150, 50)),
 		ZOrder(0),
 		Collapsed(false),
 		Open(open),
@@ -36,11 +36,11 @@ namespace monk
 
 		GuiRect headerRect;
 		headerRect.Position = Position;
-		headerRect.Size = mmath::vec2(Size.x, style.HeaderHeight);
+		headerRect.Size = mml::vec2(Size.x, style.HeaderHeight);
 
 		GuiRect windowRect;
 		windowRect.Position = Position;
-		windowRect.Size = Size + mmath::vec2(0.0f, headerRect.Size.y);
+		windowRect.Size = Size + mml::vec2(0.0f, headerRect.Size.y);
 
 		bool hot;
 		if (Collapsed)
@@ -90,7 +90,7 @@ namespace monk
 	{
 		const GuiStyle& style = Gui::GetStyle();
 
-		mmath::vec2 windowBodyPosition = mmath::vec2(Position.x, Position.y + style.HeaderHeight);
+		mml::vec2 windowBodyPosition = mml::vec2(Position.x, Position.y + style.HeaderHeight);
 
 		GuiRect resize;
 		resize.Size = style.WindowResizeCornerSize;
@@ -102,13 +102,13 @@ namespace monk
 	GuiRect GuiWindow::GetCollapseButton() const
 	{
 		const GuiStyle& style = Gui::GetStyle();
-		mmath::vec2 headerSize = mmath::vec2(Size.x, style.HeaderHeight);
+		mml::vec2 headerSize = mml::vec2(Size.x, style.HeaderHeight);
 		const float buttonHeightPercentOfHeaderHeight = 0.6; // close button occupy 60% of headerHeight
 		const float& percent = buttonHeightPercentOfHeaderHeight;
 
 		GuiRect collapse;
-		collapse.Size = mmath::vec2(style.HeaderHeight * percent);
-		collapse.Position = Position + mmath::vec2(style.HeaderPadding, style.HeaderHeight * (1.0f - percent) / 2);
+		collapse.Size = mml::vec2(style.HeaderHeight * percent);
+		collapse.Position = Position + mml::vec2(style.HeaderPadding, style.HeaderHeight * (1.0f - percent) / 2);
 
 		return collapse;
 	}
@@ -116,15 +116,15 @@ namespace monk
 	GuiRect GuiWindow::GetCloseButton() const
 	{
 		const GuiStyle& style = Gui::GetStyle();
-		mmath::vec2 headerSize = mmath::vec2(Size.x, style.HeaderHeight);
+		mml::vec2 headerSize = mml::vec2(Size.x, style.HeaderHeight);
 		const float buttonHeightPercentOfHeaderHeight = 0.8f; // close button occupy 80% of headerHeight
 		const float& percent = buttonHeightPercentOfHeaderHeight;
 
 		const float closeButtonWidth = 30;
 
 		GuiRect close;
-		close.Size = mmath::vec2(closeButtonWidth, headerSize.y * percent);
-		close.Position = Position + mmath::vec2(Size.x - close.Size.x - style.HeaderPadding, headerSize.y * (1.0f - percent) * 0.5f);
+		close.Size = mml::vec2(closeButtonWidth, headerSize.y * percent);
+		close.Position = Position + mml::vec2(Size.x - close.Size.x - style.HeaderPadding, headerSize.y * (1.0f - percent) * 0.5f);
 		
 		return close;
 	}

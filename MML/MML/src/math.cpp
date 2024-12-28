@@ -149,6 +149,26 @@ namespace mml
 			0, 0, 0, 1);
 	}
 
+	float Lerp(float a, float b, float t)
+	{
+		return a * (1.0f - t) + (b * t);
+	}
+
+	vec2 Lerp(const vec2& a, const vec2& b, float t)
+	{
+		return a * (1.0f - t) + (b * t);
+	}
+
+	vec3 Lerp(const vec3& a, const vec3& b, float t)
+	{
+		return a * (1.0f - t) + (b * t);
+	}
+
+	vec4 Lerp(const vec4& a, const vec4& b, float t)
+	{
+		return a * (1.0f - t) + (b * t);
+	}
+
 	float ToRadians(float degrees)
 	{
 		return (float)TO_RADIANS(degrees);

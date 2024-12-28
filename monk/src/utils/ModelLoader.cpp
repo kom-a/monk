@@ -7,7 +7,7 @@ namespace monk
 {
 	GLTF ModelLoader::LoadGLTF(const Filepath& filename)
 	{
-		Shared<const JSONNode> jsonPtr;
+		Ref<const JSONNode> jsonPtr;
 
 		try
 		{
@@ -145,7 +145,7 @@ namespace monk
 			else
 			{
 				// TODO: Get Translation, Rotation and Scale and use them
-				gltfNode.Matrix = mmath::mat4(1.0f);
+				gltfNode.Matrix = mml::mat4(1.0f);
 				gltfNode.UseMatrix = false;
 			}
 			gltfNode.Mesh = (*node).TryGetNumber("mesh", -1);
@@ -185,7 +185,7 @@ namespace monk
 		return attributes;
 	}
 
-	std::vector<Mesh> ModelLoader::ProcessNode(const GLTF& gltf, uint32_t node, const std::vector<FileData>& buffers, const mmath::mat4& parentMatrix)
+	std::vector<Mesh> ModelLoader::ProcessNode(const GLTF& gltf, uint32_t node, const std::vector<FileData>& buffers, const mml::mat4& parentMatrix)
 	{
 		std::vector<Mesh> meshes;
 
@@ -224,8 +224,8 @@ namespace monk
 			uint8_t* data = buffers[gltfPositionBufferView.Buffer].Data;
 	
 			IndexBuffer::IndexType indexType = gltfIndicesAccessor.ComponentType == 5125 ? IndexBuffer::IndexType::UNSIGNED_INT : IndexBuffer::IndexType::UNSIGNED_SHORT;
-			Shared<VertexBuffer> vertexBuffer = CreateShared<VertexBuffer>((float*)(data + gltfPositionBufferView.ByteOffset + gltfPositionAccessor.ByteOffset), gltfPositionBufferView.ByteLength - gltfPositionAccessor.ByteOffset, layout);
-			Shared<IndexBuffer> indexBuffer = CreateShared<IndexBuffer>((void*)(data + gltfIndicesBufferView.ByteOffset + gltfIndicesAccessor.ByteOffset), gltfIndicesAccessor.Count, indexType, IndexBuffer::IndexUsage::STATIC);
+			Ref<VertexBuffer> vertexBuffer = CreateRef<VertexBuffer>((float*)(data + gltfPositionBufferView.ByteOffset + gltfPositionAccessor.ByteOffset), gltfPositionBufferView.ByteLength - gltfPositionAccessor.ByteOffset, layout);
+			Ref<IndexBuffer> indexBuffer = CreateRef<IndexBuffer>((void*)(data + gltfIndicesBufferView.ByteOffset + gltfIndicesAccessor.ByteOffset), gltfIndicesAccessor.Count, indexType, IndexBuffer::IndexUsage::STATIC);
 
 			meshes.push_back(Mesh(vertexBuffer, indexBuffer, parentMatrix));
 		}
@@ -262,9 +262,9 @@ namespace monk
 			fileData.Free();
 	}
 
-	mmath::mat4 ModelLoader::GetMatrixFromJSONList(const JSONList& list)
+	mml::mat4 ModelLoader::GetMatrixFromJSONList(const JSONList& list)
 	{
-		return mmath::Transpose(mmath::mat4(
+		return mml::Transpose(mml::mat4(
 			list[0 * 4 + 0]->GetNumber(),
 			list[0 * 4 + 1]->GetNumber(),
 			list[0 * 4 + 2]->GetNumber(),
@@ -287,11 +287,11 @@ namespace monk
 		));
 	}
 
-	Shared<Model> ModelLoader::LoadFromFile(const Filepath& filename)
+	Ref<Model> ModelLoader::LoadFromFile(const Filepath& filename)
 	{
 		GLTF gltf = LoadGLTF(filename);
 		MONK_ASSERT(gltf.Scene != -1, "No default GLTF scene");
-		Shared<Model> model = CreateShared<Model>();
+		Ref<Model> model = CreateRef<Model>();
 		std::vector<Mesh> meshes;
 		std::vector<FileData> buffers = LoadBuffers(gltf.Buffers);
 

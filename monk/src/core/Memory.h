@@ -7,9 +7,9 @@ namespace monk
 {
 
 	template<typename T>
-	using Shared = std::shared_ptr<T>;
+	using Ref = std::shared_ptr<T>;
 	template<typename T, typename ... Args>
-	constexpr Shared<T> CreateShared(Args&& ... args)
+	constexpr Ref<T> CreateRef(Args&& ... args)
 	{
 		return std::make_shared<T>(std::forward<Args>(args)...);
 	}

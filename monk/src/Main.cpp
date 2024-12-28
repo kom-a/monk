@@ -5,7 +5,7 @@
 
 #include <MWL/MWL.h>
 #include <MOGL/MOGL.h>
-#include <MMath/MMath.h>
+#include <MML/MML.h>
 #include <MUI/MUI.h>
 
 #include "core/Memory.h"
@@ -60,9 +60,11 @@ void Application::Run()
 {
 	glClearColor(0.6f, 0.8f, 1.0f, 1.0f);
 
-	monk::OrthographicCamera camera(0, 1, 1, 0, 0, 1);
+	Ref<monk::OrthographicCamera> camera = monk::CreateRef<monk::OrthographicCamera>(0, 1, 1, 0, 0, 1);
 
 	monk::Time timer;
+
+	bool open = true;
 
 	while (!m_Window->Closed())
 	{
@@ -80,7 +82,7 @@ void Application::Run()
 		{
 			for (float j = 0; j < 1; j += step)
 			{
-				m_Renderer2D->DrawQuad(mmath::vec2(i, j), mmath::vec2(step), mmath::vec4(i, j, std::sin(timer.Elapsed()) * 0.5f + 0.5f, 1.0f));
+				m_Renderer2D->DrawQuad(mml::vec2(i, j), mml::vec2(step), mml::vec4(i, j, std::sin(timer.Elapsed()) * 0.5f + 0.5f, 1.0f));
 			}
 		}
 
@@ -91,7 +93,7 @@ void Application::Run()
 		if (m_ShowGUI)
 		{
 
-			mui::Begin("Hello world");
+			mui::Begin("Hello world", &open);
 			mui::End();
 
 			mui::Begin("Hello");
@@ -113,13 +115,12 @@ void Application::Run()
 
 void Application::InitWindow()
 {
-	mwl::SetOpenGLVersion(mwl::OpenGLVersion::OPENGL_4_6);
-
 	auto windowProps = mwl::WindowProps();
 	windowProps.Title = L"Monk";
 	windowProps.VSync = false;
 	windowProps.Width = 800;
 	windowProps.Height = 450;
+	windowProps.OpenGLContextVersion = mwl::OpenGLVersion::OPENGL_4_6;
 
 	m_Window.reset(mwl::Create(windowProps));
 

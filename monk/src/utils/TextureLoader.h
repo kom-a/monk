@@ -3,8 +3,8 @@
 #include <string>
 #include <inttypes.h>
 
-#include "utils/FileManager.h"
-#include "core/Memory.h"
+#include "../utils/FileManager.h"
+#include "../core/Memory.h"
 
 namespace monk
 {
@@ -18,13 +18,6 @@ namespace monk
 		void Free();
 	};
 
-	enum class TextureFormat
-	{
-		INTERNAL,
-		RGB,
-		RGBA,
-	};
-
 	// Prefer not using BMP format for now (it is not always working)
 	class TextureLoader
 	{
@@ -33,16 +26,16 @@ namespace monk
 		~TextureLoader() = default;
 		
 	public:
-		static TextureData LoadFromFile(const std::string& filename, TextureFormat format);
-		static int TextureFormatBytesPerPixel(TextureFormat format);
+	//	static TextureData LoadFromFile(const std::string& filename, TextureFormat format);
+	//	static int TextureFormatBytesPerPixel(TextureFormat format);
 
-	private:
-		static bool IsBMP(const FileData& filedata);
-		static bool IsPPM(const FileData& filedata);
-		static bool IsPAM(const FileData& filedata);
+	//private:
+	//	static bool IsBMP(const FileData& filedata);
+	//	static bool IsPPM(const FileData& filedata);
+	//	static bool IsPAM(const FileData& filedata);
 
-		static TextureData LoadBMP(const FileData& filedata, TextureFormat format);
-		static TextureData LoadPPM(const FileData& filedata, TextureFormat format);
-		static TextureData LoadPAM(const FileData& filedata, TextureFormat format);
+	//	static TextureData LoadBMP(const FileData& filedata, TextureFormat format);
+	//	static TextureData LoadPPM(const FileData& filedata, TextureFormat format);
+	//	static TextureData LoadPAM(const FileData& filedata, TextureFormat format);
 	};
 }

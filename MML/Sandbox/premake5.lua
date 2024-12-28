@@ -1,4 +1,4 @@
-workspace "MMath_Sandbox"
+workspace "MML_Sandbox"
 	configurations { "Debug", "Release" }
 	architecture "x86_64"
 

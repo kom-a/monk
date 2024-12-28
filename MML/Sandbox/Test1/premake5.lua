@@ -11,11 +11,11 @@ project "Test1"
 	}
 
 	includedirs {
-		IncludeDir["MMath"]
+		IncludeDir["MML"]
 	}
 
 	links {
-		"MMath"
+		"MML"
 	}
 
 	filter "configurations:Debug"

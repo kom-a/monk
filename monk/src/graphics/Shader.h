@@ -3,7 +3,9 @@
 #include <inttypes.h>
 #include <string>
 
-#include <MMath/MMath.h>
+#include <MML/MML.h>
+
+#include "../core/Memory.h"
 
 namespace monk
 {
@@ -17,7 +19,9 @@ namespace monk
 		void Unbind() const;
 
 		void SetInt(const std::string& name, int value);
-		void SetMatrix4(const std::string& name, const mmath::mat4& matrix);
+		void SetMatrix4(const std::string& name, const mml::mat4& matrix);
+
+		static Ref<Shader> Create(const std::string& vertexSource, const std::string& fragmentSource);
 
 	private:
 		uint32_t CompileShader(const std::string& shaderSource, uint32_t type);

@@ -6,4 +6,3 @@ namespace monk
 {
 	DEFINE_LOGGER();
 }
-

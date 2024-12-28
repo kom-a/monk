@@ -8,7 +8,7 @@
 
 #include "graphics/Renderer2D.h"
 #include "graphics/OrthographicCamera.h"
-#include <MMath/MMath.h>
+#include <MML/MML.h>
 
 #include "events/MouseEvent.h"
 
@@ -51,17 +51,17 @@ namespace monk
 
 	struct GuiStyle
 	{
-		mmath::vec2 Padding;
+		mml::vec2 Padding;
 		float HeaderHeight;
 		float HeaderPadding;
 		float HeaderContentSize; // Text, buttons... occupation in percentage (0.5 - content occupy 50% of HeaderHeight)
 
-		mmath::vec4 Colors[GuiColor::Count];
+		mml::vec4 Colors[GuiColor::Count];
 
-		mmath::vec2 MinWindowSize;
-		mmath::vec2 WindowBorderSize;
+		mml::vec2 MinWindowSize;
+		mml::vec2 WindowBorderSize;
 
-		mmath::vec2 WindowResizeCornerSize;
+		mml::vec2 WindowResizeCornerSize;
 	};
 
 	class Gui
@@ -76,7 +76,7 @@ namespace monk
 		static void Begin(const std::string& name, bool* open = nullptr);
 		static void End();
 
-		static void Button(const std::string& text, const mmath::vec2& size = mmath::vec2(100, 20));
+		static void Button(const std::string& text, const mml::vec2& size = mml::vec2(100, 20));
 
 	private:
 		static void DefaultStyle();
@@ -90,7 +90,7 @@ namespace monk
 		static void DrawWindowBody(const GuiWindow* window);
 		
 	private:
-		static mmath::vec2 s_LastMouse;
+		static mml::vec2 s_LastMouse;
 		static GuiStyle s_GuiStyle;
 		static std::unordered_map<uint32_t, GuiWindowCacheData> s_WindowCache;
 		static OrthographicCamera s_Camera;

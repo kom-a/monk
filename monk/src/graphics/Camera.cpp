@@ -5,8 +5,8 @@ namespace monk
 
 	Camera::Camera(float fov, float aspectRatio, float nearPlane, float farPlane)
 		:
-		m_Position(mmath::vec3(0.0f)),
-		m_Target(mmath::vec3(0.0f, 0.0f, 0.0f)),
+		m_Position(mml::vec3(0.0f)),
+		m_Target(mml::vec3(0.0f, 0.0f, 0.0f)),
 		m_FOV(fov), 
 		m_AspectRatio(aspectRatio), 
 		m_NearPlane(nearPlane), 
@@ -16,13 +16,13 @@ namespace monk
 		RecalculateViewMatrix();
 	}
 
-	void Camera::SetPosition(const mmath::vec3& position)
+	void Camera::SetPosition(const mml::vec3& position)
 	{
 		m_Position = position;
 		RecalculateViewMatrix();
 	}
 
-	void Camera::SetTarget(const mmath::vec3& target)
+	void Camera::SetTarget(const mml::vec3& target)
 	{
 		m_Target = target;
 		RecalculateViewMatrix();
@@ -48,13 +48,13 @@ namespace monk
 
 	void Camera::RecalculateProjectionMatrix()
 	{
-		m_ProjectionMatrix = mmath::Perspective(m_FOV, m_AspectRatio, m_NearPlane, m_FarPlane);
+		m_ProjectionMatrix = mml::Perspective(m_FOV, m_AspectRatio, m_NearPlane, m_FarPlane);
 		m_ProjectionViewMatrix = m_ProjectionMatrix * m_ViewMatrix;
 	}
 
 	void Camera::RecalculateViewMatrix()
 	{
-		m_ViewMatrix = mmath::LookAt(m_Position, m_Target);
+		m_ViewMatrix = mml::LookAt(m_Position, m_Target);
 		m_ProjectionViewMatrix = m_ProjectionMatrix * m_ViewMatrix;
 	}
 }

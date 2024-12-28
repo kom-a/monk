@@ -119,7 +119,7 @@ namespace mwl
 				Minimize
 			};
 
-			uint32_t Height = 32;
+			uint32_t Height = 24;
 			HoveredButton CurrentHoveredButton = HoveredButton::None;
 		};
 
@@ -133,6 +133,8 @@ namespace mwl
 			uint32_t MouseX;
 			uint32_t MouseY;
 			MouseButton MouseClicked;
+
+			OpenGLVersion OpenGLContextVersion;
 
 			bool VSync;
 			bool Closed;

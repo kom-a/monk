@@ -28,4 +28,9 @@ namespace mml
 	float Max(float a, float b);
 
 	mat4 LookAt(const vec3& position, const vec3& target);
+
+	float Lerp(float a, float b, float t);
+	vec2 Lerp(const vec2& a, const vec2& b, float t);
+	vec3 Lerp(const vec3& a, const vec3& b, float t);
+	vec4 Lerp(const vec4& a, const vec4& b, float t);
 }

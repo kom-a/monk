@@ -37,8 +37,6 @@ namespace mwl
 	typedef BOOL(WINAPI* PFNWGLSWAPINTERVALEXTPROC)(int interval);
 	PFNWGLSWAPINTERVALEXTPROC wglSwapIntervalEXT;
 
-	static OpenGLVersion g_OpenglVersion = OpenGLVersion::OPENGL_3_3;
-
 	static int GetMajorOpenGLVersion(OpenGLVersion openglVersion)
 	{
 		switch (openglVersion)
@@ -95,11 +93,6 @@ namespace mwl
 		return 3;
 	}
 
-	void SetOpenGLVersion(OpenGLVersion openglVersion)
-	{
-		g_OpenglVersion = openglVersion;
-	}
-
 	Window* Create(const WindowProps& windowProps /*= WindowProps()*/)
 	{
 		return new Win32Window(windowProps);
@@ -107,16 +100,17 @@ namespace mwl
 
 	Win32Window::Win32Window(const WindowProps& windowProps)
 	{
-		m_State.Title	= windowProps.Title;
-		m_State.Width	= windowProps.Width;
-		m_State.Height	= windowProps.Height;
-		m_State.VSync	= windowProps.VSync;
-		m_State.Closed	= windowProps.Closed;
-		m_State.MouseX	= 0;
-		m_State.MouseY = 0;
-		m_State.MouseClicked = MouseButton::None;
+		m_State.Title					= windowProps.Title;
+		m_State.Width					= windowProps.Width;
+		m_State.Height					= windowProps.Height;
+		m_State.VSync					= windowProps.VSync;
+		m_State.Closed					= windowProps.Closed;
+		m_State.OpenGLContextVersion	= windowProps.OpenGLContextVersion;
+		m_State.MouseX					= 0;
+		m_State.MouseY					= 0;
+		m_State.MouseClicked			= MouseButton::None;
 		m_State.FullscreenRecoverPlacement = { 0 };
-		m_State.IsFullscreen = false;
+		m_State.IsFullscreen			= false;
 
 		if (!CreateWin32Window())
 		{
@@ -126,7 +120,7 @@ namespace mwl
 		else
 			LOG_DEBUG("Window successfully created");
 
-		if (!CreateOpenGLContext(g_OpenglVersion))
+		if (!CreateOpenGLContext(m_State.OpenGLContextVersion))
 		{
 			LOG_CRITICAL("Could not create OpenGL context");
 			Close();
@@ -191,7 +185,7 @@ namespace mwl
 
 	uint32_t Win32Window::GetHeight() const
 	{
-		return m_State.Height - m_Titlebar.Height;
+		return m_State.Height;
 	}
 
 	void* Win32Window::GetNative()

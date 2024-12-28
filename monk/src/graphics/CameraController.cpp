@@ -7,12 +7,12 @@
 
 namespace monk
 {
-	CameraController::CameraController(Shared<Camera> camera)
+	CameraController::CameraController(Ref<Camera> camera)
 	{
 		m_Camera = camera;
 		m_LookDirection = camera->GetLookDirection();
-		m_UpDirection = mmath::vec3(0.0f, 1.0f, 0.0f);
-		m_RightDirection = mmath::Normalize(mmath::Cross(m_UpDirection, m_LookDirection));
+		m_UpDirection = mml::vec3(0.0f, 1.0f, 0.0f);
+		m_RightDirection = mml::Normalize(mml::Cross(m_UpDirection, m_LookDirection));
 	}
 
 	void CameraController::Update(float deltaTime)
@@ -27,7 +27,7 @@ namespace monk
 			return;
 
 		const float speed = m_MoveSpeed * deltaTime;
-		mmath::vec3 moveDirection(0.0f);
+		mml::vec3 moveDirection(0.0f);
 
 		if (Input::IsKeyPressed(Key::W))
 			moveDirection += m_LookDirection;
@@ -48,7 +48,7 @@ namespace monk
 		moveDirection.normalize();
 		moveDirection *= speed;
 
-		mmath::vec3 cameraPosition = m_Camera->GetPosition();
+		mml::vec3 cameraPosition = m_Camera->GetPosition();
 		cameraPosition += moveDirection;
 		m_Camera->SetPosition(cameraPosition);
 		m_Camera->SetTarget(cameraPosition + m_LookDirection);
@@ -61,7 +61,7 @@ namespace monk
 		if (!Input::IsKeyPressed(Mouse::ButtonRight))
 		{
 			m_FirstMouseInteration = true;
-			m_CenterMousePosition = mmath::vec2(-1.0f);
+			m_CenterMousePosition = mml::vec2(-1.0f);
 			return;
 		}
 		
@@ -71,9 +71,9 @@ namespace monk
 			return;
 		}
 
-		mmath::vec2 mousePosition = Input::GetMousePosition();
+		mml::vec2 mousePosition = Input::GetMousePosition();
 
-		if (m_CenterMousePosition == mmath::vec2(-1.0f))
+		if (m_CenterMousePosition == mml::vec2(-1.0f))
 		{
 			m_CenterMousePosition = mousePosition;
 			return;
@@ -83,18 +83,18 @@ namespace monk
 			return;
 
 		
-		mmath::vec2 mouseOffset = m_CenterMousePosition - mousePosition;
+		mml::vec2 mouseOffset = m_CenterMousePosition - mousePosition;
 		m_Yaw += mouseOffset.x * m_Sensitivity;
 		m_Pitch += mouseOffset.y * m_Sensitivity;
-		m_Pitch = mmath::Clamp(m_Pitch, -89.0f, 89.0f);
+		m_Pitch = mml::Clamp(m_Pitch, -89.0f, 89.0f);
 
-		m_LookDirection.x = std::cos(mmath::ToRadians(m_Yaw)) * std::cos(mmath::ToRadians(m_Pitch));
-		m_LookDirection.y = std::sin(mmath::ToRadians(m_Pitch));
-		m_LookDirection.z = std::sin(mmath::ToRadians(m_Yaw)) * std::cos(mmath::ToRadians(m_Pitch));
+		m_LookDirection.x = std::cos(mml::ToRadians(m_Yaw)) * std::cos(mml::ToRadians(m_Pitch));
+		m_LookDirection.y = std::sin(mml::ToRadians(m_Pitch));
+		m_LookDirection.z = std::sin(mml::ToRadians(m_Yaw)) * std::cos(mml::ToRadians(m_Pitch));
 		m_LookDirection.normalize();
 
-		const mmath::vec3& cameraPosition = m_Camera->GetPosition();
+		const mml::vec3& cameraPosition = m_Camera->GetPosition();
 		m_Camera->SetTarget(cameraPosition + m_LookDirection);
-		m_RightDirection = mmath::Normalize(mmath::Cross(m_UpDirection, m_LookDirection));
+		m_RightDirection = mml::Normalize(mml::Cross(m_UpDirection, m_LookDirection));
 	}
 }
