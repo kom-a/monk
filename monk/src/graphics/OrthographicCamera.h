@@ -9,10 +9,12 @@ namespace monk
 	public:
 		OrthographicCamera(float left, float right, float bottom, float top, float near, float far);
 		OrthographicCamera(const mml::mat4& projectionMatrix);
-		~OrthographicCamera();
 
 		void SetPosition(const mml::vec3& position) { m_Position = position; RecalculateViewMatrix(); }
 
+		void SetProjection(float left, float right, float bottom, float top, float near, float far);
+		void SetProjection(const mml::mat4& projectionMatrix);
+		
 		const mml::mat4& GetProjectionViewMatrix() const { return m_ProjectionViewMatrix; }
 	private:
 		void RecalculateViewMatrix();

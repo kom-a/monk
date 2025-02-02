@@ -176,6 +176,12 @@ namespace MFL
 		u4be subtable_offset;
 	};
 
+	struct LongHorMetric
+	{
+		u2be advanceWidth;
+		s2be leftSideBearing;
+	};
+
 	struct Head
 	{
 		Fixed version;
@@ -237,6 +243,14 @@ namespace MFL
 		u2be number_of_hmetrics;
 
 		void Parse(Scriptorium::Reader& reader);
+	};
+
+	struct Hmtx
+	{
+		std::vector<LongHorMetric>	hor_metrics;
+		std::vector<s2be>			leftSideBearing;
+
+		void Parse(Scriptorium::Reader& reader, u2be num_glyphs, u2be number_of_hmetrics);
 	};
 
 	struct Post

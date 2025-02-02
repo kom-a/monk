@@ -58,16 +58,16 @@ namespace monk
 		{
 			mml::vec3 Position;
 			mml::vec4 Color;
-			mml::vec2 TextureCoords;
 			float AtlasIndex;
-
+			mml::vec2 TextureCoords;
+			
 			static BufferLayout GetLayout()
 			{
 				return {
 					{ 0, BufferLayout::AttribType::Float3 },
 					{ 1, BufferLayout::AttribType::Float4 },
-					{ 2, BufferLayout::AttribType::Float2 },
-					{ 3, BufferLayout::AttribType::Float  }
+					{ 2, BufferLayout::AttribType::Float  },
+					{ 3, BufferLayout::AttribType::Float2 }
 				};
 			}
 		};
@@ -129,7 +129,7 @@ namespace monk
 
 		const struct
 		{
-			const size_t MaxFonts = 12;
+			const size_t MaxFonts = 16;
 			const size_t MaxChars = 1 << 16;
 		} TextBatchSettings;
 
@@ -179,6 +179,12 @@ namespace monk
 				Characters	= 0;
 				Verticies	= 0;
 				Indices		= 0;
+
+				for (auto atlas : FontAtlases)
+				{
+					atlas.reset();
+				}
+				FontAtlases.clear();
 			}
 		};
 
@@ -210,6 +216,9 @@ namespace monk
 
 		Ref<Texture2D> m_WhiteTexture = nullptr;
 		std::vector<Ref<MFL::Font>> m_FontStack;
+
+		monk::Ref<MFL::Font> m_DefaultFont;
+		monk::Ref<Texture2D> m_AtlasTexture;
 
 		float ZDepth = -1.0f;
 	};

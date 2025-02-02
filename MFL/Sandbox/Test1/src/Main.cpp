@@ -6,240 +6,102 @@
 #include <iostream>
 #include <assert.h>
 
-mml::vec2 p0 = mml::vec2(100, 100);
-mml::vec2 p1 = mml::vec2(200, 200);
-mml::vec2 control = mml::vec2(150, 400);
-
-int keyDown = (int)mwl::KeyCode::D1;
-
-uint32_t mouseX, mouseY;
-
-bool flag = false;
-
-void OnMouseButtonDown(const mwl::MouseButtonDownEvent& e)
-{
-	if (e.Button == mwl::MouseButton::Left)
-		p0 = mml::vec2(e.X, e.Y);
-	else if (e.Button == mwl::MouseButton::Right)
-		p1 = mml::vec2(e.X, e.Y);
-	else if (e.Button == mwl::MouseButton::Middle)
-		control = mml::vec2(e.X, e.Y);
-
-	flag = true;
-
-	std::cout << "x: " << e.X << ", y: " << e.Y << std::endl;
-}
-
-void OnMouseMove(const mwl::MouseMovedEvent& e)
-{
-	mouseX = e.X;
-	mouseY = e.Y;
-}
-
-void OnKeyDown(const mwl::KeyDownEvent& e)
-{
-	if (e.Key == mwl::KeyCode::F1)
-		keyDown--;
-	else if (e.Key == mwl::KeyCode::F2)
-		keyDown++;
-	else
-		keyDown = (int)e.Key;
-}
-
-static float Lerp(float start, float end, float t)
-{
-	return start + (end - start) * t;
-}
-
-static mml::vec2 BezierInterpolation(mml::vec2 p0, mml::vec2 p1, mml::vec2 p2, float t)
-{
-	float intAX = Lerp(p0.x, p1.x, t);
-	float intAY = Lerp(p0.y, p1.y, t);
-
-	float intBX = Lerp(p1.x, p2.x, t);
-	float intBY = Lerp(p1.y, p2.y, t);
-
-	mml::vec2 res;
-	res.x = Lerp(intAX, intBX, t);
-	res.y = Lerp(intAY, intBY, t);
-
-	return res;
-}
-
 int main()
 {
-	//monk::Ref<MFL::Font> font = monk::CreateRef<MFL::Font>("C:/Users/kamil/OneDrive/Рабочий стол/CascadiaCode.ttf");
-	//monk::Ref<MFL::Font> font = monk::CreateRef<MFL::Font>("C:/Windows/Fonts/arial.ttf");
-	//monk::Ref<MFL::Font> font = monk::CreateRef<MFL::Font>("C:/Windows/Fonts/calibri.ttf");
-	monk::Ref<MFL::Font> font = monk::CreateRef<MFL::Font>("C:/Windows/Fonts/segoeprb.ttf");
-	
-
 	mwl::WindowProps windowProps;
 	windowProps.OpenGLContextVersion = mwl::OpenGLVersion::OPENGL_4_6;
 	mwl::Window* window = mwl::Create(windowProps);
-	window->SetFullscreen(false);
+	window->SetCursor(mwl::Cursor("./oxy-bluecurve/oxy-bluecurve.inf"));
 
 	if (mogl::OpenGLLoader::LoadOpenGL(mogl::OpenGLVersion::OPENGL_4_6) != mogl::OpenGLVersion::OPENGL_4_6)
 		assert(false && "failed to load opengl");
 
-	const MFL::TTF& ttf = font->GetTTF();
-	uint32_t unicode_char = '1';
-
-
 	monk::Renderer2D renderer;
-	renderer.PushFont(font);
-
 	monk::Render::EnableBlending(true);
 	monk::Render::EnableDepthTest(true);
 
-	window->SetMouseButtonDownCallback(OnMouseButtonDown);
-	window->SetKeyDownCallback(OnKeyDown);
-	window->SetMouseMovedCallback(OnMouseMove);
+	monk::Ref<monk::OrthographicCamera> camera = monk::CreateRef<monk::OrthographicCamera>(0, window->GetWidth(), window->GetHeight(), 0, -1, 1);
+
+	const std::string text = R"(
+Lorem ipsum odor amet, consectetuer adipiscing elit. Sapien consequat morbi sagittis orci magna purus et fusce. Id pulvinar posuere vulputate molestie dapibus interdum curae parturient metus. Leo etiam ac fames mi vehicula. Venenatis quam ornare fusce; semper ornare iaculis ultrices nec. Nam ex tellus tellus ante faucibus.
+
+Aquam sit suspendisse aptent risus urna sapien porttitor ipsum. In maximus phasellus maecenas id volutpat. Egestas molestie blandit tellus gravida pulvinar orci proin diam dapibus. Porttitor primis ligula maecenas sem quam nullam ex auctor. Efficitur natoque mollis egestas viverra dictum odio. Mollis pulvinar natoque aliquam massa accumsan. Metus ut at mauris sagittis varius orci magna euismod ad. Dui potenti ultrices nec quisque libero maecenas sapien quis.
+
+Nisi potenti massa eros malesuada mauris. Placerat cras ex eleifend vitae enim sodales condimentum. Nisi diam dictum ac facilisi erat lacus aptent. Interdum ullamcorper magnis senectus mattis proin rutrum nulla, euismod tincidunt. Quisque rhoncus commodo adipiscing turpis; elementum nisl ante elit. Semper dui mollis laoreet platea tristique facilisis. Fringilla vitae duis efficitur eros cras iaculis.
+
+Dolor aliquet elementum rutrum nulla curae a. Inceptos suspendisse nostra eu, placerat ornare varius bibendum. Ridiculus lacus vulputate sed duis augue aliquam torquent amet. Duis cubilia himenaeos torquent consectetur odio ex finibus nisl. Conubia duis cras potenti vitae nascetur vestibulum. Condimentum aptent litora urna aenean lectus fringilla; mus nec. Suscipit felis senectus condimentum neque vestibulum orci fringilla senectus. Euismod sapien leo quis consequat a sagittis vivamus.
+
+Primis ut quis nisl facilisis maecenas ullamcorper pulvinar. Dignissim a dolor ridiculus et tellus. Nunc facilisis fusce fames risus porttitor nisi. Accumsan condimentum libero nullam venenatis maecenas natoque posuere augue lacinia. Gravida consequat nascetur laoreet tincidunt fringilla aliquam magnis per. Ullamcorper maximus metus, lacinia lectus vulputate ultrices. Fusce integer etiam molestie proin eleifend euismod eros. Lobortis mattis massa leo natoque adipiscing donec. Feugiat est in senectus primis interdum litora cubilia sociosqu. Faucibus pharetra nascetur consectetur curae nisl gravida aptent.
+
+Risus tortor litora quisque metus ullamcorper pretium ligula. Sit condimentum himenaeos sit efficitur; quam vivamus fames semper gravida. Adipiscing curae parturient eget eleifend netus varius. Curae adipiscing litora fames varius quisque aenean eu rhoncus. At cras fringilla nulla eget adipiscing maecenas. Alibero rutrum ullamcorper turpis quisque facilisi congue ullamcorper. Aliquam lacinia mattis quis congue ante rutrum donec augue tortor. Ante nunc dignissim, imperdiet laoreet nulla est. Nostra efficitur elit consequat egestas ornare ornare. Egestas molestie posuere ad mattis dui.
+
+Fringilla tortor ultrices pulvinar semper maecenas magna. Blandit bibendum venenatis nulla iaculis platea. Mus faucibus per fringilla luctus nascetur libero. Lacus etiam pellentesque ridiculus nascetur tincidunt conubia orci. Habitasse vulputate potenti ad sapien orci tempus risus. Nec sapien commodo donec in turpis ad. Imperdiet condimentum cras nec class ante ac. Quam at etiam congue eget blandit fermentum pretium fermentum tristique. Facilisi est nunc feugiat malesuada; nam ex gravida pretium.
+
+Venenatis nisl pharetra odio ut eros, leo ultrices amet. Adipiscing ac egestas venenatis dolor montes libero condimentum arcu. Nec blandit quam odio ligula; mollis velit integer dapibus. Tellus adipiscing metus commodo leo nisi dolor. Pellentesque euismod fermentum et, sit mattis enim. Tincidunt gravida sollicitudin tortor lacus ullamcorper erat facilisi interdum sodales. Aliquam semper erat habitasse feugiat inceptos viverra bibendum aenean.
+
+Tempus finibus adipiscing interdum habitant maecenas faucibus? Rhoncus erat efficitur sit pulvinar pulvinar urna. Ad risus rhoncus vulputate, etiam est maximus. Nibh consequat quis dictumst primis sem. Accumsan urna eu torquent metus cubilia. Senectus libero fusce porta rutrum porta justo sodales varius netus. Duis nullam nostra vel fusce vel magnis quam.
+
+Non praesent quisque maximus hac nibh sapien ante quam. Vehicula dui aptent nec taciti accumsan dignissim erat felis hendrerit. Orci aliquet varius nam; blandit imperdiet vivamus aenean. Eleifend id ullamcorper mauris nec libero taciti phasellus rhoncus fames. Quisque consequat vitae netus dictumst hac aptent. Purus cursus lectus, rutrum metus magna at. Curabitur conubia accumsan non cubilia dolor id placerat conubia. Per tellus venenatis fermentum dolor vivamus. Lacus conubia congue per vulputate tempus.
+
+Scelerisque bibendum platea nulla nunc sapien dui fames. Neque vitae hac efficitur ridiculus ligula ullamcorper faucibus. Pretium tortor condimentum donec nisi viverra porttitor a libero. Eleifend magnis est commodo dictumst varius ullamcorper per donec? Quam nec himenaeos felis nullam mollis at elit ligula suspendisse. Faucibus donec felis ultrices primis aliquam neque tincidunt tellus. Auctor accumsan volutpat et non gravida semper ligula. Aliquam ipsum fringilla finibus diam sociosqu interdum pretium facilisi.
+
+Fusce malesuada ante interdum ridiculus quisque phasellus. Tristique himenaeos convallis dui egestas donec dolor a turpis. Nunc iaculis nunc class, sit viverra nisl. Sociosqu turpis class penatibus id bibendum ac. Elit odio cubilia nulla convallis feugiat laoreet maximus? Inceptos ut libero massa facilisi duis netus risus. Commodo ex sociosqu nibh; rutrum erat eu condimentum aenean in. Blandit a congue ornare molestie commodo efficitur.
+
+Felis fames ac justo ut tempus etiam. Mus ex cursus facilisis lectus; arcu nam himenaeos. Lacinia ridiculus suscipit efficitur malesuada risus praesent phasellus. Justo malesuada commodo montes tempor placerat. Pharetra viverra penatibus maecenas diam finibus ultricies. Torquent pretium proin auctor justo euismod. Donec cras sollicitudin adipiscing tellus et torquent luctus lacus. Fermentum montes faucibus et risus tristique magnis porta. Mattis platea vivamus metus ut maecenas aliquet. Turpis efficitur dapibus, sollicitudin posuere facilisis felis.
+
+Elit habitant ultricies leo; ridiculus morbi molestie. Tortor integer urna fames natoque accumsan netus malesuada. Quisque id porta, facilisi dis integer purus ad phasellus a. Rutrum imperdiet sollicitudin quis; convallis placerat suscipit duis conubia. Ridiculus placerat pretium nostra sem cubilia. Facilisis mollis sed egestas leo odio sapien maecenas. Asenectus sapien lacinia nullam; volutpat ipsum.
+
+Nulla suspendisse vitae metus potenti taciti cursus. Ligula a mus cubilia placerat faucibus etiam potenti. Non sociosqu vel tempus ex feugiat maecenas. Congue nostra erat ipsum maecenas habitasse praesent, natoque litora tortor. Efficitur urna nulla dis justo viverra pulvinar hendrerit placerat. Libero aptent primis purus in imperdiet tortor eros. Viverra gravida lacus lorem vivamus ipsum imperdiet. Vestibulum placerat penatibus; urna ultrices accumsan natoque vestibulum felis ac.
+
+Molestie taciti pretium at vivamus quam non eu ornare. Felis dapibus viverra auctor ante mi euismod risus. Etiam euismod luctus placerat habitasse quis nisi. Sodales sodales fusce semper ligula arcu. Libero rutrum magnis, justo sodales dictum erat. Efficitur a gravida platea turpis eu eleifend habitasse.
+
+Sapien luctus ultricies venenatis eros et. Nascetur semper adipiscing accumsan bibendum ante egestas etiam eget. Erat congue suspendisse sagittis neque quam amet condimentum. Pellentesque molestie primis in luctus pretium at cras. Viverra convallis vulputate laoreet penatibus posuere interdum maximus auctor cursus. Mattis interdum in vel conubia imperdiet taciti. Urna integer ultrices ridiculus iaculis vestibulum.
+
+At odio justo arcu suspendisse vivamus scelerisque risus at. Interdum ornare fermentum convallis tellus eros nam orci. Tempor porttitor aliquet aliquam dapibus habitant id nascetur quis. Eleifend molestie enim dis semper quam. Fusce netus sagittis eleifend tortor arcu nunc in elit nascetur? Parturient hendrerit phasellus egestas ullamcorper cubilia cubilia sed. Risus conubia vitae nec maecenas lacus finibus. Turpis finibus facilisi nisl torquent sollicitudin fames maximus. Metus libero hendrerit dignissim molestie fringilla dictumst.
+
+Dictum magna vitae ut in sollicitudin ultricies conubia sodales. Rhoncus tempus tempus velit dignissim odio vestibulum suspendisse condimentum. Enim porttitor auctor tristique mauris; vel dictumst. Fermentum mi mus augue id purus ante suscipit morbi. Imperdiet magnis fusce tempor viverra natoque class ex. Enim leo orci mattis etiam iaculis. Ad mollis sollicitudin tincidunt inceptos tincidunt nec dictum. Nisi tristique massa elementum hac ultrices aliquam. Molestie eros efficitur dui; nec aptent ornare dolor. Dapibus id velit per dolor nec nunc pretium praesent.
+
+Praesent eleifend habitasse nec pellentesque torquent facilisi gravida efficitur nullam. Tortor conubia dui vivamus habitasse pulvinar commodo rutrum mauris integer. Posuere vitae euismod nisi luctus himenaeos nullam bibendum sed. Etiam nec aliquam elit platea sem penatibus convallis himenaeos. Placerat eros erat; habitasse habitasse viverra quisque. Nunc proin sed dictum dolor, fermentum ex risus amet netus. Vehicula aenean ad inceptos laoreet ligula faucibus habitasse. Pellentesque viverra cras accumsan sociosqu, justo tristique consectetur facilisi. Diam integer erat nunc amet mauris.
+
+Faucibus ac sodales curabitur metus hendrerit ac. Egestas pretium sed quis interdum porta sagittis vulputate. Leo potenti molestie himenaeos egestas, erat vitae egestas ante. Congue curabitur volutpat justo ligula sociosqu condimentum conubia ex. Fames himenaeos aliquet lacinia faucibus convallis accumsan sit augue. Class id ad pretium platea felis metus in integer habitant. Pharetra faucibus vehicula habitasse natoque; accumsan morbi erat in nibh. Mi condimentum facilisis; nisi laoreet quam lobortis.
+
+Nascetur vehicula praesent eget justo quam per dictumst odio. Ridiculus dis quisque maximus quisque senectus aenean aptent nunc. Lobortis commodo convallis proin; ridiculus pretium inceptos. Erat porttitor tristique inceptos nisi rutrum volutpat feugiat fusce ac. Ullamcorper nascetur consectetur urna fermentum enim. Neque mollis dictum commodo tortor aliquam sociosqu praesent. Id hendrerit tristique dui per vivamus turpis habitasse. Vulputate suscipit ligula aliquet turpis ullamcorper; gravida scelerisque nunc.
+
+Porttitor amet tempor hendrerit risus magnis tristique; tellus vel aliquet? Nam luctus potenti euismod parturient pulvinar justo; primis in ridiculus. Molestie duis gravida facilisis congue gravida bibendum vel suscipit. Netus nibh sit himenaeos vitae diam ac. Pretium augue pulvinar euismod senectus donec venenatis pretium. Ipsum ridiculus tempor aptent, porta torquent ornare mattis amet. Morbi sem eget elementum dui consectetur sit fames ipsum.
+
+Hendrerit erat elementum consequat eros platea id vivamus est quisque. Egestas nec varius etiam habitasse etiam velit pulvinar aenean. Posuere diam primis amet vivamus pellentesque? Egestas aenean pellentesque vestibulum odio dolor turpis imperdiet nisi parturient? Taciti curabitur euismod eleifend habitasse torquent consequat amet. Rhoncus quisque lobortis eleifend, felis imperdiet mauris. Natoque phasellus metus adipiscing conubia maecenas ut nunc.
+
+Lacus consectetur nunc; nec rhoncus tellus est consectetur. Natoque sollicitudin sed vulputate ridiculus a morbi magnis. Ullamcorper eros et dictumst ullamcorper vivamus curabitur porttitor. Iaculis enim laoreet sem purus sagittis. Vehicula himenaeos tincidunt volutpat varius phasellus. Est praesent duis consectetur himenaeos aliquam habitasse. Est leo mauris leo massa mi mi viverra.
+
+Nullam nisi convallis pellentesque odio risus vitae. Curabitur euismod ex integer dolor pretium ridiculus. Ad quam venenatis hac metus class platea malesuada consequat. Placerat ultricies purus integer adipiscing et amet. Primis dignissim ac eget pretium vulputate cubilia. Odio phasellus tristique dolor risus penatibus finibus condimentum varius. Eu risus molestie magna est vel maecenas. Dolor porta sapien platea eu eu! Parturient ad ultrices mi curabi
+	)";
+
+	monk::Time timer;
+
+	float y = 0;
 
 	while (!window->Closed())
 	{
 		window->Update();
 
-		monk::Render::SetClearColor(0.55f, 0.55f, 0.55f, 1.0f);
-		monk::Render::SetClearColor(0.05f, 0.05f, 0.05f, 1.0f);
+		monk::Render::SetClearColor(0.65f, 0.05f, 0.05f, 1.0f);
 		monk::Render::Clear();
-
-		//monk::Render::Viewport(glyf.x_min, glyf.y_min, (glyf.x_max - glyf.x_min), (glyf.y_max - glyf.y_min));
 		monk::Render::Viewport(window->GetWidth(), window->GetHeight());
 
-		//monk::Ref<monk::OrthographicCamera> camera = monk::CreateRef<monk::OrthographicCamera>(glyf.x_min, (glyf.x_max - glyf.x_min) , glyf.y_min, (glyf.y_max - glyf.y_min), -1, 1);
-		monk::Ref<monk::OrthographicCamera>camera = monk::CreateRef<monk::OrthographicCamera>(0, window->GetWidth(), window->GetHeight(), 0, -1, 1);
+		camera->SetProjection(0, window->GetWidth(), window->GetHeight(), 0, -1, 1);
+
 		renderer.Begin(camera);
 
-#if 0
-		for (size_t i = 0; i < contours.size(); i++)
-		{
-			for (size_t ii = 0; ii < contours[i].points.size(); ii++)
-			{
-				MFL::GlyfPoint& point = contours[i].points[ii];
+		renderer.DrawString(text, mml::vec2(10, y), 12, mml::vec4(0.0f, 1.0f, 0.0f, 1.0f));
 
-				const int size = 10;
-
-				const int offset = 0;
-
-				p0.x += offset;
-				p0.y += offset;
-				p1.x += offset;
-				p1.y += offset;
-				control.x += offset;
-				control.y += offset;
-
-				mml::vec4 color = point.on_curve ? mml::vec4(1.0f, 0.0f, 0.0f, 1.0f) : mml::vec4(0.0f, 1.0f, 1.0f, 1.0f);
-
-
-				//renderer.DrawBezierCurve(mml::vec2(p0.x, p0.y), mml::vec2(p1.x, p1.y), mml::vec2(control.x, control.y), mml::vec4(1.0f, 0.0f, 0.0f, 1.0f), 32, 4);
-				renderer.DrawQuad(mml::vec2(point.x - size / 2, point.y - size / 2 + 200), mml::vec2(size), color);
-			}
-		}
-#elif 0
-
-		//renderer.DrawBezierCurve(p0, p1, control, mml::vec4(1.0f, 0.0f, 0.0f, 1.0f), 8, 32);
-
-		const size_t x = 10;
-		const size_t y = 10;
-		const size_t w = window->GetWidth() / x;
-		const size_t h = window->GetHeight() / y;
-
-		for (size_t i = 0; i < y; i++)
-		{
-			for (size_t j = 0; j < x; j++)
-			{
-				renderer.DrawQuad(mml::vec2(j * w, i * h), mml::vec2(w, h), mml::vec4((float)j / x, (float)i / y, 0.5f, 1.0f));
-				//renderer.DrawCircle(mml::vec2(j * w, i * h), 25, mml::vec4((float)j / x, (float)i / y, 0.5f, 1.0f));
-			}
-		}
-
-		//renderer.DrawQuad(mml::vec2(100, 100), mml::vec2(250, 123), mml::vec4(1.0f, 0.0f, 1.0f, 1.0f));
-
-		renderer.DrawCircle(p0, 100, mml::vec4(0.0f, 1.0f, 0.0f, 1.0f));
-
-#elif 1
-		//const auto& atlasTexture = font->GetAtlas().m_AtlasTextures[keyDown - ' '];
-		const auto& atlasTexture = font->GetAtlas().m_AtlasTextures[keyDown - '1'];
-		monk::Ref<monk::Texture2D> texture = monk::Texture2D::Create(atlasTexture.Width, atlasTexture.Height, monk::TextureFormat::RED, atlasTexture.Buffer.data());
-
-		const MFL::Glyf& glyf = ttf.glyfs[ttf.cmap[(int)keyDown]];
-		const MFL::Path path = GetGlyphPath(glyf);
-
-		renderer.DrawTexture(mml::vec2(glyf.x_min, glyf.y_min), texture->Size(), texture);
-
-		renderer.DrawQuad(mml::vec2(mouseX, mouseY - 0.5f), mml::vec2(window->GetWidth() - mouseX, 1.0f), mml::vec4(1.0f, 0.0f, 0.0f, 1.0f));
-
-		if (flag && false)
-		{
-			std::optional<MFL::Intersection> closest = std::nullopt;
-
-			for (const auto& contour : path)
-			{
-				std::optional<MFL::Intersection> intersection = RayContourIntersection(mouseX, mouseY, contour);
-
-				if (!closest && intersection)
-					closest = intersection;
-
-				if (intersection && intersection->Distance < closest->Distance)
-					closest = intersection;
-			}
-
-			if (closest)
-			{
-				std::cout << (int)closest->Dir << std::endl;
-			}
-
-			flag = false;
-		}
-
-		if (true)
-		{
-			for (const auto& contour : path)
-			{
-				for (const auto& curve : contour)
-				{
-					mml::vec2 p0(curve.P0.x, curve.P0.y);
-					mml::vec2 p1(curve.P1.x, curve.P1.y);
-					mml::vec2 p2(curve.P2.x, curve.P2.y);
-
-					renderer.DrawCircle(p0, 5, mml::vec4(1.0f, 0.0f, 0.0f, 1.0f));
-					renderer.DrawCircle(p1, 5, mml::vec4(0.0f, 1.0f, 0.0f, 1.0f));
-					renderer.DrawCircle(p2, 5, mml::vec4(1.0f, 0.0f, 0.0f, 1.0f));
-
-					for (float t = 0; t <= 1.0f; t += 0.001f)
-					{
-						mml::vec2 point = BezierInterpolation(p0, p1, p2, t);
-
-						renderer.DrawCircle(point, 2, mml::vec4(0.0f, 0.0f, 1.0f, 1.0f));
-					}
-
-					std::optional<MFL::Intersection> intersection = RayCurveIntersection(mouseX, mouseY, curve);
-
-					if (intersection)
-					{
-						renderer.DrawCircle(mml::vec2(50, 50), 10, mml::vec4(0.0f, 1.0f, 0.0f, 1.0f));
-
-						mml::vec4 color = intersection->Dir == MFL::Direction::Clockwise ? mml::vec4(1.0f, 1.0f, 0.0f, 1.0f) : mml::vec4(1.0f, 0.0f, 1.0f, 1.0f);
-						float radius = intersection->Dir == MFL::Direction::Clockwise ? 10 : 15;
-
-						renderer.DrawCircle(mml::vec2(intersection->Distance, mouseY), radius, color);
-
-						if (flag)
-						{
-							std::cout << (int)intersection->x << std::endl;
-							std::cout << (int)intersection->y << std::endl;
-							std::cout << (int)intersection->Dir << std::endl;
-
-							flag = false;
-						}
-					}
-				}
-			}
-		}
-
-#endif
 		renderer.End();
+
+		y = -timer.Elapsed() * 50;
+
+		if (y <= -1000)
+		{
+			timer.Reset();
+		}
 
 		window->SwapBuffers();
 	}

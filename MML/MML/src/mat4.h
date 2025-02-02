@@ -35,6 +35,9 @@ namespace mml
 		void Translate(const vec3& translation);
 		void Rotate(float deg, vec3 axis);
 		void Scale(const vec3& scale);
+		
+		// TODO: See OrthographicCamera::RecalculateViewMatrix()
+		// mml::Transalte(mml::mat4(1.0f), m_Position);
 
 		vec4& operator[](int index);
 		const vec4& operator[](int index) const;

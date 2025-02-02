@@ -74,5 +74,6 @@ namespace mwl
 		Enter = 0x0D,
 		Space = 0x20,
 		LeftControl = 0xA2,
+		Backspace = 0x08,
 	};
 }

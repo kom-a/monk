@@ -108,6 +108,23 @@ namespace MFL
 		number_of_hmetrics		= reader.ReadUInt16();
 	}
 
+	void Hmtx::Parse(Scriptorium::Reader& reader, u2be num_glyphs, u2be number_of_hmetrics)
+	{
+		hor_metrics.reserve(number_of_hmetrics);
+
+		for (size_t i = 0; i < number_of_hmetrics; i++)
+		{
+			LongHorMetric metric;
+			metric.advanceWidth		= reader.ReadUInt16();
+			metric.leftSideBearing	= reader.ReadInt16();
+
+			hor_metrics.push_back(metric);
+		}
+
+		for (size_t i = 0; i < num_glyphs - number_of_hmetrics; i++)
+			leftSideBearing.push_back(reader.ReadInt16());
+	}
+
 	void Post::Parse(Scriptorium::Reader& reader)
 	{
 		format.Parse(reader);
@@ -174,7 +191,7 @@ namespace MFL
 		for (size_t i = 0; i < number_of_contours; i++)
 			value.end_pts_of_contours[i] = reader.ReadUInt16();
 
-		size_t num_points = value.end_pts_of_contours.back() + 1;
+		size_t num_points = value.end_pts_of_contours.size() ? value.end_pts_of_contours.back() + 1 : 0;
 		value.flags.resize(num_points);
 		value.coordinates.resize(num_points);
 
@@ -284,6 +301,9 @@ namespace MFL
 	{
 		if (map.find(char_code) == map.end())
 			return 0;
+
+		if (map.find(char_code) == map.end())
+			return 2;
 
 		return map.at(char_code);
 	}

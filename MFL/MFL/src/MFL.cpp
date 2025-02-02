@@ -3,6 +3,8 @@
 #include <fstream>
 #include <iostream>
 #include <optional>
+#include <map>
+#include <thread>
 
 #include "Log.h"
 
@@ -22,6 +24,25 @@ namespace MFL
 		}
 	}
 
+	const MFL::Glyf& TTF::GetGlyfByUnicode(uint32_t unicode) const
+	{
+		return glyfs[cmap[unicode]];
+	}
+
+	const MFL::GlyphMetrics TTF::GetGlyfMetricsByUnicode(uint32_t unicode) const
+	{
+		MFL::GlyphMetrics metrics;
+		uint32_t index = cmap[unicode];
+
+		if (index < hhea.number_of_hmetrics)
+		{
+			metrics.Advance = hmtx.hor_metrics[index].advanceWidth;
+			metrics.LeftSizeBearing = hmtx.hor_metrics[index].leftSideBearing;
+		}
+
+		return metrics;
+	}
+
 	void TTF::Parse(Scriptorium::Reader& reader)
 	{
 		offsetTable.Parse(reader);
@@ -34,140 +55,83 @@ namespace MFL
 
 			if (dirTableEntry.tag == "head")
 			{
-				LOG_INFO("=============================");
-				LOG_INFO("Head table");
-				LOG_INFO("\t\toffset: {0}", dirTableEntry.offset);
-				LOG_INFO("\t\tlength: {0}", dirTableEntry.length);
-				LOG_INFO("\t\tchecksum: {0}", dirTableEntry.checksum);
-
 				reader.PushCursor(dirTableEntry.offset);
 				head.Parse(reader);
 				reader.PopCursor();
 			}
 			else if (dirTableEntry.tag == "cvt ")
 			{
-				LOG_INFO("=============================");
-				LOG_INFO("cvt table");
-				LOG_INFO("\t\toffset: {0}", dirTableEntry.offset);
-				LOG_INFO("\t\tlength: {0}", dirTableEntry.length);
-				LOG_INFO("\t\tchecksum: {0}", dirTableEntry.checksum);
-
 				reader.PushCursor(dirTableEntry.offset);
 				cvt.Parse(reader);
 				reader.PopCursor();
 			}
 			else if (dirTableEntry.tag == "prep")
 			{
-				LOG_INFO("=============================");
-				LOG_INFO("prep table");
-				LOG_INFO("\t\toffset: {0}", dirTableEntry.offset);
-				LOG_INFO("\t\tlength: {0}", dirTableEntry.length);
-				LOG_INFO("\t\tchecksum: {0}", dirTableEntry.checksum);
-
 				reader.PushCursor(dirTableEntry.offset);
 				prep.Parse(reader);
 				reader.PopCursor();
 			}
 			else if (dirTableEntry.tag == "kern")
 			{
-				LOG_INFO("=============================");
-				LOG_INFO("kern table");
-				LOG_INFO("\t\toffset: {0}", dirTableEntry.offset);
-				LOG_INFO("\t\tlength: {0}", dirTableEntry.length);
-				LOG_INFO("\t\tchecksum: {0}", dirTableEntry.checksum);
-
 				reader.PushCursor(dirTableEntry.offset);
 				kern.Parse(reader);
 				reader.PopCursor();
 			}
 			else if (dirTableEntry.tag == "hhea")
 			{
-				LOG_INFO("=============================");
-				LOG_INFO("hhea table");
-				LOG_INFO("\t\toffset: {0}", dirTableEntry.offset);
-				LOG_INFO("\t\tlength: {0}", dirTableEntry.length);
-				LOG_INFO("\t\tchecksum: {0}", dirTableEntry.checksum);
-
 				reader.PushCursor(dirTableEntry.offset);
 				hhea.Parse(reader);
 				reader.PopCursor();
 			}
 			else if (dirTableEntry.tag == "post")
 			{
-				LOG_INFO("=============================");
-				LOG_INFO("Post table");
-				LOG_INFO("\t\toffset: {0}", dirTableEntry.offset);
-				LOG_INFO("\t\tlength: {0}", dirTableEntry.length);
-				LOG_INFO("\t\tchecksum: {0}", dirTableEntry.checksum);
-
 				reader.PushCursor(dirTableEntry.offset);
 				post.Parse(reader);
 				reader.PopCursor();
 			}
 			else if (dirTableEntry.tag == "OS/2")
 			{
-				LOG_INFO("=============================");
-				LOG_INFO("OS/2 table");
-				LOG_INFO("\t\toffset: {0}", dirTableEntry.offset);
-				LOG_INFO("\t\tlength: {0}", dirTableEntry.length);
-				LOG_INFO("\t\tchecksum: {0}", dirTableEntry.checksum);
-
 				reader.PushCursor(dirTableEntry.offset);
 				os2.Parse(reader);
 				reader.PopCursor();
 			}
 			else if (dirTableEntry.tag == "name")
 			{
-				LOG_INFO("=============================");
-				LOG_INFO("Name table");
-				LOG_INFO("\t\toffset: {0}", dirTableEntry.offset);
-				LOG_INFO("\t\tlength: {0}", dirTableEntry.length);
-				LOG_INFO("\t\tchecksum: {0}", dirTableEntry.checksum);
-
 				reader.PushCursor(dirTableEntry.offset);
 				name.Parse(reader);
 				reader.PopCursor();
 			}
 			else if (dirTableEntry.tag == "maxp")
 			{
-				LOG_INFO("=============================");
-				LOG_INFO("Maxp table");
-				LOG_INFO("\t\toffset: {0}", dirTableEntry.offset);
-				LOG_INFO("\t\tlength: {0}", dirTableEntry.length);
-				LOG_INFO("\t\tchecksum: {0}", dirTableEntry.checksum);
-
 				reader.PushCursor(dirTableEntry.offset);
 				maxp.Parse(reader);
 				reader.PopCursor();
 			}
 			else if (dirTableEntry.tag == "fpgm")
 			{
-				LOG_INFO("=============================");
-				LOG_INFO("Fpgm table");
-				LOG_INFO("\t\toffset: {0}", dirTableEntry.offset);
-				LOG_INFO("\t\tlength: {0}", dirTableEntry.length);
-				LOG_INFO("\t\tchecksum: {0}", dirTableEntry.checksum);
-
 				reader.PushCursor(dirTableEntry.offset);
 				fpgm.Parse(reader);
 				reader.PopCursor();
 			}
 			else if (dirTableEntry.tag == "cmap")
 			{
-				LOG_INFO("=============================");
-				LOG_INFO("Cmap table");
-				LOG_INFO("\t\toffset: {0}", dirTableEntry.offset);
-				LOG_INFO("\t\tlength: {0}", dirTableEntry.length);
-				LOG_INFO("\t\tchecksum: {0}", dirTableEntry.checksum);
-
 				reader.PushCursor(dirTableEntry.offset);
 				cmap.Parse(reader);
 				reader.PopCursor();
 			}
 		}
 
-		size_t location_table_start		= m_TableLocation["loca"];
-		size_t glyf_table_start			= m_TableLocation["glyf"];
+		auto it_hmtx = m_TableLocation.find("hmtx");
+
+		if (it_hmtx != m_TableLocation.end())
+		{
+			reader.PushCursor(it_hmtx->second);
+			hmtx.Parse(reader, maxp.num_glyphs, hhea.number_of_hmetrics);
+			reader.PopCursor();
+		}
+
+		size_t location_table_start = m_TableLocation["loca"];
+		size_t glyf_table_start = m_TableLocation["glyf"];
 
 		reader.PushCursor();
 
@@ -196,7 +160,7 @@ namespace MFL
 				const Glyf& component = glyfs[compound.glyph_index];
 
 				// TODO: Handle multiple nested compound glyphs
-				if(component.number_of_contours == -1)
+				if (component.number_of_contours == -1)
 					continue;
 
 				for (auto end_point : component.value.end_pts_of_contours)
@@ -212,7 +176,7 @@ namespace MFL
 				}
 
 				glyf.value.flags.insert(glyf.value.flags.begin(), component.value.flags.begin(), component.value.flags.end());
-				
+
 				glyf.number_of_contours += component.number_of_contours;
 			}
 		}
@@ -221,8 +185,8 @@ namespace MFL
 	}
 
 	Font::Font(const std::filesystem::path& filename)
-		: 
-		m_Ttf(filename), 
+		:
+		m_Ttf(filename),
 		m_Atlas(m_Ttf)
 	{
 	}
@@ -333,22 +297,15 @@ namespace MFL
 		return result;
 	}
 
-	static void fill(std::vector<uint8_t>& buffer, int32_t width, int32_t height, int x, int y)
+	GlyfConstraints GetGlyphConstraints(const Glyf& glyf)
 	{
-		int color = 0xff;
-		int size = 16;
+		GlyfConstraints gc;
+		gc.XMin = glyf.x_min;
+		gc.XMax = glyf.x_max;
+		gc.YMin = glyf.y_min;
+		gc.YMax = glyf.y_max;
 
-		for (int i = 0; i < size; i++)
-		{
-			if (x + i < width)
-				buffer[x + i + y * width] = color;
-			if (x - i > 0)
-				buffer[x - i + y * width] = color;
-			if (y + i < height)
-				buffer[x + (y + i) * width] = color;
-			if (y - i > 0)
-				buffer[x + (y - i) * width] = color;
-		}
+		return gc;
 	}
 
 	static std::pair<float, float> CalculateQuadraticRoots(float a, float b, float c)
@@ -377,106 +334,6 @@ namespace MFL
 		return result;
 	}
 
-#if 0
-	static float Lerp(float start, float end, float t)
-	{
-		return start + (end - start) * t;
-	}
-
-	static GlyfPoint BezierInterpolation(GlyfPoint p0, GlyfPoint p1, GlyfPoint p2, float t)
-	{
-		float intAX = Lerp(p0.x, p1.x, t);
-		float intAY = Lerp(p0.y, p1.y, t);
-		
-		float intBX = Lerp(p1.x, p2.x, t);
-		float intBY = Lerp(p1.y, p2.y, t);
-
-		GlyfPoint res;
-		res.x = Lerp(intAX, intBX, t);
-		res.y = Lerp(intAY, intBY, t);
-
-		return res;
-	}
-
-	static bool IsValidIntersection(const BezierCurve& curve, int x, float t)
-	{
-		bool isOnCurve = t >= 0 && t < 1;
-		bool isToRightOfRay = BezierInterpolation(curve.P0, curve.CP, curve.P1, t).x > x;
-		return isOnCurve && isToRightOfRay;
-	}
-
-
-	static int RayCurveIntersections(int x, int y, MFL::BezierCurve curve, bool& inside, float& closestDst)
-	{
-		const GlyfPoint& p0 = curve.P0;
-		const GlyfPoint& p1 = curve.P1;
-		const GlyfPoint& p2 = curve.P2;
-
-		//if (p0.y < y && p1.y <= y && p2.y < y)
-		//	return 0;
-		//if (p0.y > y && p1.y >= y && p2.y >= y)
-		//	return 0;
-
-		float ax = p0.x - 2 * p1.x + p2.x;
-		float bx = 2 * (p1.x - p0.x);
-		float cx = p0.x;
-
-		float ay = p0.y - 2 * p1.y + p2.y;
-		float by = 2 * (p1.y - p0.y);
-		float cy = p0.y;
-
-		auto [t0, t1] = CalculateQuadraticRoots(ay, by, cy - y);
-
-		float intersection0 = ax * t0 * t0 + bx * t0 + cx;
-		float intersection1 = ax * t1 * t1 + bx * t1 + cx;
-
-		const float eps = 0.0f;
-		bool valid0 = (t0 >= -eps && t0 <= 1 + eps) && intersection0 > x;
-		bool valid1 = (t1 >= -eps && t1 <= 1 + eps) && intersection1 > x;
-
-		if (valid0 || valid1)
-		{
-			bool use0 = (valid0 && valid1) ? intersection0 < intersection1 : valid0;
-			float intersectDst = use0 ? intersection0 : intersection1;
-
-			bool isCloser = intersectDst < closestDst;
-
-			if (isCloser)
-			{
-				float intersectT = use0 ? t0 : t1;
-				float gradY = 2 * ay * intersectT * by;
-				inside = gradY < 0;
-				closestDst = intersectDst;
-			}
-		}
-
-		int qwe = 0;
-		if (valid0) qwe++;
-		if (valid1) qwe++;
-		return qwe;
-	}
-#endif // 0
-
-	static float Lerp(float start, float end, float t)
-	{
-		return start + (end - start) * t;
-	}
-
-	static GlyfPoint BezierInterpolation(GlyfPoint p0, GlyfPoint p1, GlyfPoint p2, float t)
-	{
-		float intAX = Lerp(p0.x, p1.x, t);
-		float intAY = Lerp(p0.y, p1.y, t);
-
-		float intBX = Lerp(p1.x, p2.x, t);
-		float intBY = Lerp(p1.y, p2.y, t);
-
-		GlyfPoint res;
-		res.x = Lerp(intAX, intBX, t);
-		res.y = Lerp(intAY, intBY, t);
-
-		return res;
-	}
-
 	struct Parabola
 	{
 		float AX;
@@ -489,7 +346,7 @@ namespace MFL
 		float CY;
 	};
 
-	static Parabola CalculateCoefficients(const BezierCurve& curve)
+	inline static Parabola CalculateCoefficients(const BezierCurve& curve)
 	{
 		Parabola result;
 
@@ -504,179 +361,218 @@ namespace MFL
 		return result;
 	}
 
-	std::optional<Intersection> RayCurveIntersection(int x, int y, const BezierCurve& curve)
+	static std::vector<Intersection> RayCurveIntersection(int x, int y, const BezierCurve& curve)
 	{
-		std::optional<Intersection> intersection = std::nullopt;
+		std::vector<Intersection> result;
 
 		const GlyfPoint& p0 = curve.P0;
 		const GlyfPoint& p1 = curve.P1;
 		const GlyfPoint& p2 = curve.P2;
 
-		//if (p0.y < y && p1.y < y && p2.y < y)
-		//	return std::nullopt;
-		//if (p0.y > y && p1.y > y && p2.y > y)
-		//	return std::nullopt;
+		if (p0.y < y && p1.y < y && p2.y < y)
+			return {};
+		if (p0.y > y && p1.y > y && p2.y > y)
+			return {};
 
 		Parabola p = CalculateCoefficients(curve);
 
 		auto [t0, t1] = CalculateQuadraticRoots(p.AY, p.BY, p.CY - y);
-		
+
 		float off = 0;
 		while (t0 == t1 && t0 != FLT_MAX)
 		{
-			off += p.AY >= 0 ? 1.0f : -1.0f;
+			off += p.AY >= 0 ? -1.0f : 1.0f;
 
 			auto [tt0, tt1] = CalculateQuadraticRoots(p.AY, p.BY, p.CY - y + off);
 
 			t0 = tt0;
 			t1 = tt1;
 		}
-		
-		float intersect0 = p.AX * t0 * t0 + p.BX * t0 + p.CX;
-		float intersect1 = p.AX * t1 * t1 + p.BX * t1 + p.CX;
+
+		float intersect0 = p.AX * t0 * t0 + p.BX * t0 + p.CX - x;
+		float intersect1 = p.AX * t1 * t1 + p.BX * t1 + p.CX - x;
 
 		const float eps = 0;
-		bool valid0 = (t0 >= -eps && t0 <= 1 + eps) && intersect0 > x;
-		bool valid1 = (t1 >= -eps && t1 <= 1 + eps) && intersect1 > x;
+		bool valid0 = t0 >= -eps && t0 <= 1 + eps;
+		bool valid1 = t1 >= -eps && t1 <= 1 + eps;
 
-		if (valid0 && valid1)
+		if (valid0)
 		{
-			intersection = Intersection();
-			intersection->T = (intersect0 < intersect1) ? t0 : t1;
-			intersection->Distance = ((intersect0 < intersect1) ? intersect0 : intersect1);
-		}
-		else if (valid0 && !valid1)
-		{
-			intersection = Intersection();
-			intersection->T = t0;
-			intersection->Distance = intersect0;
-		}
-		else if (!valid0 && valid1)
-		{
-			intersection = Intersection();
-			intersection->T = t1;
-			intersection->Distance = intersect1;
-		}
-		else if(!valid0 && !valid1)
-		{
-			intersection = std::nullopt;
-		}
-		
-		if (intersection)
-		{
-			float gradY = 2 * p.AY * intersection->T + p.BY;
-			intersection->Dir = gradY < 0 ? Direction::Clockwise : Direction::Counterclockwise;
+			auto intersection = Intersection();
+			intersection.T = t0;
+			intersection.Distance = intersect0;
+			intersection.GradX = 2 * p.AX * intersection.T + p.BX;
+			intersection.GradY = 2 * p.AY * intersection.T + p.BY;
 
-			intersection->x = x;
-			intersection->y = y;
+			intersection.Dir = intersection.GradY < 0 ? Direction::Clockwise : Direction::Counterclockwise;
 
-			intersection->P0 = p0;
-			intersection->P1 = p1;
-			intersection->P2 = p2;
+			result.push_back(intersection);
 		}
 
-		return intersection;
+		if (valid1)
+		{
+			auto intersection = Intersection();
+			intersection.T = t1;
+			intersection.Distance = intersect1;
+
+			intersection.GradX = 2 * p.AX * intersection.T + p.BX;
+			intersection.GradY = 2 * p.AY * intersection.T + p.BY;
+
+			intersection.Dir = intersection.GradY < 0 ? Direction::Clockwise : Direction::Counterclockwise;
+
+			result.push_back(intersection);
+		}
+
+		return result;
 	}
 
-	std::optional<Intersection> RayContourIntersection(int x, int y, const Contour& contour)
+	static bool IsHoleContour(const Contour& contour)
 	{
-		std::optional<Intersection> closest = std::nullopt;
+		int64_t area = 0;
 
-		for (size_t i = 0; i < contour.size(); i++)
+		for (const BezierCurve& curve : contour)
+			area += curve.P0.x * curve.P2.y - curve.P2.x * curve.P0.y;
+
+		return area > 0;
+	}
+
+	ContourHitRecord RayContourIntersections(int x, int y, const Contour& contour)
+	{
+		ContourHitRecord result;
+
+		bool isHole = IsHoleContour(contour);
+
+		for (const auto& curve : contour)
 		{
-			const auto& curve = contour[i];
+			ContourHitRecord record = RayCurveIntersection(x, y, curve);
 
-			std::optional<Intersection> intersection = RayCurveIntersection(x, y, curve);
-
-			const float eps = 1e-5f;
-
-			//if (intersection && std::abs(intersection->T - 1.0f) < eps)
-			//{
-			//	Parabola p = CalculateCoefficients(curve);
-
-			//	int offset = p.AY >= 0 ? -1 : 1;
-
-			//	intersection = RayCurveIntersection(x, y + offset, curve);
-			//}
-
-			if (!closest && intersection)
-				closest = intersection;
-			else if (intersection && closest && intersection->Dir != closest->Dir && std::abs(intersection->Distance - closest->Distance) < 1e-5f)
+			for (auto& intersection : record)
 			{
-				float intersectionT = intersection->T > 0.5f ? 1.0f - eps : eps;
-				float closestT = closest->T > 0.5f ? 1.0f - eps : eps;
-
-				GlyfPoint intersectionDelta = BezierInterpolation(curve.P0, curve.P1, curve.P2, intersectionT);
-				GlyfPoint closestDelta = BezierInterpolation(closest->P0, closest->P1, closest->P2, closestT);
-
-				if (intersectionDelta.x < closestDelta.x)
-					closest = intersection;
-			}
-			else if (intersection && intersection->Distance < closest->Distance)
-			{
-				closest = intersection;
+				intersection.isHole = isHole;
+				result.push_back(intersection);
 			}
 		}
 
-		return closest;
+		std::sort(result.begin(), result.end(), [](const Intersection& left, const Intersection& right) {
+
+			if (right.Dir != left.Dir && std::abs(left.Distance - right.Distance) < 1e-5f)
+			{
+				float rightGradientDirection = right.T > 0.5f ? -1.0f : 1.0f;
+				float leftGradientDirection = left.T > 0.5f ? -1.0f : 1.0f;
+
+				float rightGradientLength = std::sqrt(right.GradX * right.GradX + right.GradY * right.GradY);
+				float leftGradientLength = std::sqrt(left.GradX * left.GradX + left.GradY * left.GradY);
+
+				float rightGradientX = (rightGradientDirection * right.GradX) / rightGradientLength;
+				float leftGradientX = (leftGradientDirection * left.GradX) / leftGradientLength;
+
+				if (leftGradientX < rightGradientX)
+					return true;
+			}
+
+			return left.Distance < right.Distance;
+			});
+
+		return result;
 	}
 
-	bool IsPointInsidePath(int x, int y, const Path& path)
+	PathHitRecord GetLineIntersections(size_t line, const Path& path, const GlyfConstraints& constraints)
 	{
-		std::optional<Intersection> closest = std::nullopt;
+		PathHitRecord result(path.size());
 
-		for (const auto& contour : path)
+		for (size_t i = 0; i < path.size(); i++)
 		{
-			std::optional<Intersection> intersection = RayContourIntersection(x, y, contour);
+			const Contour& contour = path[i];
 
-			if (!closest && intersection)
-				closest = intersection;
-
-			if (intersection && intersection->Distance < closest->Distance)
-				closest = intersection;
+			result[i] = RayContourIntersections(constraints.XMin, line + constraints.YMin, contour);
 		}
 
-		if (closest)
-			return closest->Dir == Direction::Clockwise;
+		return result;
+	}
 
-		return false;
+	static bool IsDistanceInsideContourHitRecord(size_t distance, const ContourHitRecord& record)
+	{
+		bool inside = false;
+
+		std::optional<Intersection> left;
+		std::optional<Intersection> right;
+
+		for (size_t i = 0; i < record.size(); i++)
+		{
+			if (record[i].Distance > distance)
+			{
+				right = record[i];
+				break;
+			}
+
+			left = record[i];
+		}
+
+		if (!left || !right)
+			return false;
+
+		if (left && right)
+		{
+			bool isHole = left->isHole;
+
+			if (!isHole && left->Dir == Direction::Clockwise && right->Dir == Direction::Counterclockwise)
+				return false;
+		}
+
+		return true;
+	}
+
+	static bool IsDistanceInsidePathHitRecord(size_t distance, const PathHitRecord& record)
+	{
+		bool inside = false;
+
+		for (const ContourHitRecord& contourRecord : record)
+		{
+			bool insideContour = IsDistanceInsideContourHitRecord(distance, contourRecord);
+			if (insideContour)
+				inside = true;
+
+			if (insideContour && contourRecord.size() && contourRecord.front().isHole)
+				return false;
+		}
+
+		return inside;
+	}
+
+	static void ProcessPathHitRecord(size_t line, float scale, const PathHitRecord& record, GlyphTexture& texture)
+	{
+		if (!record.size())
+			return;
+
+		for (size_t i = 0; i < texture.Width; i++)
+		{
+			bool inside = IsDistanceInsidePathHitRecord(i / scale, record);
+
+			const size_t bufferIndex = (texture.Height - line - 1) * texture.Width + i;
+			texture.Buffer[bufferIndex] = inside ? 255 : 0;
+		}
+
+		return;
+	}
+
+	static void ProcessTextureLine(size_t line, float scale, const Path& path, const GlyfConstraints& constraints, GlyphTexture& texture)
+	{
+		PathHitRecord record = GetLineIntersections(line / scale, path, constraints);
+
+		ProcessPathHitRecord(line, scale, record, texture);
 	}
 
 	Atlas::Atlas(const TTF& ttf)
 		:
-		m_Width(0), 
-		m_Height(0), 
-		m_AtlasTextures()
-	{		
-		for (uint32_t c = '1'; c <= '9'; c++)
-		{
-			const Glyf& glyf = ttf.glyfs[ttf.cmap[c]];
-
-			GlyphTexture texture;
-
-			float scale = 1.0f;
-
-			texture.Width = (glyf.x_max - glyf.x_min + 1);
-			texture.Height = (glyf.y_max - glyf.y_min + 1);
-			texture.Buffer.resize(texture.Width * texture.Height, 0x00);
-
-			Path path = GetGlyphPath(glyf);
-
-			std::cout << "current char: " << c << std::endl;
-
-			for (size_t y = 0; y < texture.Height; y++)
-			{
-				for (size_t x = 0; x < texture.Width; x++)
-				{
-					bool isInsidePath = IsPointInsidePath((x + glyf.x_min), (y + glyf.y_min), path);
-
-					//texture.Buffer[x + (texture.Height - y - 1) * texture.Width] = isInsidePath ? 255 : 0;
-					texture.Buffer[x + y * texture.Width] = isInsidePath ? 255 : 0;
-				}
-			}
-
-			m_AtlasTextures.push_back(texture);
-		}
+		m_Width(0),
+		m_Height(0),
+		m_GlyphTextures(),
+		m_FontSize(256.0f),
+		m_FontAscender(ttf.hhea.ascender),
+		m_FontDescender(ttf.hhea.descender)
+	{
+		RasterizeGlyphs(ttf);
+		CreateAtlas(m_GlyphTextures);
 	}
 
 	uint32_t Atlas::GetWidth() const
@@ -689,67 +585,194 @@ namespace MFL
 		return m_Height;
 	}
 
-#if 0
-	std::vector<Contour> GetGlyphContours(const Glyf& glyf)
+	const uint8_t* Atlas::GetTexture() const
 	{
-		std::vector<Contour> contours(glyf.number_of_contours);
+		return m_Atlas.data();
+	}
 
-		size_t contour_index = 0;
-		for (size_t i = 0; i < glyf.value.coordinates.size(); i++)		
+	float Atlas::GetFontSize() const
+	{
+		return m_FontSize;
+	}
+
+	GlyphData Atlas::GetGlyphData(uint32_t unicode) const
+	{
+		GlyphDataMap::const_iterator it = m_GlyphData.find(unicode);
+		if (it != m_GlyphData.end())
+			return it->second;
+
+		GlyphDataMap::const_iterator it_null = m_GlyphData.find(0);
+		if (it_null != m_GlyphData.end())
+			return it_null->second;
+
+		return GlyphData();
+	}
+
+	float Atlas::GetScaleForFontSize(uint32_t fontSize) const
+	{
+		return ((float)fontSize / (m_FontSize));
+	}
+
+	void Atlas::RasterizeWorker(GlyphTextureMap& atlasTextures, const TTF& ttf, uint32_t unicodeStart, uint32_t unicodeEnd) const
+	{
+		atlasTextures.reserve(unicodeEnd - unicodeStart);
+
+		for (uint32_t c = unicodeStart; c < unicodeEnd; c++)
 		{
-			Contour& contour = contours[contour_index];
-			const GlyfPoint& point = glyf.value.coordinates[i];
+			GlyphTexture texture = RasterizeGlyph(ttf, c);
+			atlasTextures.try_emplace(c, std::move(texture));
+		}
+	}
 
-			if (contour.size() && contour.back().on_curve && point.on_curve)
+	void Atlas::CreateAtlas(const GlyphTextureMap& atlasTextures)
+	{
+		AtlasGlyphMetrics metrics = CalculateAtlasGlyphMetrics(atlasTextures);
+		uint32_t side = (uint32_t)std::ceil(std::sqrtf(metrics.SumArea));
+
+		m_Width = side + metrics.MaxWidth * 3;
+		m_Height = side + metrics.MaxHeight * 3;
+		m_Atlas.resize(m_Width * m_Height);
+
+		uint32_t maxRowHeight = 0;
+
+		uint32_t offsetX = 0;
+		uint32_t offsetY = 0;
+		uint32_t gap = 20;
+
+		for (const auto& [unicode, texture] : atlasTextures)
+		{
+			if (offsetX + texture.Width > m_Width)
 			{
-				const GlyfPoint& p1 = contour.points.back();
-				const GlyfPoint& p2 = point;
-
-				GlyfPoint dummyPoint;
-				dummyPoint.on_curve = false;
-				dummyPoint.x = (p1.x + p2.x) / 2;
-				dummyPoint.y = (p1.y + p2.y) / 2;
-
-				contour.points.push_back(dummyPoint);
+				offsetY += maxRowHeight + gap;
+				maxRowHeight = 0;
+				offsetX = 0;
 			}
-			else if (contour.points.size() && !contour.points.back().on_curve && !point.on_curve)
+			
+			if (texture.Height > maxRowHeight)
+				maxRowHeight = texture.Height;
+
+			GlyphData glyphData;
+			glyphData.UV_BottomLeft		= { offsetX					, offsetY + texture.Height	};
+			glyphData.UV_TopLeft		= { offsetX					, offsetY					};
+			glyphData.UV_TopRight		= { offsetX + texture.Width	, offsetY					};
+			glyphData.UV_BottomRight	= { offsetX + texture.Width	, offsetY + texture.Height	};
+			glyphData.Width = texture.Width;
+			glyphData.Height = texture.Height;
+			m_GlyphData.try_emplace(unicode, glyphData);
+
+			for (uint32_t y = 0; y < texture.Height; y++)
 			{
-				const GlyfPoint& p1 = contour.points.back();
-				const GlyfPoint& p2 = point;
-
-				GlyfPoint dummyPoint;
-				dummyPoint.on_curve = true;
-				dummyPoint.x = (p1.x + p2.x) / 2;
-				dummyPoint.y = (p1.y + p2.y) / 2;
-
-				contour.points.push_back(dummyPoint);
-			}
-
-			contour.points.push_back(point);
-
-			if (i == glyf.value.end_pts_of_contours[contour_index])
-			{
-				if (contour.points.size() && contour.points.front().on_curve && point.on_curve)
+				for(uint32_t x = 0; x < texture.Width; x++)
 				{
-					const GlyfPoint& p1 = contour.points.front();
-					const GlyfPoint& p2 = point;
-
-					GlyfPoint dummyPoint;
-					dummyPoint.on_curve = false;
-					dummyPoint.x = (p1.x + p2.x) / 2;
-					dummyPoint.y = (p1.y + p2.y) / 2;
-
-					contour.points.push_back(dummyPoint);
-					contour.points.push_back(contour.points.front());
+					m_Atlas[(y + offsetY) * m_Width + x + offsetX] = texture.Buffer[y * texture.Width + x];
 				}
-
-				contour_index++;
 			}
-				
+
+			offsetX += texture.Width + gap;
 		}
 
-		return contours;
+		int qwe = 123;
 	}
-#endif
+
+	Atlas::AtlasGlyphMetrics Atlas::CalculateAtlasGlyphMetrics(const GlyphTextureMap& atlasTextures)
+	{
+		AtlasGlyphMetrics metrics;
+
+		for (const auto&[unicode, texture] : atlasTextures)
+		{
+			if (texture.Width > metrics.MaxWidth)
+				metrics.MaxWidth = texture.Width;
+
+			if (texture.Height > metrics.MaxHeight)
+				metrics.MaxHeight = texture.Height;
+
+			metrics.SumArea += texture.Width * texture.Height;
+		}
+
+		return metrics;
+	}
+
+	void Atlas::RasterizeGlyphs(const TTF& ttf)
+	{
+		uint32_t threadCount = std::thread::hardware_concurrency();
+		std::vector<std::thread> threads;
+		std::vector<GlyphTextureMap> maps(threadCount);
+
+		size_t unicodeStartRange = '!';
+		size_t unicodeEndRange = '~' + 1;
+		size_t unicodeRange = unicodeEndRange - unicodeStartRange;
+
+		size_t sizePerWorker = unicodeRange / threadCount;
+
+		for (size_t t = 0; t < threadCount; t++)
+		{
+			size_t start = unicodeStartRange + t * sizePerWorker;
+			size_t end = (t == threadCount - 1) ? unicodeEndRange : start + sizePerWorker;
+
+			threads.emplace_back(&Atlas::RasterizeWorker, this, std::ref(maps[t]), ttf, start, end);
+		}
+
+		GlyphTexture nullTexture = RasterizeGlyphByIndex(ttf, 0);
+		m_GlyphTextures.try_emplace(0, std::move(nullTexture));
+
+		for (auto& thread : threads)
+			thread.join();
+
+		for (const GlyphTextureMap& m : maps)
+			m_GlyphTextures.insert(m.begin(), m.end());
+	}
+
+	GlyphTexture Atlas::RasterizeGlyphByIndex(const TTF& ttf, uint32_t index) const
+	{
+		const Glyf& glyf = ttf.glyfs[index];
+		const Path& path = GetGlyphPath(glyf);
+		const GlyfConstraints& constraints = GetGlyphConstraints(glyf);
+
+		const float scale = m_FontSize / (ttf.hhea.ascender - ttf.hhea.descender);
+
+		std::cout << "index: " << index << std::endl;
+
+		GlyphTexture texture(glyf, scale);
+
+		for (size_t y = 0; y < texture.Height; y++)
+			ProcessTextureLine(y, scale, path, constraints, texture);
+
+		return texture;
+	}
+
+	GlyphTexture Atlas::RasterizeGlyph(const TTF& ttf, uint32_t unicode) const
+	{
+		return RasterizeGlyphByIndex(ttf, ttf.cmap[unicode]);
+	}
+
+	GlyphTexture::GlyphTexture()
+		:
+		Width(0),
+		Height(0),
+		Buffer()
+	{ }
+
+	GlyphTexture::GlyphTexture(GlyphTexture&& other) noexcept
+		:
+		Width(other.Width),
+		Height(other.Height),
+		Buffer(std::move(other.Buffer))
+	{ }
+
+	GlyphTexture& GlyphTexture::operator=(GlyphTexture&& other) noexcept
+	{
+		Width = other.Width;
+		Height = other.Height;
+		Buffer = std::move(other.Buffer);
+
+		return *this;
+	}
+
+	GlyphTexture::GlyphTexture(const Glyf& glyf, float scale)
+		:
+		Width((glyf.x_max - glyf.x_min)* scale),
+		Height((glyf.y_max - glyf.y_min)* scale),
+		Buffer(Width* Height, 0x00)
+	{ }
 }
 

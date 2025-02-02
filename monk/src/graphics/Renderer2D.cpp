@@ -138,8 +138,8 @@ namespace monk
 
 		layout (location = 0) in vec3 a_Position;
 		layout (location = 1) in vec4 a_Color;
-		layout (location = 2) in vec2 a_TextureCoords;
-		layout (location = 3) in float a_AtlasIndex;
+		layout (location = 2) in float a_AtlasIndex;
+		layout (location = 3) in vec2 a_TextureCoords;
 
 		uniform mat4 u_ProjectionView;
 
@@ -163,7 +163,7 @@ namespace monk
 		out vec4 FragColor;
 
 		in vec4 v_Color;
-		in float v_TextureID;
+		in float v_AtlasIndex;
 		in vec2 v_TextureCoords;
 
 		uniform sampler2D u_Atlas0;
@@ -183,27 +183,32 @@ namespace monk
 		uniform sampler2D u_Atlas14;
 		uniform sampler2D u_Atlas15;
 
+		vec4 GetRedChannel(vec4 color)
+		{
+			return vec4(color.r, color.r, color.r, color.r);
+		}
+
 		void main()
 		{
-			int textureIndex = int(v_TextureID);
+			int textureIndex = int(v_AtlasIndex);
 			switch(textureIndex)
 			{
-				case 0: FragColor = texture(u_Atlas0, v_TextureCoords) * v_Color; break;
-				case 1: FragColor = texture(u_Atlas1, v_TextureCoords) * v_Color; break;
-				case 2: FragColor = texture(u_Atlas2, v_TextureCoords) * v_Color; break;
-				case 3: FragColor = texture(u_Atlas3, v_TextureCoords) * v_Color; break;
-				case 4: FragColor = texture(u_Atlas4, v_TextureCoords) * v_Color; break;
-				case 5: FragColor = texture(u_Atlas5, v_TextureCoords) * v_Color; break;
-				case 6: FragColor = texture(u_Atlas6, v_TextureCoords) * v_Color; break;
-				case 7: FragColor = texture(u_Atlas7, v_TextureCoords) * v_Color; break;
-				case 8: FragColor = texture(u_Atlas8, v_TextureCoords) * v_Color; break;
-				case 9: FragColor = texture(u_Atlas9, v_TextureCoords) * v_Color; break;
-				case 10: FragColor = texture(u_Atlas10, v_TextureCoords) * v_Color; break;
-				case 11: FragColor = texture(u_Atlas11, v_TextureCoords) * v_Color; break;
-				case 12: FragColor = texture(u_Atlas12, v_TextureCoords) * v_Color; break;
-				case 13: FragColor = texture(u_Atlas13, v_TextureCoords) * v_Color; break;
-				case 14: FragColor = texture(u_Atlas14, v_TextureCoords) * v_Color; break;
-				case 15: FragColor = texture(u_Atlas15, v_TextureCoords) * v_Color; break;
+				case 0: FragColor = GetRedChannel(texture(u_Atlas0, v_TextureCoords)) * v_Color; break;
+				case 1: FragColor = GetRedChannel(texture(u_Atlas1, v_TextureCoords)) * v_Color; break;
+				case 2: FragColor = GetRedChannel(texture(u_Atlas2, v_TextureCoords)) * v_Color; break;
+				case 3: FragColor = GetRedChannel(texture(u_Atlas3, v_TextureCoords)) * v_Color; break;
+				case 4: FragColor = GetRedChannel(texture(u_Atlas4, v_TextureCoords)) * v_Color; break;
+				case 5: FragColor = GetRedChannel(texture(u_Atlas5, v_TextureCoords)) * v_Color; break;
+				case 6: FragColor = GetRedChannel(texture(u_Atlas6, v_TextureCoords)) * v_Color; break;
+				case 7: FragColor = GetRedChannel(texture(u_Atlas7, v_TextureCoords)) * v_Color; break;
+				case 8: FragColor = GetRedChannel(texture(u_Atlas8, v_TextureCoords)) * v_Color; break;
+				case 9: FragColor = GetRedChannel(texture(u_Atlas9, v_TextureCoords)) * v_Color; break;
+				case 10: FragColor = GetRedChannel(texture(u_Atlas10, v_TextureCoords)) * v_Color; break;
+				case 11: FragColor = GetRedChannel(texture(u_Atlas11, v_TextureCoords)) * v_Color; break;
+				case 12: FragColor = GetRedChannel(texture(u_Atlas12, v_TextureCoords)) * v_Color; break;
+				case 13: FragColor = GetRedChannel(texture(u_Atlas13, v_TextureCoords)) * v_Color; break;
+				case 14: FragColor = GetRedChannel(texture(u_Atlas14, v_TextureCoords)) * v_Color; break;
+				case 15: FragColor = GetRedChannel(texture(u_Atlas15, v_TextureCoords)) * v_Color; break;
 				default: FragColor = vec4(1.0f, 0.0f, 1.0f, 1.0f);
 			}
 		}
@@ -217,6 +222,9 @@ namespace monk
 
 		uint32_t whiteTexture = 0xffffffff;
 		m_WhiteTexture = CreateUnique<Texture2D>(1, 1, TextureFormat::RGBA, (uint8_t*)&whiteTexture);
+
+		m_DefaultFont = CreateRef<MFL::Font>("C:/Windows/Fonts/arial.ttf");
+		m_AtlasTexture = Texture2D::Create(m_DefaultFont->GetAtlas().GetWidth(), m_DefaultFont->GetAtlas().GetHeight(), TextureFormat::RED, m_DefaultFont->GetAtlas().GetTexture());
 	}
 
 	void Renderer2D::Begin(Ref<const OrthographicCamera> camera)
@@ -267,9 +275,9 @@ namespace monk
 		bottomLeftVertex->Position.y += size.y;
 		m_QuadVertexDataPtr++;
 
-		m_QuadBatchStats.Quads		+= 1;
-		m_QuadBatchStats.Verticies	+= 4;
-		m_QuadBatchStats.Indices	+= 6;
+		m_QuadBatchStats.Quads += 1;
+		m_QuadBatchStats.Verticies += 4;
+		m_QuadBatchStats.Indices += 6;
 
 		ZDepth += FLT_EPSILON;
 	}
@@ -280,11 +288,11 @@ namespace monk
 
 		m_QuadVertexArray->Bind();
 
-		if (m_QuadBatchStats.Quads >= QuadBatchSettings.MaxQuads)
+		if (m_QuadBatchStats.Quads >= QuadBatchSettings.MaxQuads || m_QuadBatchStats.Textures.size() >= QuadBatchSettings.MaxTextures)
 			NextQuadBatch();
 
 		float textureID = GetBatchTextureID(texture);
-			
+
 		QuadVertex* topLeftVertex = m_QuadVertexDataPtr;
 		topLeftVertex->Position = mml::vec3(position.x, position.y, ZDepth);
 		topLeftVertex->Color = mml::vec4(1.0f);
@@ -354,9 +362,9 @@ namespace monk
 		bottomLeftVertex->Radius = radius;
 		m_CircleVertexDataPtr++;
 
-		m_CircleBatchStats.Circles		+= 1;
-		m_CircleBatchStats.Verticies	+= 4;
-		m_CircleBatchStats.Indices		+= 6;
+		m_CircleBatchStats.Circles += 1;
+		m_CircleBatchStats.Verticies += 4;
+		m_CircleBatchStats.Indices += 6;
 
 		ZDepth += FLT_EPSILON;
 	}
@@ -367,11 +375,81 @@ namespace monk
 
 		m_TextVertexArray->Bind();
 
-		TextVertex* topLeftVertex = m_TextVertexDataPtr;
-		topLeftVertex->Position = mml::vec3(position.x, position.y, ZDepth);
-		topLeftVertex->Color = color;
-		// TODO
-		
+		float offsetX = 0.0f;
+		float offsetY = 0.0f;
+		float maxRowHeight = 0.0f;
+
+		for (uint32_t c : text)
+		{
+			MFL::GlyphData glyphData = m_DefaultFont->GetAtlas().GetGlyphData(c);
+			const MFL::Glyf& glyf = m_DefaultFont->GetTTF().GetGlyfByUnicode(c);
+
+			float ttfScale = (m_DefaultFont->GetAtlas().GetFontSize() / (m_DefaultFont->GetTTF().hhea.ascender - m_DefaultFont->GetTTF().hhea.descender));
+			float scale = m_DefaultFont->GetAtlas().GetScaleForFontSize(fontSize);
+
+			float width = glyphData.Width * scale;
+			float height = glyphData.Height * scale;
+			float ascender = glyf.y_max * ttfScale * scale;
+			float descender = glyf.y_min * ttfScale * scale;
+
+			if (c == ' ')
+			{
+				float ttfAdvance = m_DefaultFont->GetTTF().GetGlyfMetricsByUnicode(c).Advance * ttfScale;
+				float advance = ttfAdvance != 0 ? ttfAdvance : glyphData.Width;
+
+				offsetX += advance * scale;
+				continue;
+			}
+			else if (c == '\n' || position.x + width + offsetX > 1600)
+			{
+				offsetX = 0;
+				offsetY += maxRowHeight + 8;
+				maxRowHeight = 0;
+				continue;
+			}
+
+			maxRowHeight = mml::Max(height, maxRowHeight);
+
+
+			TextVertex* topLeftVertex = m_TextVertexDataPtr;
+			topLeftVertex->Position = mml::vec3(position.x + offsetX, position.y + offsetY - ascender, ZDepth);
+			topLeftVertex->Color = color;
+			topLeftVertex->TextureCoords = mml::vec2((float)glyphData.UV_TopLeft.U / m_DefaultFont->GetAtlas().GetWidth(), (float)glyphData.UV_TopLeft.V / m_DefaultFont->GetAtlas().GetHeight());
+			topLeftVertex->AtlasIndex = 0;
+			m_TextVertexDataPtr++;
+
+			TextVertex* topRightVertex = m_TextVertexDataPtr;
+			topRightVertex->Position = mml::vec3(position.x + width + offsetX, position.y + offsetY - ascender, ZDepth);
+			topRightVertex->Color = color;
+			topRightVertex->TextureCoords = mml::vec2((float)glyphData.UV_TopRight.U / m_DefaultFont->GetAtlas().GetWidth(), (float)glyphData.UV_TopRight.V / m_DefaultFont->GetAtlas().GetHeight());
+			topRightVertex->AtlasIndex = 0;
+			m_TextVertexDataPtr++;
+
+			TextVertex* bottomRightVertex = m_TextVertexDataPtr;
+			bottomRightVertex->Position = mml::vec3(position.x + width + offsetX, position.y + height + offsetY - ascender, ZDepth);
+			bottomRightVertex->Color = color;
+			bottomRightVertex->TextureCoords = mml::vec2((float)glyphData.UV_BottomRight.U / m_DefaultFont->GetAtlas().GetWidth(), (float)glyphData.UV_BottomRight.V / m_DefaultFont->GetAtlas().GetHeight());
+			bottomRightVertex->AtlasIndex = 0;
+			m_TextVertexDataPtr++;
+
+			TextVertex* bottomLeftVertex = m_TextVertexDataPtr;
+			bottomLeftVertex->Position = mml::vec3(position.x + offsetX, position.y + height + offsetY - ascender, ZDepth);
+			bottomLeftVertex->Color = color;
+			bottomLeftVertex->TextureCoords = mml::vec2((float)glyphData.UV_BottomLeft.U / m_DefaultFont->GetAtlas().GetWidth(), (float)glyphData.UV_BottomLeft.V / m_DefaultFont->GetAtlas().GetHeight());
+			bottomLeftVertex->AtlasIndex = 0;
+			m_TextVertexDataPtr++;
+
+			float ttfAdvance = m_DefaultFont->GetTTF().GetGlyfMetricsByUnicode(c).Advance * ttfScale;
+			float advance = ttfAdvance != 0 ? ttfAdvance : glyphData.Width;
+
+			offsetX += advance * scale;
+
+			m_TextBatchStats.Characters += 1;
+			m_TextBatchStats.Verticies += 4;
+			m_TextBatchStats.Indices += 6;
+		}
+
+		ZDepth += FLT_EPSILON;
 	}
 
 	void Renderer2D::DrawLine(const mml::vec2& p0, const mml::vec2& p1, const mml::vec4& color, float thickness /*= 1.0f*/)
@@ -403,32 +481,32 @@ namespace monk
 
 			float t = (float)(i + 1) / segments;
 
-			mml::vec2 tp0	= mml::Lerp(p0, controlPoint, t);
-			mml::vec2 tp1	= mml::Lerp(controlPoint, p1, t);
+			mml::vec2 tp0 = mml::Lerp(p0, controlPoint, t);
+			mml::vec2 tp1 = mml::Lerp(controlPoint, p1, t);
 			mml::vec2 point = mml::Lerp(tp0, tp1, t);
 
-			mml::vec2 dir	= mml::Normalize(point - prev);
-			mml::vec2 side	= mml::vec2(-dir.y, dir.x) * thickness * 0.5f;
+			mml::vec2 dir = mml::Normalize(point - prev);
+			mml::vec2 side = mml::vec2(-dir.y, dir.x) * thickness * 0.5f;
 
-			mml::vec2 pointL	= point - side;
-			mml::vec2 pointR	= point + side;
+			mml::vec2 pointL = point - side;
+			mml::vec2 pointR = point + side;
 
-			Vertex& _prevL	= m_VertexBufferData[m_BatchStats.Verticies + 0];
-			Vertex& _prevR	= m_VertexBufferData[m_BatchStats.Verticies + 1];
+			Vertex& _prevL = m_VertexBufferData[m_BatchStats.Verticies + 0];
+			Vertex& _prevR = m_VertexBufferData[m_BatchStats.Verticies + 1];
 			Vertex& _pointR = m_VertexBufferData[m_BatchStats.Verticies + 2];
 			Vertex& _pointL = m_VertexBufferData[m_BatchStats.Verticies + 3];
-			
+
 			_prevL.Position = mml::vec3(prevL.x, prevL.y, 0.0f);
-			_prevL.Color	= color;
-			
+			_prevL.Color = color;
+
 			_prevR.Position = mml::vec3(prevR.x, prevR.y, 0.0f);
-			_prevR.Color	= color;
+			_prevR.Color = color;
 
 			_pointR.Position = mml::vec3(pointR.x, pointR.y, 0.0f);
 			_pointR.Color = color;
 
 			_pointL.Position = mml::vec3(pointL.x, pointL.y, 0.0f);
-			_pointL.Color	 = color;
+			_pointL.Color = color;
 
 			prev = point;
 			prevL = pointL;
@@ -462,13 +540,13 @@ namespace monk
 		m_QuadVertexArray = VertexArray::Create();
 		m_QuadVertexArray->Bind();
 
-		const size_t maxVertecies = QuadBatchSettings.MaxQuads * 6;
-		const size_t maxIndices = QuadBatchSettings.MaxQuads * 4;
+		const size_t maxVertecies = QuadBatchSettings.MaxQuads * 4;
+		const size_t maxIndices = QuadBatchSettings.MaxQuads * 6;
 
 		m_QuadVertexBuffer = VertexBuffer::Create(sizeof(QuadVertex) * maxVertecies, QuadVertex::GetLayout());
 
 		auto* indices = new uint32_t[maxIndices];
-		
+
 		size_t quad_index = 0;
 		const size_t pattern[6] = { 0, 1, 2, 2, 3, 0 };
 		for (int i = 0; i < maxIndices; i++)
@@ -492,8 +570,8 @@ namespace monk
 		m_CircleVertexArray = VertexArray::Create();
 		m_CircleVertexArray->Bind();
 
-		const size_t maxVertecies = CircleBatchSettings.MaxCircles * 6;
-		const size_t maxIndices = CircleBatchSettings.MaxCircles * 4;
+		const size_t maxVertecies = CircleBatchSettings.MaxCircles * 4;
+		const size_t maxIndices = CircleBatchSettings.MaxCircles * 6;
 
 		m_CircleVertexBuffer = VertexBuffer::Create(sizeof(CircleVertex) * maxVertecies, CircleVertex::GetLayout());
 
@@ -554,6 +632,7 @@ namespace monk
 		m_QuadVertexDataBase = (QuadVertex*)m_QuadVertexBuffer->Map();
 		m_QuadVertexDataPtr = m_QuadVertexDataBase;
 
+		m_QuadBatchStats.Textures.clear();
 		m_QuadBatchStats.Textures.push_back(m_WhiteTexture);
 	}
 
@@ -563,8 +642,8 @@ namespace monk
 
 		m_QuadVertexBuffer->Unmap();
 
-		m_QuadVertexDataBase	= nullptr;
-		m_QuadVertexDataPtr		= nullptr;
+		m_QuadVertexDataBase = nullptr;
+		m_QuadVertexDataPtr = nullptr;
 	}
 
 	void Renderer2D::BeginCirclesBatch()
@@ -581,8 +660,8 @@ namespace monk
 
 		m_CircleVertexBuffer->Unmap();
 
-		m_CircleVertexDataBase	= nullptr;
-		m_CircleVertexDataPtr	= nullptr;
+		m_CircleVertexDataBase = nullptr;
+		m_CircleVertexDataPtr = nullptr;
 	}
 
 	void Renderer2D::BeginTextBatch()
@@ -591,6 +670,9 @@ namespace monk
 
 		m_TextVertexDataBase = (TextVertex*)m_TextVertexBuffer->Map();
 		m_TextVertexDataPtr = m_TextVertexDataBase;
+
+		m_TextBatchStats.FontAtlases.clear();
+		m_TextBatchStats.FontAtlases.push_back(m_AtlasTexture);
 	}
 
 	void Renderer2D::EndTextBatch()
@@ -599,13 +681,13 @@ namespace monk
 
 		m_TextVertexBuffer->Unmap();
 
-		m_TextVertexDataBase	= nullptr;
-		m_TextVertexDataPtr		= nullptr;
+		m_TextVertexDataBase = nullptr;
+		m_TextVertexDataPtr = nullptr;
 	}
 
 	void Renderer2D::Flush()
 	{
-		if(m_QuadBatchStats.Quads)
+		if (m_QuadBatchStats.Quads)
 			FlushQuads();
 		if (m_CircleBatchStats.Circles)
 			FlushCircles();
@@ -665,8 +747,11 @@ namespace monk
 		{
 			glActiveTexture(GL_TEXTURE0 + i);
 			glBindTexture(GL_TEXTURE_2D, m_TextBatchStats.FontAtlases[i]->GetID());
-			m_QuadShader->SetInt(std::string("u_Atlas") + std::to_string(i), i);
+			m_TextShader->SetInt(std::string("u_Atlas") + std::to_string(i), i);
 		}
+
+		glDrawElements(GL_TRIANGLES, m_TextBatchStats.Indices, GL_UNSIGNED_INT, nullptr);
+		m_TextBatchStats.Reset();
 	}
 
 	void Renderer2D::NextQuadBatch()
@@ -705,4 +790,4 @@ namespace monk
 		return (float)textureID;
 	}
 
-}
+	}
