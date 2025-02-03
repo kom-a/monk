@@ -1,6 +1,6 @@
 include "../../../Monk"
 include "../../../MML/MML"
-include "../../../MUI/MUI"
+include "../../MFL"
 
 project "Test1"
 	kind "ConsoleApp"

@@ -223,8 +223,8 @@ namespace monk
 		uint32_t whiteTexture = 0xffffffff;
 		m_WhiteTexture = CreateUnique<Texture2D>(1, 1, TextureFormat::RGBA, (uint8_t*)&whiteTexture);
 
-		m_DefaultFont = CreateRef<MFL::Font>("C:/Windows/Fonts/arial.ttf");
-		m_AtlasTexture = Texture2D::Create(m_DefaultFont->GetAtlas().GetWidth(), m_DefaultFont->GetAtlas().GetHeight(), TextureFormat::RED, m_DefaultFont->GetAtlas().GetTexture());
+		m_DefaultFont = CreateRef<MFL::Font>("C:/Users/kamil/OneDrive/Рабочий стол/small_pixel.ttf");
+		m_AtlasTexture = Texture2D::Create(m_DefaultFont->GetAtlasWidth(), m_DefaultFont->GetAtlasHeight(), TextureFormat::RED, m_DefaultFont->GetAtlasTextureBuffer());
 	}
 
 	void Renderer2D::Begin(Ref<const OrthographicCamera> camera)
@@ -381,26 +381,21 @@ namespace monk
 
 		for (uint32_t c : text)
 		{
-			MFL::GlyphData glyphData = m_DefaultFont->GetAtlas().GetGlyphData(c);
-			const MFL::Glyf& glyf = m_DefaultFont->GetTTF().GetGlyfByUnicode(c);
+			const MFL::GlyphData& glyphData = m_DefaultFont->GetGlyphDataByUnicode(c);
+			float scale = m_DefaultFont->GetScaleForFontSize(fontSize);
 
-			float ttfScale = (m_DefaultFont->GetAtlas().GetFontSize() / (m_DefaultFont->GetTTF().hhea.ascender - m_DefaultFont->GetTTF().hhea.descender));
-			float scale = m_DefaultFont->GetAtlas().GetScaleForFontSize(fontSize);
-
-			float width = glyphData.Width * scale;
-			float height = glyphData.Height * scale;
-			float ascender = glyf.y_max * ttfScale * scale;
-			float descender = glyf.y_min * ttfScale * scale;
+			float width		= glyphData.Width		* scale;
+			float height	= glyphData.Height		* scale;
+			float ascender	= glyphData.Ascender	* scale;
+			float descender = glyphData.Descender	* scale;
+			float advance	= glyphData.Advance == 0 ? width : glyphData.Advance * scale;
 
 			if (c == ' ')
 			{
-				float ttfAdvance = m_DefaultFont->GetTTF().GetGlyfMetricsByUnicode(c).Advance * ttfScale;
-				float advance = ttfAdvance != 0 ? ttfAdvance : glyphData.Width;
-
-				offsetX += advance * scale;
+				offsetX += advance;
 				continue;
 			}
-			else if (c == '\n' || position.x + width + offsetX > 1600)
+			else if (c == '\n'/* || position.x + width + offsetX > 1700*/)
 			{
 				offsetX = 0;
 				offsetY += maxRowHeight + 8;
@@ -410,39 +405,35 @@ namespace monk
 
 			maxRowHeight = mml::Max(height, maxRowHeight);
 
-
 			TextVertex* topLeftVertex = m_TextVertexDataPtr;
 			topLeftVertex->Position = mml::vec3(position.x + offsetX, position.y + offsetY - ascender, ZDepth);
 			topLeftVertex->Color = color;
-			topLeftVertex->TextureCoords = mml::vec2((float)glyphData.UV_TopLeft.U / m_DefaultFont->GetAtlas().GetWidth(), (float)glyphData.UV_TopLeft.V / m_DefaultFont->GetAtlas().GetHeight());
+			topLeftVertex->TextureCoords = mml::vec2((float)glyphData.UV_TopLeft.U, (float)glyphData.UV_TopLeft.V);
 			topLeftVertex->AtlasIndex = 0;
 			m_TextVertexDataPtr++;
 
 			TextVertex* topRightVertex = m_TextVertexDataPtr;
 			topRightVertex->Position = mml::vec3(position.x + width + offsetX, position.y + offsetY - ascender, ZDepth);
 			topRightVertex->Color = color;
-			topRightVertex->TextureCoords = mml::vec2((float)glyphData.UV_TopRight.U / m_DefaultFont->GetAtlas().GetWidth(), (float)glyphData.UV_TopRight.V / m_DefaultFont->GetAtlas().GetHeight());
+			topRightVertex->TextureCoords = mml::vec2((float)glyphData.UV_TopRight.U, (float)glyphData.UV_TopRight.V);
 			topRightVertex->AtlasIndex = 0;
 			m_TextVertexDataPtr++;
 
 			TextVertex* bottomRightVertex = m_TextVertexDataPtr;
 			bottomRightVertex->Position = mml::vec3(position.x + width + offsetX, position.y + height + offsetY - ascender, ZDepth);
 			bottomRightVertex->Color = color;
-			bottomRightVertex->TextureCoords = mml::vec2((float)glyphData.UV_BottomRight.U / m_DefaultFont->GetAtlas().GetWidth(), (float)glyphData.UV_BottomRight.V / m_DefaultFont->GetAtlas().GetHeight());
+			bottomRightVertex->TextureCoords = mml::vec2((float)glyphData.UV_BottomRight.U, (float)glyphData.UV_BottomRight.V);
 			bottomRightVertex->AtlasIndex = 0;
 			m_TextVertexDataPtr++;
 
 			TextVertex* bottomLeftVertex = m_TextVertexDataPtr;
 			bottomLeftVertex->Position = mml::vec3(position.x + offsetX, position.y + height + offsetY - ascender, ZDepth);
 			bottomLeftVertex->Color = color;
-			bottomLeftVertex->TextureCoords = mml::vec2((float)glyphData.UV_BottomLeft.U / m_DefaultFont->GetAtlas().GetWidth(), (float)glyphData.UV_BottomLeft.V / m_DefaultFont->GetAtlas().GetHeight());
+			bottomLeftVertex->TextureCoords = mml::vec2((float)glyphData.UV_BottomLeft.U, (float)glyphData.UV_BottomLeft.V);
 			bottomLeftVertex->AtlasIndex = 0;
 			m_TextVertexDataPtr++;
 
-			float ttfAdvance = m_DefaultFont->GetTTF().GetGlyfMetricsByUnicode(c).Advance * ttfScale;
-			float advance = ttfAdvance != 0 ? ttfAdvance : glyphData.Width;
-
-			offsetX += advance * scale;
+			offsetX += advance;
 
 			m_TextBatchStats.Characters += 1;
 			m_TextBatchStats.Verticies += 4;

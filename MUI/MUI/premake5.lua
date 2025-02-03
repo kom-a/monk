@@ -1,5 +1,6 @@
 include "../../WangMauna/WangMauna"
 include "../../MOGL/MOGL"
+include "../../MFL/MFL"
 
 project "MUI"
 	kind "StaticLib"
@@ -17,11 +18,13 @@ project "MUI"
 	includedirs {
 		IncludeDir["WangMauna"],
 		IncludeDir["MOGL"],
+		IncludeDir["MFL"],
 	}
 
 	links {
 		"WangMauna",
-		"MOGL"
+		"MOGL",
+		"MFL"
 	}
 
 	filter "configurations:Debug"

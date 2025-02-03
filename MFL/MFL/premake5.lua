@@ -1,4 +1,5 @@
 include "../../Scriptorium/Scriptorium"
+include "../../WangMauna/WangMauna"
 
 project "MFL"
 	kind "StaticLib"
@@ -18,6 +19,7 @@ project "MFL"
 	}
 
 	links {
+		"Scriptorium",
 		"WangMauna"
 	}
 

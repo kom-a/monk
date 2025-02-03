@@ -4,8 +4,4 @@ workspace "MFL_Sandbox"
 
 include "../../Common.lua"
 
-include "stb_truetype_test"
-include "stb_easy_font_test"
 include "Test1"
-
-include "../MFL"

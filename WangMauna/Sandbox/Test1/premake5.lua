@@ -12,7 +12,7 @@ project "Test1"
 
 	includedirs {
 		IncludeDir["WangMauna"],
-		IncludeDir["MOGl"],
+		IncludeDir["MOGL"],
 	}
 
 	links {

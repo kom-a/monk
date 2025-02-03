@@ -1,205 +1,59 @@
-#include "MFL.h"
+#include "Atlas.h"
 
-#include <fstream>
-#include <iostream>
-#include <optional>
-#include <map>
 #include <thread>
-
-#include "Log.h"
 
 namespace MFL
 {
-	TTF::TTF(const std::filesystem::path& filename)
+	struct BezierCurve
 	{
-		std::ifstream file(filename, std::ios::binary | std::ios::ate);
-		std::streamsize size = file.tellg();
-		file.seekg(0, std::ios::beg);
+		GlyfPoint P0;
+		GlyfPoint P1;
+		GlyfPoint P2;
+	};
 
-		std::vector<char> buffer(size);
-		if (file.read(buffer.data(), size))
-		{
-			Scriptorium::Reader reader(buffer.data(), Scriptorium::Endianness::BIG);
-			Parse(reader);
-		}
-	}
-
-	const MFL::Glyf& TTF::GetGlyfByUnicode(uint32_t unicode) const
+	struct GlyfConstraints
 	{
-		return glyfs[cmap[unicode]];
-	}
+		int32_t XMin;
+		int32_t YMin;
+		int32_t XMax;
+		int32_t YMax;
+	};
 
-	const MFL::GlyphMetrics TTF::GetGlyfMetricsByUnicode(uint32_t unicode) const
+	enum class Direction
 	{
-		MFL::GlyphMetrics metrics;
-		uint32_t index = cmap[unicode];
+		None = 0,
+		Clockwise,
+		Counterclockwise
+	};
 
-		if (index < hhea.number_of_hmetrics)
-		{
-			metrics.Advance = hmtx.hor_metrics[index].advanceWidth;
-			metrics.LeftSizeBearing = hmtx.hor_metrics[index].leftSideBearing;
-		}
-
-		return metrics;
-	}
-
-	void TTF::Parse(Scriptorium::Reader& reader)
+	struct Intersection
 	{
-		offsetTable.Parse(reader);
+		float Distance	= 0;
+		float T			= 0;
+		Direction Dir	= Direction::None;
 
-		for (size_t i = 0; i < offsetTable.num_tables; i++)
-		{
-			DirTableEntry dirTableEntry(reader);
+		float GradX		= 0;
+		float GradY		= 0;
 
-			m_TableLocation.try_emplace(dirTableEntry.tag, dirTableEntry.offset);
+		bool isHole		= false;
+	};
 
-			if (dirTableEntry.tag == "head")
-			{
-				reader.PushCursor(dirTableEntry.offset);
-				head.Parse(reader);
-				reader.PopCursor();
-			}
-			else if (dirTableEntry.tag == "cvt ")
-			{
-				reader.PushCursor(dirTableEntry.offset);
-				cvt.Parse(reader);
-				reader.PopCursor();
-			}
-			else if (dirTableEntry.tag == "prep")
-			{
-				reader.PushCursor(dirTableEntry.offset);
-				prep.Parse(reader);
-				reader.PopCursor();
-			}
-			else if (dirTableEntry.tag == "kern")
-			{
-				reader.PushCursor(dirTableEntry.offset);
-				kern.Parse(reader);
-				reader.PopCursor();
-			}
-			else if (dirTableEntry.tag == "hhea")
-			{
-				reader.PushCursor(dirTableEntry.offset);
-				hhea.Parse(reader);
-				reader.PopCursor();
-			}
-			else if (dirTableEntry.tag == "post")
-			{
-				reader.PushCursor(dirTableEntry.offset);
-				post.Parse(reader);
-				reader.PopCursor();
-			}
-			else if (dirTableEntry.tag == "OS/2")
-			{
-				reader.PushCursor(dirTableEntry.offset);
-				os2.Parse(reader);
-				reader.PopCursor();
-			}
-			else if (dirTableEntry.tag == "name")
-			{
-				reader.PushCursor(dirTableEntry.offset);
-				name.Parse(reader);
-				reader.PopCursor();
-			}
-			else if (dirTableEntry.tag == "maxp")
-			{
-				reader.PushCursor(dirTableEntry.offset);
-				maxp.Parse(reader);
-				reader.PopCursor();
-			}
-			else if (dirTableEntry.tag == "fpgm")
-			{
-				reader.PushCursor(dirTableEntry.offset);
-				fpgm.Parse(reader);
-				reader.PopCursor();
-			}
-			else if (dirTableEntry.tag == "cmap")
-			{
-				reader.PushCursor(dirTableEntry.offset);
-				cmap.Parse(reader);
-				reader.PopCursor();
-			}
-		}
-
-		auto it_hmtx = m_TableLocation.find("hmtx");
-
-		if (it_hmtx != m_TableLocation.end())
-		{
-			reader.PushCursor(it_hmtx->second);
-			hmtx.Parse(reader, maxp.num_glyphs, hhea.number_of_hmetrics);
-			reader.PopCursor();
-		}
-
-		size_t location_table_start = m_TableLocation["loca"];
-		size_t glyf_table_start = m_TableLocation["glyf"];
-
-		reader.PushCursor();
-
-		for (size_t i = 0; i < maxp.num_glyphs; i++)
-		{
-			reader.SetCursor(location_table_start + i * (head.index_to_loc_format ? 4 : 2));
-			size_t glyf_offset = head.index_to_loc_format ? reader.ReadUInt32() : reader.ReadUInt16() * 2;
-
-			Glyf glyf;
-			reader.SetCursor(glyf_table_start + glyf_offset);
-			glyf.Parse(reader);
-
-			glyfs.push_back(glyf);
-		}
-
-		// Compound glyphs
-		for (Glyf& glyf : glyfs)
-		{
-			if (glyf.number_of_contours != -1)
-				continue;
-
-			glyf.number_of_contours = 0;
-
-			for (CompoundGlyph& compound : glyf.compounds)
-			{
-				const Glyf& component = glyfs[compound.glyph_index];
-
-				// TODO: Handle multiple nested compound glyphs
-				if (component.number_of_contours == -1)
-					continue;
-
-				for (auto end_point : component.value.end_pts_of_contours)
-					glyf.value.end_pts_of_contours.push_back(end_point + glyf.value.coordinates.size());
-
-				for (const auto& point : component.value.coordinates)
-				{
-					GlyfPoint new_point;
-					new_point.x = point.x * compound.x_scale + compound.x_offset;
-					new_point.y = point.y * compound.y_scale + compound.y_offset;
-
-					glyf.value.coordinates.push_back(new_point);
-				}
-
-				glyf.value.flags.insert(glyf.value.flags.begin(), component.value.flags.begin(), component.value.flags.end());
-
-				glyf.number_of_contours += component.number_of_contours;
-			}
-		}
-
-		reader.PopCursor();
-	}
-
-	Font::Font(const std::filesystem::path& filename)
-		:
-		m_Ttf(filename),
-		m_Atlas(m_Ttf)
+	struct Parabola
 	{
-	}
+		float AX;
+		float AY;
 
-	const MFL::TTF& Font::GetTTF() const
-	{
-		return m_Ttf;
-	}
+		float BX;
+		float BY;
 
-	const MFL::Atlas& Font::GetAtlas() const
-	{
-		return m_Atlas;
-	}
+		float CX;
+		float CY;
+	};
+
+	using ContourHitRecord	= std::vector<Intersection>;
+	using PathHitRecord		= std::vector<ContourHitRecord>;
+	using Contour			= std::vector<BezierCurve>;
+	using Path				= std::vector<Contour>;
 
 	static std::vector<std::vector<GlyfPoint>> SplitByContour(const Glyf& glyf)
 	{
@@ -271,9 +125,9 @@ namespace MFL
 		return points;
 	}
 
-	MFL::Path GetGlyphPath(const Glyf& glyf)
+	static Path GetGlyphPath(const Glyf& glyf)
 	{
-		MFL::Path result;
+		Path result;
 		std::vector<std::vector<GlyfPoint>> points = GetGlyphPoints(glyf);
 
 		for (const auto& pts : points)
@@ -334,19 +188,7 @@ namespace MFL
 		return result;
 	}
 
-	struct Parabola
-	{
-		float AX;
-		float AY;
-
-		float BX;
-		float BY;
-
-		float CX;
-		float CY;
-	};
-
-	inline static Parabola CalculateCoefficients(const BezierCurve& curve)
+	static Parabola CalculateCoefficients(const BezierCurve& curve)
 	{
 		Parabola result;
 
@@ -436,7 +278,7 @@ namespace MFL
 		return area > 0;
 	}
 
-	ContourHitRecord RayContourIntersections(int x, int y, const Contour& contour)
+	static ContourHitRecord RayContourIntersections(int x, int y, const Contour& contour)
 	{
 		ContourHitRecord result;
 
@@ -476,7 +318,7 @@ namespace MFL
 		return result;
 	}
 
-	PathHitRecord GetLineIntersections(size_t line, const Path& path, const GlyfConstraints& constraints)
+	static PathHitRecord GetLineIntersections(size_t line, const Path& path, const GlyfConstraints& constraints)
 	{
 		PathHitRecord result(path.size());
 
@@ -562,14 +404,43 @@ namespace MFL
 		ProcessPathHitRecord(line, scale, record, texture);
 	}
 
+
+	GlyphTexture::GlyphTexture()
+		:
+		Width(0),
+		Height(0),
+		Buffer()
+	{ }
+
+	GlyphTexture::GlyphTexture(GlyphTexture&& other) noexcept
+		:
+		Width(other.Width),
+		Height(other.Height),
+		Buffer(std::move(other.Buffer))
+	{ }
+
+	GlyphTexture& GlyphTexture::operator=(GlyphTexture&& other) noexcept
+	{
+		Width = other.Width;
+		Height = other.Height;
+		Buffer = std::move(other.Buffer);
+
+		return *this;
+	}
+
+	GlyphTexture::GlyphTexture(const Glyf& glyf, float scale)
+		:
+		Width((glyf.x_max - glyf.x_min)* scale),
+		Height((glyf.y_max - glyf.y_min)* scale),
+		Buffer(Width* Height, 0x00)
+	{ }
+
 	Atlas::Atlas(const TTF& ttf)
 		:
 		m_Width(0),
 		m_Height(0),
 		m_GlyphTextures(),
-		m_FontSize(256.0f),
-		m_FontAscender(ttf.hhea.ascender),
-		m_FontDescender(ttf.hhea.descender)
+		m_FontSize(256.0f)
 	{
 		RasterizeGlyphs(ttf);
 		CreateAtlas(m_GlyphTextures);
@@ -633,11 +504,10 @@ namespace MFL
 		m_Height = side + metrics.MaxHeight * 3;
 		m_Atlas.resize(m_Width * m_Height);
 
-		uint32_t maxRowHeight = 0;
-
-		uint32_t offsetX = 0;
-		uint32_t offsetY = 0;
-		uint32_t gap = 20;
+		uint32_t maxRowHeight	= 0;
+		uint32_t offsetX		= 0;
+		uint32_t offsetY		= 0;
+		const uint32_t gap		= 10;
 
 		for (const auto& [unicode, texture] : atlasTextures)
 		{
@@ -652,10 +522,10 @@ namespace MFL
 				maxRowHeight = texture.Height;
 
 			GlyphData glyphData;
-			glyphData.UV_BottomLeft		= { offsetX					, offsetY + texture.Height	};
-			glyphData.UV_TopLeft		= { offsetX					, offsetY					};
-			glyphData.UV_TopRight		= { offsetX + texture.Width	, offsetY					};
-			glyphData.UV_BottomRight	= { offsetX + texture.Width	, offsetY + texture.Height	};
+			glyphData.UV_BottomLeft		= {  (float)offsetX						/ m_Width	, ((float)offsetY + texture.Height) / m_Height	};
+			glyphData.UV_TopLeft		= {  (float)offsetX						/ m_Width	,  (float)offsetY					/ m_Height	};
+			glyphData.UV_TopRight		= { ((float)offsetX + texture.Width)	/ m_Width	,  (float)offsetY					/ m_Height	};
+			glyphData.UV_BottomRight	= { ((float)offsetX + texture.Width)	/ m_Width	, ((float)offsetY + texture.Height) / m_Height	};
 			glyphData.Width = texture.Width;
 			glyphData.Height = texture.Height;
 			m_GlyphData.try_emplace(unicode, glyphData);
@@ -670,8 +540,6 @@ namespace MFL
 
 			offsetX += texture.Width + gap;
 		}
-
-		int qwe = 123;
 	}
 
 	Atlas::AtlasGlyphMetrics Atlas::CalculateAtlasGlyphMetrics(const GlyphTextureMap& atlasTextures)
@@ -730,8 +598,6 @@ namespace MFL
 
 		const float scale = m_FontSize / (ttf.hhea.ascender - ttf.hhea.descender);
 
-		std::cout << "index: " << index << std::endl;
-
 		GlyphTexture texture(glyf, scale);
 
 		for (size_t y = 0; y < texture.Height; y++)
@@ -744,35 +610,5 @@ namespace MFL
 	{
 		return RasterizeGlyphByIndex(ttf, ttf.cmap[unicode]);
 	}
-
-	GlyphTexture::GlyphTexture()
-		:
-		Width(0),
-		Height(0),
-		Buffer()
-	{ }
-
-	GlyphTexture::GlyphTexture(GlyphTexture&& other) noexcept
-		:
-		Width(other.Width),
-		Height(other.Height),
-		Buffer(std::move(other.Buffer))
-	{ }
-
-	GlyphTexture& GlyphTexture::operator=(GlyphTexture&& other) noexcept
-	{
-		Width = other.Width;
-		Height = other.Height;
-		Buffer = std::move(other.Buffer);
-
-		return *this;
-	}
-
-	GlyphTexture::GlyphTexture(const Glyf& glyf, float scale)
-		:
-		Width((glyf.x_max - glyf.x_min)* scale),
-		Height((glyf.y_max - glyf.y_min)* scale),
-		Buffer(Width* Height, 0x00)
-	{ }
 }
 

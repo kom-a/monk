@@ -1,6 +1,5 @@
 #pragma once 
 
-#include <windows.h>
 #include <inttypes.h>
 
 #ifdef __cplusplus
@@ -3084,6 +3083,6 @@ namespace mogl
 		static bool LoadOpenGL_4_6();
 
 	private:
-		static HMODULE s_OpenGLLib;
+		static void* s_OpenGLLib;
 	};
 }

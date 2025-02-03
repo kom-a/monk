@@ -1,3 +1,11 @@
+include "../WangMauna/WangMauna"
+include "../MWL/MWL"
+include "../MOGL/MOGL"
+include "../MML/MML"
+include "../MUI/MUI"
+include "../MFL/MFL"
+include "../Scriptorium/Scriptorium"
+
 project "Monk"
    kind "StaticLib"
    language "C++"
@@ -8,6 +16,11 @@ project "Monk"
 
    files {
       "src/**"
+   }
+
+   removefiles {
+       "src/utils/**",
+       "src/gui/**"
    }
 
    includedirs {

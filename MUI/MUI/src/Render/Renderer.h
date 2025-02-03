@@ -1,6 +1,9 @@
 #pragma once
 
 #include <vector>
+#include<array>
+
+#include <MFL/MFL.h>
 
 namespace mui
 {
@@ -38,18 +41,34 @@ namespace mui
 	{
 		Vec3f Position;
 		Vec4f Color; 
+		Vec2f UV;
 
-		Vertex(Vec3f position, Vec4f color) :
-			Position(position), Color(color) { };
+		Vertex(Vec3f position, Vec4f color, Vec2f uv) :
+			Position(position), Color(color), UV(uv) { };
+	};
+
+	struct OpenGLRestoreState
+	{
+		uint32_t VAO = 0;
+		uint32_t VBO = 0;
+		uint32_t ShaderID = 0;
+
+		std::array<int, 4> Viewport;
+
+		bool IsBlendEnabled;
+		int BlendSrc;
+		int BlendDst;
 	};
 
 	class Renderer
 	{
 	public:
 		Renderer();
+		~Renderer();
 
 		void BeginDraw();
 			void DrawRect(Vec2f position, Vec2f size, Vec4f color);
+			void DrawString(std::string_view text, Vec2f position, float fontSize, Vec4f color);
 		void EndDraw();
 
 		void Flush();
@@ -58,7 +77,10 @@ namespace mui
 		uint32_t CreateShader() const;
 		uint32_t CreateVertexArrayObject() const;
 		uint32_t CreateVertexBufferObject() const;
+		uint32_t CreateAtlasTexture() const;
 
+		void StoreOpenGLState();
+		void RestoreOpenGLState();
 
 	private:
 		uint32_t m_Shader	= 0;
@@ -79,6 +101,9 @@ namespace mui
 
 		RenderState m_RenderState;
 
+		MFL::Font* m_Font;
+		uint32_t m_AtlasTextureID;
 
+		OpenGLRestoreState m_OpenGLRestoreState;
 	};
 }

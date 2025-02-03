@@ -761,7 +761,7 @@ PFNGLPOLYGONOFFSETCLAMPPROC _glPolygonOffsetClamp = nullptr;
 
 namespace mogl
 {
-	HMODULE OpenGLLoader::s_OpenGLLib;
+	void* OpenGLLoader::s_OpenGLLib = nullptr;
 
 	OpenGLVersion OpenGLLoader::LoadOpenGL(OpenGLVersion version)
 	{
@@ -927,7 +927,7 @@ namespace mogl
 				return OpenGLVersion::OPENGL_4_6;
 		}
 
-		FreeLibrary(s_OpenGLLib);
+		FreeLibrary((HMODULE)s_OpenGLLib);
 
 		return OpenGLVersion::OPENGL_4_6;
 	}
@@ -943,7 +943,7 @@ namespace mogl
 			(func == (void*)0x3) ||
 			(func == (void*)-1))
 		{
-			func = (void*)GetProcAddress(s_OpenGLLib, name);
+			func = (void*)GetProcAddress((HMODULE)s_OpenGLLib, name);
 		}
 
 		if (!func)

@@ -5,68 +5,13 @@
 #include <unordered_map>
 
 #include <MOGL/MOGL.h>
+#include <MFL/MFL.h>
+
+#include "Render/Renderer.h"
 
 namespace mui
 {
 	IMPL_LOGGER("MUI");
-
-	struct Vec2f
-	{
-		float X;
-		float Y;
-
-		Vec2f()
-			: X(0.0f), Y(0.0f) {}
-
-		Vec2f(float x, float y)
-			: X(x), Y(y) {}
-	};
-
-	struct Vec3f
-	{
-		float X;
-		float Y;
-		float Z;
-
-		Vec3f()
-			: X(0.0f), Y(0.0f), Z(0.0f) {}
-
-		Vec3f(float x, float y, float z)
-			: X(x), Y(y), Z(z) {}
-	};
-
-	struct Vec4f
-	{
-		float X;
-		float Y;
-		float Z;
-		float W;
-
-		Vec4f()
-			: X(0.0f), Y(0.0f), Z(0.0f), W(0.0f) {}
-
-		Vec4f(float x, float y, float z, float w)
-			: X(x), Y(y), Z(z), W(w) {}
-	};
-
-	struct OpenGLRestoreState
-	{
-		uint32_t VAO		= 0;
-		uint32_t VBO		= 0;
-		uint32_t ShaderID	= 0;
-
-		std::array<int, 4> Viewport;
-
-		bool IsBlendEnabled;
-		int BlendSrc;
-		int BlendDst;
-	};
-
-	struct Vertex
-	{
-		Vec2f Position;
-		Vec4f Color;
-	};
 
 	struct Style
 	{
@@ -146,6 +91,7 @@ namespace mui
 	static const RenderSettings g_RenderSettings;
 	static Style				g_Style;
 	static Input				g_Input;
+	static Renderer*			g_Renderer;
 
 	static const std::string g_VertexShaderSrc = R"(
 		#version 330 core
@@ -378,33 +324,6 @@ namespace mui
 		glEnable(GL_BLEND);
 	}
 
-	static void StoreOpenGLState()
-	{
-		glGetIntegerv(GL_VIEWPORT, g_OpenGlRestoreState.Viewport.data());
-		glGetIntegerv(GL_BLEND_SRC, &g_OpenGlRestoreState.BlendSrc);
-		glGetIntegerv(GL_BLEND_DST, &g_OpenGlRestoreState.BlendDst);
-
-		g_OpenGlRestoreState.IsBlendEnabled = glIsEnabled(GL_BLEND);
-	}
-
-	static void RestoreOpenGLState()
-	{
-		const OpenGLRestoreState& s = g_OpenGlRestoreState;
-
-		glViewport(
-			s.Viewport[0],
-			s.Viewport[1],
-			s.Viewport[2],
-			s.Viewport[3]);
-
-		glBlendFunc(s.BlendSrc, s.BlendDst);
-
-		if (s.IsBlendEnabled)
-			glEnable(GL_BLEND);
-		else 
-			glDisable(GL_BLEND);
-	}
-
 	static void InitRenderData()
 	{
 		g_Context.ShaderID	= CreateShader(g_VertexShaderSrc, g_FragmentShaderSrc);
@@ -433,6 +352,13 @@ namespace mui
 
 		InitRenderData();
 		SetupRenderState();
+
+		g_Renderer = new Renderer();
+	}
+
+	void Shutdown()
+	{
+		delete g_Renderer;
 	}
 
 	Input& GetInput()
@@ -450,6 +376,9 @@ namespace mui
 		}
 
 		g_Context.WindowsDrawOrder.clear();
+
+		g_Renderer->BeginDraw();
+		g_Renderer->DrawRect(Vec2f(100, 100), Vec2f(500, 500), Vec4f(1.0f, 0.0f, 1.0f, 1.0f));
 	}
 
 	void EndFrame()
@@ -573,6 +502,8 @@ namespace mui
 		g_Input.LastMouseLeftDown = g_Input.MouseLeftDown;
 		g_Input.LastMouseX = g_Input.MouseX;
 		g_Input.LastMouseY = g_Input.MouseY;
+
+		g_Renderer->EndDraw();
 	}
 
 	void Begin(const std::string& name, bool* open)
@@ -625,7 +556,7 @@ namespace mui
 
 	void DrawQuad(const Vec2f& position, const Vec2f& size, const Vec4f& color)
 	{
-		Vertex v0;
+		/*Vertex v0;
 		v0.Position = position;
 		v0.Color = color;
 
@@ -647,7 +578,7 @@ namespace mui
 
 		g_Context.DrawBuffer.push_back(v0);
 		g_Context.DrawBuffer.push_back(v2);
-		g_Context.DrawBuffer.push_back(v3);
+		g_Context.DrawBuffer.push_back(v3);*/
 	}
 
 	void DrawWindowTitlebar(const Window& window)
@@ -671,7 +602,6 @@ namespace mui
 			const Vec4f closeButtonColor = window.CloseHot() ? g_Style.WindowCloseButtonHotColor : g_Style.WindowCloseButtonColor;
 			DrawQuad(closeButtonPosition, titlebarItemSize, closeButtonColor);
 		}
-			
 
 		// Draw collapse button
 		Vec4f collapseButtonColor = window.CollapseHot() ? g_Style.WindowCollapseButtonHotColor : g_Style.WindowCollapseButtonColor;
@@ -726,8 +656,6 @@ namespace mui
 			DrawQuad(rightBorderPosition, rightBorderSize, g_Style.WindowBorderColor);
 		}
 
-		StoreOpenGLState();
-
 		glViewport(0, 0, g_Context.DisplayWidth, g_Context.DisplayHeight);
 
 		glBindVertexArray(g_Context.VAO);
@@ -748,8 +676,6 @@ namespace mui
 		glDrawArrays(GL_TRIANGLES, 0, g_Context.DrawBuffer.size());
 
 		g_Context.DrawBuffer.clear();
-
-		RestoreOpenGLState();
 	}
 }
 
