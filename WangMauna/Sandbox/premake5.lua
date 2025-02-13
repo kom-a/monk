@@ -5,7 +5,5 @@ workspace "WangMauna_Sandbox"
 include "../../Common.lua"
 
 include "Test1"
-include "Test2"
-include "Test2_Lib"
 
 include "../WangMauna"
