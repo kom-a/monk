@@ -23,6 +23,7 @@ namespace MFL
 		const uint8_t* GetAtlasTextureBuffer() const;
 		GlyphData GetGlyphDataByUnicode(uint32_t unicode) const;
 		float GetScaleForFontSize(float fontSize) const;
+		VerticalMetrics GetVerticalMetrics() const;
 
 	private:
 		TTF m_Ttf;
@@ -76,6 +77,16 @@ namespace MFL
 		return fontSize / m_Atlas.GetFontSize();
 	}
 
+	VerticalMetrics FontImpl_::GetVerticalMetrics() const
+	{
+		float ttfScale = m_Atlas.GetFontSize() / (m_Ttf.hhea.ascender - m_Ttf.hhea.descender);
+
+		return {
+			(float)(m_Ttf.hhea.ascender - m_Ttf.hhea.descender) * ttfScale,
+			(float)m_Ttf.hhea.line_gap * ttfScale
+		};
+	}
+
 	Font::Font(const std::filesystem::path& filename)
 		:
 		Impl(new FontImpl_(filename))
@@ -115,4 +126,9 @@ namespace MFL
 	{
 		return Impl->GetScaleForFontSize(fontSize);
 	}	
+
+	VerticalMetrics Font::GetVerticalMetrics() const
+	{
+		return Impl->GetVerticalMetrics();
+	}
 }

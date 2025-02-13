@@ -26,6 +26,12 @@ namespace MFL
 		float Advance		= 0.0f;
 	};
 
+	struct VerticalMetrics
+	{
+		float LineHeight;
+		float LineGap;
+	};
+
 	class FontImpl_;
 
 	class Font
@@ -40,6 +46,7 @@ namespace MFL
 		const uint8_t* GetAtlasTextureBuffer() const;
 		GlyphData GetGlyphDataByUnicode(uint32_t unicode) const;
 		float GetScaleForFontSize(float fontSize) const;
+		VerticalMetrics GetVerticalMetrics() const;
 
 	private:
 		FontImpl_* Impl;
