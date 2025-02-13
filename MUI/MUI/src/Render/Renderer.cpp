@@ -7,243 +7,180 @@
 
 #include <MOGL/MOGL.h>
 
-#include "Font.h"
+#include "FontAtlas.h"
 
 namespace mui
 {
-	uint32_t Renderer::RenderSettings::MaxVertices = 4096;
-
-	static void CheckError(uint32_t object, uint32_t status)
-	{
-		switch (status)
-		{
-		case GL_COMPILE_STATUS:
-		{
-			int success;
-			glGetShaderiv(object, status, &success);
-			if (!success)
-			{
-				int length;
-				glGetShaderiv(object, GL_INFO_LOG_LENGTH, &length);
-				char* infoLog = (char*)alloca(length);
-				glGetShaderInfoLog(object, length, &length, infoLog);
-				std::cout << infoLog << std::endl;
-			}
-		} break;
-		case GL_LINK_STATUS:
-		{
-			int success;
-			glGetProgramiv(object, status, &success);
-			if (!success)
-			{
-				int length;
-				glGetProgramiv(object, GL_INFO_LOG_LENGTH, &length);
-				char* infoLog = (char*)alloca(length);
-				glGetProgramInfoLog(object, length, &length, infoLog);
-				std::cout << infoLog << std::endl;
-			}
-		} break;
-		}
-	}
-
 	Renderer::Renderer()
 	{
-		m_Shader			= CreateShader();
-		m_VAO				= CreateVertexArrayObject();
-		m_VBO				= CreateVertexBufferObject();
-
-		m_Font				= new MFL::Font(g_FontBuffer_small_pixel);
-		m_AtlasTextureID	= CreateAtlasTexture();
-	}
-
-	Renderer::~Renderer()
-	{
-		delete m_Font;
-	}
-
-	void Renderer::BeginDraw()
-	{
-		m_Buffer.clear();
-	}
-
-	void Renderer::DrawRect(Vec2f position, Vec2f size, Vec4f color)
-	{
-		glBindVertexArray(m_VAO);
-		glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
-
-		const uint32_t rectVerticesCount = 6;
-		if (m_Buffer.size() + rectVerticesCount >= RenderSettings::MaxVertices)
-			Flush();
-
-		float z = 0;
-
-		position.X /= 1920;
-		position.Y /= 1080;
-		size.X /= 1920;
-		size.Y /= 1080;
-
-
-		Vertex v1 = Vertex(Vec3f(position.X			, position.Y			, z), color, Vec2f(-1.0f, -1.0f));
-		Vertex v2 = Vertex(Vec3f(position.X + size.X, position.Y			, z), color, Vec2f(-1.0f, -1.0f));
-		Vertex v3 = Vertex(Vec3f(position.X + size.X, position.Y + size.Y	, z), color, Vec2f(-1.0f, -1.0f));
-		Vertex v4 = Vertex(Vec3f(position.X			, position.Y + size.Y	, z), color, Vec2f(-1.0f, -1.0f));
-
-		m_Buffer.push_back(v1);
-		m_Buffer.push_back(v2);
-		m_Buffer.push_back(v3);
-
-		m_Buffer.push_back(v1);
-		m_Buffer.push_back(v3);
-		m_Buffer.push_back(v4);
-	}
-
-	void Renderer::DrawString(std::string_view text, Vec2f position, float fontSize, Vec4f color)
-	{
-		glBindVertexArray(m_VAO);
-		glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
-
-		float offsetX = 0.0f;
-		float z = 0.0f;
-
-		for (uint32_t c : text)
-		{
-			if (m_Buffer.size() + 6 >= RenderSettings::MaxVertices)
-				Flush();
-
-			const MFL::GlyphData& glyphData = m_Font->GetGlyphDataByUnicode(c);
-
-			float scale		= m_Font->GetScaleForFontSize(fontSize);
-			float width		= glyphData.Width * scale;
-			float height	= glyphData.Height * scale;
-			float ascender	= glyphData.Ascender * scale;
-			float descender = glyphData.Descender * scale;
-			float advance	= glyphData.Advance == 0 ? width : glyphData.Advance * scale;
-
-			if (c == ' ')
-			{
-				offsetX += advance;
-				continue;
-			}
-
-			Vertex v1 = Vertex(Vec3f(position.X			+ offsetX	, position.Y			, z), color, Vec2f(glyphData.UV_TopLeft.U	, glyphData.UV_TopLeft.V));
-			Vertex v2 = Vertex(Vec3f(position.X + width + offsetX	, position.Y			, z), color, Vec2f(glyphData.UV_TopRight.U	, glyphData.UV_TopRight.V));
-			Vertex v3 = Vertex(Vec3f(position.X + width + offsetX	, position.Y + height	, z), color, Vec2f(glyphData.UV_BottomRight.U, glyphData.UV_BottomRight.V));
-			Vertex v4 = Vertex(Vec3f(position.X			+ offsetX	, position.Y + height	, z), color, Vec2f(glyphData.UV_BottomLeft.U , glyphData.UV_BottomLeft.V));
-
-			m_Buffer.push_back(v1);
-			m_Buffer.push_back(v2);
-			m_Buffer.push_back(v3);
-
-			m_Buffer.push_back(v1);
-			m_Buffer.push_back(v3);
-			m_Buffer.push_back(v4);
-		}
-	}
-
-	void Renderer::EndDraw()
-	{
-		Flush();
-	}
-
-	void Renderer::Flush()
-	{
-		StoreOpenGLState();
-
-		glBindVertexArray(m_VAO);
-
-		glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
-		glBufferData(GL_ARRAY_BUFFER, m_Buffer.size() * sizeof(Vertex), m_Buffer.data(), GL_STATIC_DRAW);
-
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(offsetof(Vertex, Position)));
-		glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(offsetof(Vertex, Color)));
-		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(offsetof(Vertex, UV)));
-
-		glEnableVertexAttribArray(0);
-		glEnableVertexAttribArray(1);
-		glEnableVertexAttribArray(2);
-
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		glEnable(GL_BLEND);
-
-		glUseProgram(m_Shader);
-
-		glDrawArrays(GL_TRIANGLES, 0, (int)m_Buffer.size());
-
-		m_Buffer.clear();
-
-		RestoreOpenGLState();
-	}
-
-	unsigned int Renderer::CreateShader() const
-	{
 		const std::string vertexSrc = R"(#version 330 core
-			layout (location = 0) in vec3 a_Position;
+			layout (location = 0) in vec2 a_Position;
 			layout (location = 1) in vec4 a_Color;
 			layout (location = 2) in vec2 a_UV;
 
+			layout (location = 3) in vec2 a_Center;
+			layout (location = 4) in float a_Radius;
+
+			out vec2 v_Position;
 			out vec4 v_Color;
 			out vec2 v_UV;
 
+			out vec2 v_Center;
+			out float v_Radius;
+
+			uniform mat4 u_ProjectionMatrix;
+
 			void main()
 			{
-				gl_Position = vec4(a_Position, 1.0f);
-				v_Color = a_Color;
-				v_UV = a_UV;
+				gl_Position = u_ProjectionMatrix * vec4(a_Position, 0.0f, 1.0f);
+
+				v_Position	= a_Position;
+				v_Color		= a_Color;
+				v_UV		= a_UV;
+
+				v_Center	= a_Center;
+				v_Radius	= a_Radius;
 			}
 		)";
 
 		const std::string fragmentSrc = R"(#version 330 core
 			out vec4 FragColor;
 
+			in vec2 v_Position;
 			in vec4 v_Color;
 			in vec2 v_UV;
 
+			in vec2 v_Center;
+			in float v_Radius;
+
 			uniform sampler2D u_Atlas;
+
+			vec4 GetAtlasColor(float alpha)
+			{
+				return vec4(alpha, alpha, alpha, alpha);
+			}
 
 			void main()
 			{
-				FragColor = v_Color;
+				if(v_Radius != -1.0f)
+				{
+					float dist = length(v_Position - v_Center);
+					const float eps = 0.5f;
+					FragColor = vec4(v_Color.xyz, 1.0f - smoothstep(v_Radius - eps, v_Radius + eps, dist));
+				}
+				else
+				{
+					if(v_UV == vec2(-1.0f, -1.0f))
+						FragColor = v_Color; 
+					else 
+						FragColor = GetAtlasColor(texture(u_Atlas, v_UV).r) * v_Color;
+				}
 			}
 		)";
 
-		uint32_t vertexShader = glCreateShader(GL_VERTEX_SHADER);
-		uint32_t fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+		m_VertexBuffer = std::make_unique<VertexBuffer>(DrawList::MaxQuadCount());
+		m_Shader = std::make_unique<Shader>(vertexSrc, fragmentSrc);
 
-		const char* vertexCSrc = vertexSrc.c_str();
-		glShaderSource(vertexShader, 1, &vertexCSrc, nullptr);
-		glCompileShader(vertexShader);
-		CheckError(vertexShader, GL_COMPILE_STATUS);
-
-		const char* fragment = fragmentSrc.c_str();
-		glShaderSource(fragmentShader, 1, &fragment, nullptr);
-		glCompileShader(fragmentShader);
-		CheckError(fragmentShader, GL_COMPILE_STATUS);
-
-		unsigned int shader = glCreateProgram();
-		glAttachShader(shader, vertexShader);
-		glAttachShader(shader, fragmentShader);
-		glLinkProgram(shader);
-		CheckError(shader, GL_LINK_STATUS);
-
-		return shader;
+		//m_Font			= std::make_unique<MFL::Font>("C:/Windows/Fonts/arial.ttf");
+		//m_Font			= std::make_unique<MFL::Font>("C:/Users/kamil/OneDrive/Рабочий стол/Roboto-Medium.ttf");
+		m_Font = std::make_unique<MFL::Font>(g_FontBuffer_small_pixel);
+		m_AtlasTexture	= CreateAtlasTexture();
 	}
 
-	uint32_t Renderer::CreateVertexArrayObject() const
+	void Renderer::SetViewport(float x, float y, float width, float height)
 	{
-		uint32_t vertexArrayObject = 0;
-		glGenVertexArrays(1, &vertexArrayObject);
-		glBindVertexArray(vertexArrayObject);
-
-		return vertexArrayObject;
+		m_Viewport.X = x;
+		m_Viewport.Y = y;
+		m_Viewport.Width = width;
+		m_Viewport.Height = height;
 	}
 
-	uint32_t Renderer::CreateVertexBufferObject() const
+	void Renderer::SetWindowViewport(float x, float y, float width, float height)
 	{
-		uint32_t vertexBufferObject = 0;
-		glGenBuffers(1, &vertexBufferObject);
-		glBindBuffer(GL_ARRAY_BUFFER, vertexBufferObject);
+		m_WindowViewport.X = x;
+		m_WindowViewport.Y = y;
+		m_WindowViewport.Width = width;
+		m_WindowViewport.Height = height;
+	}
 
-		return vertexBufferObject;
+	void Renderer::FlushDrawList(const DrawList& drawList)
+	{
+		StoreOpenGLState();
+
+		float L = m_WindowViewport.X;
+		float R = L + m_WindowViewport.Width;
+		float T = m_WindowViewport.Y;
+		float B = T + m_WindowViewport.Height;
+
+		std::array<float, 16> projectionMatrix = {
+			2.0f / (R - L)		, 0.0f				, 0.0f	, 0.0f,
+			0.0f				, 2.0f / (T - B)	, 0.0f	, 0.0f,
+			0.0f				, 0.0f				, -1.0f	, 0.0f,
+			(R + L) / (L - R)	, (T + B) / (B - T)	, 0.0f	, 1.0f
+		};
+
+		m_Shader->Bind();
+		m_Shader->SetMatrix4("u_ProjectionMatrix", projectionMatrix);
+
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, m_AtlasTexture);
+		m_Shader->SetInt("u_Atlas", 0);
+
+		//glViewport(x, sh - y - h, w, h);
+
+		glViewport(m_WindowViewport.X, m_Viewport.Height - m_WindowViewport.Y - m_WindowViewport.Height, m_WindowViewport.Width, m_WindowViewport.Height);
+
+		for (const DrawListBuffer& dl : drawList.m_DrawList)
+		{
+			glDisable(GL_DEPTH_TEST);
+			glEnable(GL_BLEND);
+
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+			m_VertexBuffer->SetData(dl.Buffer.data(), dl.BufferStats.VerticesCount);
+
+			glDrawElements(GL_TRIANGLES, dl.BufferStats.IndicesCount, GL_UNSIGNED_INT, nullptr);
+		}
+
+		RestoreOpenGLState();
+	}
+
+	Vec2f Renderer::CalcTextSize(std::string_view text, float fontSize)
+	{
+		MFL::VerticalMetrics vm = m_Font->GetVerticalMetrics();
+		float scale = m_Font->GetScaleForFontSize(fontSize);
+
+		Vec2f size{ 0.0f, vm.LineHeight * scale };
+
+		float x = 0.0f;
+
+		for (uint32_t c : text)
+		{
+			const MFL::GlyphData& glyphData = m_Font->GetGlyphDataByUnicode(c);
+			float width = glyphData.Width * scale;
+			float height = glyphData.Height * scale;
+			float ascender = glyphData.Ascender * scale;
+			float descender = glyphData.Descender * scale;
+			float advance = glyphData.Advance == 0 ? width : glyphData.Advance * scale;
+
+			if (c == '\n')
+			{
+				size.X = max(size.X, x);
+				size.Y += (vm.LineGap + vm.LineHeight) * scale;
+				x = 0;
+			}
+
+			x += advance;
+		}
+
+		size.X = max(size.X, x);
+
+		return size;
+	}
+
+	MFL::Font* Renderer::GetFont()
+	{
+		return m_Font.get();
 	}
 
 	uint32_t Renderer::CreateAtlasTexture() const
@@ -273,6 +210,7 @@ namespace mui
 		glGetIntegerv(GL_BLEND_DST, &m_OpenGLRestoreState.BlendDst);
 
 		m_OpenGLRestoreState.IsBlendEnabled = glIsEnabled(GL_BLEND);
+		m_OpenGLRestoreState.IsBlendEnabled = glIsEnabled(GL_DEPTH_TEST);
 	}
 
 	void Renderer::RestoreOpenGLState()
@@ -291,6 +229,10 @@ namespace mui
 			glEnable(GL_BLEND);
 		else
 			glDisable(GL_BLEND);
-	}
 
+		if (s.IsDepthTestEnabled)
+			glEnable(GL_DEPTH_TEST);
+		else
+			glDisable(GL_DEPTH_TEST);
+	}
 }

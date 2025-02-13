@@ -149,8 +149,8 @@ void Application::OnWindowResize(mwl::WindowResizeEvent e)
 
 void Application::OnMouseMove(mwl::MouseMovedEvent e)
 {
-	mui::GetInput().MouseX = e.X;
-	mui::GetInput().MouseY = e.Y;
+	mui::GetInput().MousePosition.X = e.X;
+	mui::GetInput().MousePosition.Y = e.Y;
 }
 
 void Application::OnButtonDown(mwl::MouseButtonDownEvent& e)

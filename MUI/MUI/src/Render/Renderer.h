@@ -5,48 +5,14 @@
 
 #include <MFL/MFL.h>
 
+#include "Math.h"
+#include "IndexBuffer.h"
+#include "VertexBuffer.h"
+#include "Shader.h"
+#include "DrawList.h"
+
 namespace mui
 {
-	struct Vec2f
-	{
-		float X = 0;
-		float Y = 0;
-
-		Vec2f(float x, float y)
-			: X(x), Y(y) {}
-	};
-
-	struct Vec3f
-	{
-		float X = 0;
-		float Y = 0;
-		float Z = 0;
-
-		Vec3f(float x, float y, float z)
-			: X(x), Y(y), Z(z) {}
-	};
-
-	struct Vec4f
-	{
-		float X = 0;
-		float Y = 0;
-		float Z = 0;
-		float W = 0;
-
-		Vec4f(float x, float y, float z, float w)
-			: X(x), Y(y), Z(z), W(w) {}
-	};
-
-	struct Vertex
-	{
-		Vec3f Position;
-		Vec4f Color; 
-		Vec2f UV;
-
-		Vertex(Vec3f position, Vec4f color, Vec2f uv) :
-			Position(position), Color(color), UV(uv) { };
-	};
-
 	struct OpenGLRestoreState
 	{
 		uint32_t VAO = 0;
@@ -56,54 +22,48 @@ namespace mui
 		std::array<int, 4> Viewport;
 
 		bool IsBlendEnabled;
+		bool IsDepthTestEnabled;
 		int BlendSrc;
 		int BlendDst;
+	};
+
+	struct Viewport
+	{
+		float X;
+		float Y;
+		float Width;
+		float Height;
 	};
 
 	class Renderer
 	{
 	public:
 		Renderer();
-		~Renderer();
 
-		void BeginDraw();
-			void DrawRect(Vec2f position, Vec2f size, Vec4f color);
-			void DrawString(std::string_view text, Vec2f position, float fontSize, Vec4f color);
-		void EndDraw();
+		void SetWindowViewport(float x, float y, float width, float height);
+		void SetViewport(float x, float y, float width, float height);
 
-		void Flush();
+		void FlushDrawList(const DrawList& drawList);
+
+		Vec2f CalcTextSize(std::string_view text, float fontSize);
+
+		MFL::Font* GetFont();
 
 	private:
-		uint32_t CreateShader() const;
-		uint32_t CreateVertexArrayObject() const;
-		uint32_t CreateVertexBufferObject() const;
 		uint32_t CreateAtlasTexture() const;
 
 		void StoreOpenGLState();
 		void RestoreOpenGLState();
 
 	private:
-		uint32_t m_Shader	= 0;
-		uint32_t m_VAO		= 0;
-		uint32_t m_VBO		= 0;
-
-		struct RenderSettings
-		{
-			static uint32_t MaxVertices;
-		};
-
-		struct RenderState
-		{
-			uint32_t VerticesCount = 0;
-		};
-
-		std::vector<Vertex> m_Buffer;
-
-		RenderState m_RenderState;
-
-		MFL::Font* m_Font;
-		uint32_t m_AtlasTextureID;
-
 		OpenGLRestoreState m_OpenGLRestoreState;
+
+		Viewport m_Viewport = { 0.0f, 0.0f, 0.0f, 0.0f };
+		Viewport m_WindowViewport = { 0.0f, 0.0f, 0.0f, 0.0f };
+
+		std::unique_ptr<VertexBuffer>	m_VertexBuffer	= nullptr;
+		std::unique_ptr<MFL::Font>		m_Font			= nullptr;
+		std::unique_ptr<Shader>			m_Shader		= nullptr;
+		uint32_t						m_AtlasTexture	= (uint32_t)-1;
 	};
 }

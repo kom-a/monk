@@ -28,9 +28,16 @@ void OnKeyDown(const mwl::KeyDownEvent& e)
 	show_demo_window = true;
 }
 
+void OnScroll(const mwl::MouseScrollEvent& e)
+{
+	mui::Input& input = mui::GetInput();
+
+	input.Scroll.Y = e.Delta;
+}
+
 void OnKeyUp(const mwl::KeyUpEvent& e)
 {
-	
+
 }
 
 void OnMouseMove(const mwl::MouseMovedEvent& e)
@@ -40,8 +47,8 @@ void OnMouseMove(const mwl::MouseMovedEvent& e)
 	mouseX = e.X;
 	mouseY = e.Y;
 
-	input.MouseX = mouseX;
-	input.MouseY = mouseY;
+	input.MousePosition.X = mouseX;
+	input.MousePosition.Y = mouseY;
 }
 
 void OnButtonDown(const mwl::MouseButtonDownEvent& e)
@@ -61,12 +68,15 @@ void OnButtonUp(const mwl::MouseButtonUpEvent& e)
 int main()
 {
 	mwl::WindowProps windowProps;
-	windowProps.VSync = false;
+	windowProps.VSync = true;
 	windowProps.Width = 1600;
 	windowProps.Height = 900;
 	windowProps.Title = L"MUI";
 
 	window = mwl::Create(windowProps);
+
+	mwl::CursorData cursor("res/oxy-bluecurve/oxy-bluecurve.inf");
+	window->LoadCursorData(cursor);
 
 	window->SetWindowResizeCallback(OnWindowResize);
 	window->SetKeyDownCallback(OnKeyDown);
@@ -74,38 +84,94 @@ int main()
 	window->SetMouseMovedCallback(OnMouseMove);
 	window->SetMouseButtonDownCallback(OnButtonDown);
 	window->SetMouseButtonUpCallback(OnButtonUp);
+	window->SetMouseScrollCalback(OnScroll);
 
 	mogl::OpenGLLoader::LoadOpenGL(mogl::OpenGLVersion::OPENGL_4_6);
 
-	mui::InitForWin32((HWND)window->GetNative());
-	
+	mui::InitForWin32(window->GetNative());
+
+	mui::Input& input = mui::GetInput();
+
+	uint32_t count = 0;
+
+	bool flag = false;
+
+	bool value1 = false;
+	bool value2 = true;
+	bool value3 = false;
+
+	int radio_value = 0;
+	int radio_value_2 = 0;
+
 	while (!window->Closed())
 	{
 		window->Update();
 		window->MakeContextCurrent();
 
-		glClearColor((float)mouseX / window->GetWidth(), (float)mouseY / window->GetHeight(), 0.8f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
+		input.Viewport = mui::Vec2f(window->GetWidth(), window->GetHeight());
 
+		glClearColor(0.85f, 0.75f, 0.75f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		mui::NewFrame();
 
-		mui::Begin("Demo", &show_demo_window);
-		mui::End();
-		
-		mui::Begin("Demo1");
-		if (mui::Button("Open demo window"))
+		for (size_t i = 0; i < 1; i++)
 		{
-			show_demo_window = true;
+			mui::Begin("Text wrap" + std::to_string(i));
+
+			if (mui::Button("Click me"))
+			{
+				count++;
+				flag = !flag;
+			}
+
+			mui::Text("count: " + std::to_string(count));
+
+			if (flag)
+			{
+				mui::Separator();
+				mui::Text("Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim. Donec pede justo, fringilla vel, aliquet nec, vulputate", mui::TextFlags::TextFlags_WordWrap);
+				mui::Separator();
+			}
+
+			if (mui::Button("Show demo window", mui::Vec2f(), mui::ButtonFlags_AutoFit))
+				show_demo_window = true;
+
+			mui::Separator();
+			mui::Checkbox("Value 1", &value1);
+			mui::Checkbox("Value 2", &value2);
+			mui::Checkbox("Value 3", &value3);
+
+			mui::Separator();
+
+			mui::BeginRadio(&radio_value);
+			mui::Radio("value 0", 0);
+			mui::Radio("value 1", 1);
+			mui::Radio("value 2", 2);
+			mui::EndRadio();
+
+			mui::Separator();
+
+			mui::BeginRadio(&radio_value_2);
+			mui::Radio("value 0", 0);
+			mui::Radio("value 1", 1);
+			mui::EndRadio();
+
+			if (mui::Button("Helol"))
+			{
+				std::cout << "qweqwe" << std::endl;
+			}
+
+			mui::End();
 		}
-		mui::End();
 
-		mui::Begin("Demo2");
-		mui::End();
-
-		
 		mui::EndFrame();
 		mui::Render();
+
+		//if (mouseX > 500)
+		//	window->SetCursor(mwl::CursorType::Hand);
+		//else
+		//	window->SetCursor(mwl::CursorType::Pointer);
 
 		window->SwapBuffers();
 	}
