@@ -9,6 +9,8 @@
 #include <MOGL/MOGL.h>
 #include <WangMauna/WangMauna.h>
 
+float mouseX = 0.0f;
+
 void resizeCallback(mwl::WindowResizeEvent e)
 {
 	std::cout << e.Width << " " << e.Height << std::endl;
@@ -16,6 +18,8 @@ void resizeCallback(mwl::WindowResizeEvent e)
 
 void mouseMove(mwl::MouseMovedEvent e)
 {
+	mouseX = e.X;
+
 	std::cout << "Mouse " <<  e.X << " " << e.Y << std::endl;
 }
 
@@ -54,10 +58,16 @@ void keyUp(mwl::KeyUpEvent e)
 
 int main()
 {
-	mwl::SetOpenGLVersion(mwl::OpenGLVersion::OPENGL_4_6);
-	mwl::Window* window = mwl::Create();
+	mwl::WindowProps props;
+	props.Closed = false;
+	props.VSync = true;
+	props.Width = 1600;
+	props.Height = 900;
+	props.Title = L"Hello";
+	props.OpenGLContextVersion = mwl::OpenGLVersion::OPENGL_4_6;
+	mwl::Window* window = mwl::Create(props);
 	//window->SetWindowResizeCallback(resizeCallback);
-	//window->SetMouseMovedCallback(mouseMove);
+	window->SetMouseMovedCallback(mouseMove);
 	//window->SetMouseButtonDownCallback(mouseButtonDown);
 	//window->SetMouseButtonUpCallback(mouseButtonUp);
 	//window->SetMouseClickedCallback(mouseClicked);
@@ -65,8 +75,8 @@ int main()
 	window->SetKeyDownCallback(keyDown);
 //	window->SetKeyUpCallback(keyUp);
 
-	mwl::Cursor cursor(L"res/oxy-bluecurve/oxy-bluecurve.inf");
-	window->SetCursor(cursor);
+	//mwl::Cursor cursor(L"res/oxy-bluecurve/oxy-bluecurve.inf");
+	//window->SetCursor(cursor);
 
 	if (mogl::OpenGLVersion::OPENGL_4_6 != mogl::OpenGLLoader::LoadOpenGL(mogl::OpenGLVersion::OPENGL_4_6))
 	{
@@ -99,6 +109,13 @@ int main()
 
 	while (!window->Closed())
 	{
+		window->Update();
+
+		if (mouseX > 500)
+		{
+			//PostMessageW((HWND)window->GetNative(), WM_SETCURSOR, 0, HTLEFT);
+		}
+
 		glViewport(0, 0, window->GetWidth(), window->GetHeight());
 
 		glClearColor(0.9f, 0.7f, 0.8f, 1.0f);
@@ -118,7 +135,7 @@ int main()
 		glDrawArrays(GL_TRIANGLES, 0, 3); // Starting from vertex 0; 3 vertices total -> 1 triangle
 		glDisableVertexAttribArray(0);
 
-		window->Update();
+		window->SwapBuffers();
 	}
 
 	return 0;

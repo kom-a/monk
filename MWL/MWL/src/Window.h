@@ -44,9 +44,28 @@ namespace mwl
 		OpenGLVersion OpenGLContextVersion	= OpenGLVersion::OPENGL_3_3;
 	};
 
-	struct Cursor
+	enum class CursorType
 	{
-		explicit Cursor(const std::filesystem::path& filename);
+		Pointer,
+		Help,
+		Work,
+		Busy,
+		Cross,
+		Text,
+		Hand,
+		Unavailiable,
+		Vert,
+		Horz,
+		Dgn1,
+		Dgn2,
+		Move,
+		Alternate,
+		Link,
+	};
+	
+	struct CursorData
+	{
+		explicit CursorData(const std::filesystem::path& filename);
 
 		std::optional<std::wstring> Pointer;
 		std::optional<std::wstring> Help;
@@ -63,6 +82,12 @@ namespace mwl
 		std::optional<std::wstring> Move;
 		std::optional<std::wstring> Alternate;
 		std::optional<std::wstring> Link;
+	};
+
+	enum WindowNativeType
+	{
+		None = 0,
+		Win32 = 1
 	};
 
 	class Window
@@ -83,8 +108,11 @@ namespace mwl
 		virtual uint32_t GetHeight()	const = 0;
 
 		virtual void* GetNative() = 0;
+		virtual WindowNativeType GetNativeType() const = 0;
 		
-		virtual void SetCursor			(const Cursor& cursor);
+		virtual void LoadCursorData(const CursorData& cursor);
+		virtual void SetCursor(CursorType cursorType) = 0;
+
 		virtual void SetFullscreen		(bool fullscreen) = 0;
 
 		void SetWindowResizeCallback	(const WindowResizeCallbackFn& callback);
@@ -111,7 +139,7 @@ namespace mwl
 			KeyUpCallbackFn KeyUpCallback						= nullptr;
 		} Callbacks;
 
-		Cursor m_Cursor = Cursor(L"");
+		CursorData m_Cursor = CursorData(L"");
 	};
 
 	Window* Create(const WindowProps& windowProps = WindowProps());

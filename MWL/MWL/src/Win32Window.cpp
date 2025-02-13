@@ -193,17 +193,40 @@ namespace mwl
 		return (void*)m_Win32Data.OpenGLHandle;
 	}
 
-	void Win32Window::SetCursor(const Cursor& cursor)
+	WindowNativeType Win32Window::GetNativeType() const
 	{
-		Window::SetCursor(cursor);
+		return WindowNativeType::Win32;
+	}
 
-		m_Style.Cursor.LeftPointer			= LoadCursorFromFile(cursor.Pointer.value_or(L"").c_str());
-		m_Style.Cursor.HandPointer			= LoadCursorFromFile(cursor.Hand.value_or(L"").c_str());
-		m_Style.Cursor.Text					= LoadCursorFromFile(cursor.Text.value_or(L"").c_str());
-		m_Style.Cursor.ResizeHorizontal		= LoadCursorFromFile(cursor.Horz.value_or(L"").c_str());
-		m_Style.Cursor.ResizeVertical		= LoadCursorFromFile(cursor.Vert.value_or(L"").c_str());
-		m_Style.Cursor.ResizeFDiag			= LoadCursorFromFile(cursor.Dgn1.value_or(L"").c_str());
-		m_Style.Cursor.ResizeBDiag			= LoadCursorFromFile(cursor.Dgn2.value_or(L"").c_str());
+	void Win32Window::LoadCursorData(const CursorData& cursor)
+	{
+		Window::LoadCursorData(cursor);
+
+		m_Style.Cursors.LeftPointer			= LoadCursorFromFile(cursor.Pointer.value_or(L"").c_str());
+		m_Style.Cursors.HandPointer			= LoadCursorFromFile(cursor.Hand.value_or(L"").c_str());
+		m_Style.Cursors.Text				= LoadCursorFromFile(cursor.Text.value_or(L"").c_str());
+		m_Style.Cursors.ResizeHorizontal	= LoadCursorFromFile(cursor.Horz.value_or(L"").c_str());
+		m_Style.Cursors.ResizeVertical		= LoadCursorFromFile(cursor.Vert.value_or(L"").c_str());
+		m_Style.Cursors.ResizeFDiag			= LoadCursorFromFile(cursor.Dgn1.value_or(L"").c_str());
+		m_Style.Cursors.ResizeBDiag			= LoadCursorFromFile(cursor.Dgn2.value_or(L"").c_str());
+	}
+
+	void Win32Window::SetCursor(CursorType cursorType)
+	{
+		HCURSOR cursor = m_Style.Cursors.LeftPointer;
+
+		switch (cursorType)
+		{
+			case CursorType::Pointer:		cursor = m_Style.Cursors.LeftPointer; break;
+			case CursorType::Text:			cursor = m_Style.Cursors.Text; break;
+			case CursorType::Hand:			cursor = m_Style.Cursors.HandPointer; break;
+			case CursorType::Dgn1:			cursor = m_Style.Cursors.ResizeBDiag; break;
+			case CursorType::Dgn2:			cursor = m_Style.Cursors.ResizeFDiag; break;
+			case CursorType::Vert:			cursor = m_Style.Cursors.ResizeVertical; break;
+			case CursorType::Horz:			cursor = m_Style.Cursors.ResizeHorizontal; break;
+		}
+
+		::SetCursor(cursor);
 	}
 
 	void Win32Window::SetFullscreen(bool fullscreen)
@@ -876,14 +899,14 @@ namespace mwl
 		switch (hit)
 		{
 			case HTNOWHERE:
-			case HTRIGHT:
 			case HTLEFT:
-			case HTTOPLEFT:
+			case HTRIGHT:
 			case HTTOP:
-			case HTTOPRIGHT:
-			case HTBOTTOMRIGHT:
 			case HTBOTTOM:
+			case HTTOPRIGHT:
 			case HTBOTTOMLEFT:
+			case HTTOPLEFT:
+			case HTBOTTOMRIGHT:
 				return hit;
 		}
 
@@ -903,11 +926,17 @@ namespace mwl
 		cursor_point.y = GET_Y_LPARAM(lParam);
 		ScreenToClient(hWindow, &cursor_point);
 		if (cursor_point.y > 0 && cursor_point.y < frame_y + padding && !Win32IsWindowMaximized(hWindow))
+		{
+			window->SetCursor(CursorType::Vert);
 			return HTTOP;
+		}
+			
 
 		// Since we are drawing our own caption, this needs to be a custom test
 		if (cursor_point.y < Win32GetTitlebarRect(hWindow).bottom)
 			return HTCAPTION;
+
+		window->SetCursor(CursorType::Pointer);
 
 		return HTCLIENT;
 	}
@@ -1177,11 +1206,11 @@ namespace mwl
 		if (!window)
 			return DefWindowProc(hWindow, uMessage, wParam, lParam);
 
-		HCURSOR leftPointer = window->m_Style.Cursor.LeftPointer ? window->m_Style.Cursor.LeftPointer : LoadCursor(nullptr, IDC_ARROW);
-		HCURSOR resizeHorizontal = window->m_Style.Cursor.ResizeHorizontal ? window->m_Style.Cursor.ResizeHorizontal : LoadCursor(nullptr, IDC_SIZEWE);
-		HCURSOR resizeVertical = window->m_Style.Cursor.ResizeVertical ? window->m_Style.Cursor.ResizeVertical : LoadCursor(nullptr, IDC_SIZENS);
-		HCURSOR resizeBDiag = window->m_Style.Cursor.ResizeBDiag ? window->m_Style.Cursor.ResizeBDiag : LoadCursor(nullptr, IDC_SIZENESW);
-		HCURSOR resizeFDiag = window->m_Style.Cursor.ResizeFDiag ? window->m_Style.Cursor.ResizeFDiag: LoadCursor(nullptr, IDC_SIZENWSE);
+		HCURSOR leftPointer = window->m_Style.Cursors.LeftPointer ? window->m_Style.Cursors.LeftPointer : LoadCursor(nullptr, IDC_ARROW);
+		HCURSOR resizeHorizontal = window->m_Style.Cursors.ResizeHorizontal ? window->m_Style.Cursors.ResizeHorizontal : LoadCursor(nullptr, IDC_SIZEWE);
+		HCURSOR resizeVertical = window->m_Style.Cursors.ResizeVertical ? window->m_Style.Cursors.ResizeVertical : LoadCursor(nullptr, IDC_SIZENS);
+		HCURSOR resizeBDiag = window->m_Style.Cursors.ResizeBDiag ? window->m_Style.Cursors.ResizeBDiag : LoadCursor(nullptr, IDC_SIZENESW);
+		HCURSOR resizeFDiag = window->m_Style.Cursors.ResizeFDiag ? window->m_Style.Cursors.ResizeFDiag: LoadCursor(nullptr, IDC_SIZENWSE);
 
 		switch(LOWORD(lParam))
 		{
@@ -1355,6 +1384,8 @@ namespace mwl
 					SpawnMouseMoveEvent(window);
 				}
 
+				window->SetCursor(CursorType::Pointer);
+
 				return 0;
 			} break;
 			case WM_LBUTTONDOWN:
@@ -1423,6 +1454,7 @@ namespace mwl
 			} break;
 			case WM_SETCURSOR:
 			{
+				return TRUE;
 				return Win32HandleWM_SETCURSOR(hWnd, uMsg, wParam, lParam);
 			} break;
 			default:

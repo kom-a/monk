@@ -27,8 +27,11 @@ namespace mwl
 		uint32_t GetWidth()	const override;
 		uint32_t GetHeight() const override;
 		void* GetNative() override;
+		WindowNativeType GetNativeType() const override;
 
-		void SetCursor(const Cursor& cursor) override;
+		void LoadCursorData(const CursorData& cursor) override;
+		void SetCursor(CursorType cursorType) override;
+
 		void SetFullscreen(bool fullscreen) override;
 
 	private:
@@ -99,7 +102,7 @@ namespace mwl
 				HCURSOR ResizeVertical		= nullptr;
 				HCURSOR ResizeBDiag			= nullptr;
 				HCURSOR ResizeFDiag			= nullptr;
-			} Cursor;
+			} Cursors;
 		};
 
 		struct Titlebar

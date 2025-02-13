@@ -6,7 +6,7 @@
 
 namespace mwl
 {
-	static std::wstring ReadFile(std::filesystem::path filepath)
+	static std::wstring ReadFile(const std::filesystem::path& filepath)
 	{
 		std::wifstream wif(filepath.c_str());
 		wif.imbue(std::locale(std::locale::empty(), new std::codecvt_utf8<wchar_t>));
@@ -15,7 +15,7 @@ namespace mwl
 		return wss.str();
 	}
 
-	static std::vector<std::wstring> SplitString(std::wstring str, const std::wstring& delimiter)
+	static std::vector<std::wstring> SplitString(std::wstring str, std::wstring_view delimiter)
 	{
 		std::vector<std::wstring> split;
 
@@ -41,7 +41,7 @@ namespace mwl
 		return line.substr(left_quote + 1, right_quote - left_quote - 1);
 	}
 
-	Cursor::Cursor(const std::filesystem::path& filepath)
+	CursorData::CursorData(const std::filesystem::path& filepath)
 	{
 		std::wstring inf_data = ReadFile(filepath);
 		if (inf_data.empty())
@@ -96,7 +96,7 @@ namespace mwl
 		}
 	}
 
-	void Window::SetCursor(const Cursor& cursor)
+	void Window::LoadCursorData(const CursorData& cursor)
 	{
 		m_Cursor = cursor;
 	}
