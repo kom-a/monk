@@ -65,20 +65,20 @@ namespace mui
 	void Radio(const std::string& text, int index);
 	void EndRadio();
 
-	void SliderInt (const std::string& text, int* value  , int min = -2147483648, int max = 2147483647);
-	void SliderInt2(const std::string& text, int value[2], int min = -2147483648, int max = 2147483647);
-	void SliderInt3(const std::string& text, int value[3], int min = -2147483648, int max = 2147483647);
-	void SliderInt4(const std::string& text, int value[4], int min = -2147483648, int max = 2147483647);
+	void SliderInt (const std::string& text, int* value  , int min = INT_MIN, int max = INT_MAX);
+	void SliderInt2(const std::string& text, int value[2], int min = INT_MIN, int max = INT_MAX);
+	void SliderInt3(const std::string& text, int value[3], int min = INT_MIN, int max = INT_MAX);
+	void SliderInt4(const std::string& text, int value[4], int min = INT_MIN, int max = INT_MAX);
 
-	void SliderFloat (const std::string& text, float* value  , float step, float min, float max);
-	void SliderFloat2(const std::string& text, float value[2], float step, float min, float max);
-	void SliderFloat3(const std::string& text, float value[3], float step, float min, float max);
-	void SliderFloat4(const std::string& text, float value[4], float step, float min, float max);
+	void SliderFloat (const std::string& text, float* value  , float step = 0.2f, float min = -FLT_MAX, float max = FLT_MAX);
+	void SliderFloat2(const std::string& text, float value[2], float step = 0.2f, float min = -FLT_MAX, float max = FLT_MAX);
+	void SliderFloat3(const std::string& text, float value[3], float step = 0.2f, float min = -FLT_MAX, float max = FLT_MAX);
+	void SliderFloat4(const std::string& text, float value[4], float step = 0.2f, float min = -FLT_MAX, float max = FLT_MAX);
 
-	void DragInt (const std::string& text, int* value  , int step = 1, int min = -2147483648, int max = 2147483647);
-	void DragInt2(const std::string& text, int value[2], int step = 1, int min = -2147483648, int max = 2147483647);
-	void DragInt3(const std::string& text, int value[3], int step = 1, int min = -2147483648, int max = 2147483647);
-	void DragInt4(const std::string& text, int value[4], int step = 1, int min = -2147483648, int max = 2147483647);
+	void DragInt (const std::string& text, int* value  , int step = 1, int min = INT_MIN, int max = INT_MAX);
+	void DragInt2(const std::string& text, int value[2], int step = 1, int min = INT_MIN, int max = INT_MAX);
+	void DragInt3(const std::string& text, int value[3], int step = 1, int min = INT_MIN, int max = INT_MAX);
+	void DragInt4(const std::string& text, int value[4], int step = 1, int min = INT_MIN, int max = INT_MAX);
 
 
 	void DragFloat (const std::string& text, float* value, float step = 0.2f, float min = -FLT_MAX, float max = FLT_MAX);
