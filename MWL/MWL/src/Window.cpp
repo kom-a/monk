@@ -96,6 +96,9 @@ namespace mwl
 		}
 	}
 
+	CursorData::CursorData()
+	{ }
+
 	void Window::LoadCursorData(const CursorData& cursor)
 	{
 		m_Cursor = cursor;

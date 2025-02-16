@@ -46,6 +46,8 @@ namespace mwl
 		bool SetOpenGLPixelFormat(HWND handle);
 		HGLRC CreateOpenGLRenderingContext(OpenGLVersion openglVerson);
 
+		HCURSOR TryLoadCursorFromFile(const std::wstring& path, LPCWSTR defaultCursor);
+
 		friend void SpawnWindowResizeEvent			(const Win32Window* window);
 		friend void SpawnMouseMoveEvent				(const Win32Window* window);
 		friend void SpawnMouseButtonDownEvent		(const Win32Window* window, MouseButton button);

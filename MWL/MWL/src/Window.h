@@ -65,6 +65,7 @@ namespace mwl
 	
 	struct CursorData
 	{
+		explicit CursorData();
 		explicit CursorData(const std::filesystem::path& filename);
 
 		std::optional<std::wstring> Pointer;

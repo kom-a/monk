@@ -131,6 +131,8 @@ namespace mwl
 		ShowWindow(m_Win32Data.WindowHandle, SW_SHOW);
 		EnableVSync(m_State.VSync);
 
+		LoadCursorData(CursorData());
+
 		SetWindowLongPtr(m_Win32Data.WindowHandle, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
 	}
 
@@ -202,13 +204,13 @@ namespace mwl
 	{
 		Window::LoadCursorData(cursor);
 
-		m_Style.Cursors.LeftPointer			= LoadCursorFromFile(cursor.Pointer.value_or(L"").c_str());
-		m_Style.Cursors.HandPointer			= LoadCursorFromFile(cursor.Hand.value_or(L"").c_str());
-		m_Style.Cursors.Text				= LoadCursorFromFile(cursor.Text.value_or(L"").c_str());
-		m_Style.Cursors.ResizeHorizontal	= LoadCursorFromFile(cursor.Horz.value_or(L"").c_str());
-		m_Style.Cursors.ResizeVertical		= LoadCursorFromFile(cursor.Vert.value_or(L"").c_str());
-		m_Style.Cursors.ResizeFDiag			= LoadCursorFromFile(cursor.Dgn1.value_or(L"").c_str());
-		m_Style.Cursors.ResizeBDiag			= LoadCursorFromFile(cursor.Dgn2.value_or(L"").c_str());
+		m_Style.Cursors.LeftPointer			= TryLoadCursorFromFile(cursor.Pointer.value_or(L""), IDC_ARROW);
+		m_Style.Cursors.HandPointer			= TryLoadCursorFromFile(cursor.Hand.value_or(L""), IDC_HAND);
+		m_Style.Cursors.Text				= TryLoadCursorFromFile(cursor.Text.value_or(L""), IDC_ARROW);
+		m_Style.Cursors.ResizeHorizontal	= TryLoadCursorFromFile(cursor.Horz.value_or(L""), IDC_SIZEWE);
+		m_Style.Cursors.ResizeVertical		= TryLoadCursorFromFile(cursor.Vert.value_or(L""), IDC_SIZENS);
+		m_Style.Cursors.ResizeFDiag			= TryLoadCursorFromFile(cursor.Dgn1.value_or(L""), IDC_SIZENWSE);
+		m_Style.Cursors.ResizeBDiag			= TryLoadCursorFromFile(cursor.Dgn2.value_or(L""), IDC_SIZENESW);
 	}
 
 	void Win32Window::SetCursor(CursorType cursorType)
@@ -546,6 +548,15 @@ namespace mwl
 		}
 		
 		return opengl_rendering_context;
+	}
+
+	HCURSOR Win32Window::TryLoadCursorFromFile(const std::wstring& path, LPCWSTR defaultCursor)
+	{
+		HCURSOR cursor = LoadCursorFromFile(path.c_str());
+		if (!cursor)
+			cursor = LoadCursor(nullptr, defaultCursor);
+
+		return cursor;
 	}
 
 	static void SpawnWindowResizeEvent(const Win32Window* window)
@@ -926,17 +937,12 @@ namespace mwl
 		cursor_point.y = GET_Y_LPARAM(lParam);
 		ScreenToClient(hWindow, &cursor_point);
 		if (cursor_point.y > 0 && cursor_point.y < frame_y + padding && !Win32IsWindowMaximized(hWindow))
-		{
-			window->SetCursor(CursorType::Vert);
 			return HTTOP;
-		}
 			
 
 		// Since we are drawing our own caption, this needs to be a custom test
 		if (cursor_point.y < Win32GetTitlebarRect(hWindow).bottom)
 			return HTCAPTION;
-
-		window->SetCursor(CursorType::Pointer);
 
 		return HTCLIENT;
 	}
@@ -1216,31 +1222,31 @@ namespace mwl
 		{
 		case HTCLIENT:
 		{
-			SetCursor(leftPointer);
+			::SetCursor(leftPointer);
 		} break;
 		case HTRIGHT:
 		case HTLEFT:
 		{
-			SetCursor(resizeHorizontal);
+			::SetCursor(resizeHorizontal);
 		} break;
 			
 		case HTTOP:
 		case HTBOTTOM:
 		{
-			SetCursor(resizeVertical);
+			::SetCursor(resizeVertical);
 		} break;
 		case HTTOPRIGHT:
 		case HTBOTTOMLEFT:
 		{
-			SetCursor(resizeBDiag);
+			::SetCursor(resizeBDiag);
 		} break;
 		case HTBOTTOMRIGHT:
 		case HTTOPLEFT:
 		{
-			SetCursor(resizeFDiag);
+			::SetCursor(resizeFDiag);
 		} break;
 		default:
-			SetCursor(leftPointer);
+			::SetCursor(leftPointer);
 		}
 
 		return TRUE;
@@ -1454,7 +1460,6 @@ namespace mwl
 			} break;
 			case WM_SETCURSOR:
 			{
-				return TRUE;
 				return Win32HandleWM_SETCURSOR(hWnd, uMsg, wParam, lParam);
 			} break;
 			default:
