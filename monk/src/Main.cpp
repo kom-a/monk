@@ -58,19 +58,23 @@ Application::Application()
 
 void Application::Run()
 {
-	glClearColor(0.6f, 0.8f, 1.0f, 1.0f);
-
 	Ref<monk::OrthographicCamera> camera = monk::CreateRef<monk::OrthographicCamera>(0, 1, 1, 0, 0, 1);
 
 	monk::Time timer;
-
 	bool open = true;
+
+	float drag = 0;
 
 	while (!m_Window->Closed())
 	{
 		m_Window->Update();
 
-		glClear(GL_COLOR_BUFFER_BIT);
+		glClearColor(0.6f, 0.8f, 1.0f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		glViewport(0, 0, m_Window->GetWidth(), m_Window->GetHeight());
+		mui::Input& muiInput = mui::GetInput();
+		muiInput.Viewport = { (float)m_Window->GetWidth(), (float)m_Window->GetHeight() };
 
 		m_Renderer2D->Begin(camera);
 
@@ -90,10 +94,12 @@ void Application::Run()
 
 		mui::NewFrame();
 
-		if (m_ShowGUI)
+		if (m_ShowGUI || true)
 		{
-
 			mui::Begin("Hello world", &open);
+			mui::Text("Hello world");
+
+			mui::DragFloat("drag me", &drag);
 			mui::End();
 
 			mui::Begin("Hello");
@@ -107,8 +113,6 @@ void Application::Run()
 		mui::Render();
 
 		m_Window->SwapBuffers();
-		
-
 		Input::Update();
 	}
 }
@@ -130,7 +134,8 @@ void Application::InitWindow()
 	m_Window->SetMouseButtonUpCallback(BIND_FUNCTION(Application::OnButtonUp));
 	m_Window->SetKeyDownCallback(BIND_FUNCTION(Application::OnKeyDown));
 
-	m_Window->SetCursor(mwl::Cursor(L"res/oxy-bluecurve/oxy-bluecurve.inf"));
+	mwl::CursorData cursor("res/oxy-bluecurve/oxy-bluecurve.inf");
+	m_Window->LoadCursorData(cursor);
 }
 
 void Application::LoadOpenGL()
@@ -145,6 +150,9 @@ void Application::OnWindowResize(mwl::WindowResizeEvent e)
 {
 	LOG_INFO("{0}, {1}", e.Width, e.Height);
 	glViewport(0, 0, e.Width, e.Height);
+
+	mui::Input& muiInput = mui::GetInput();
+	muiInput.Viewport = { (float)m_Window->GetWidth(), (float)m_Window->GetHeight() };
 }
 
 void Application::OnMouseMove(mwl::MouseMovedEvent e)
@@ -165,7 +173,7 @@ void Application::OnButtonUp(mwl::MouseButtonUpEvent& e)
 
 void Application::OnKeyDown(mwl::KeyDownEvent& e)
 {
-	if(e.Key == mwl::KeyCode::Space)
+	if (e.Key == mwl::KeyCode::Space)
 		m_ShowGUI = !m_ShowGUI;
 	if (e.Key == mwl::KeyCode::F11)
 		m_Window->SetFullscreen(!m_Window->IsFullscreen());

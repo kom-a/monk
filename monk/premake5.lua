@@ -7,7 +7,7 @@ include "../MFL/MFL"
 include "../Scriptorium/Scriptorium"
 
 project "Monk"
-   kind "StaticLib"
+   kind "ConsoleApp"
    language "C++"
    cppdialect "C++17"
 
