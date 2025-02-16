@@ -47,6 +47,19 @@ namespace mui
 		Vec4f ScrollColor					= Vec4f(0.40f, 0.40f, 0.50f, 1.0f);
 		Vec4f ScrollHotColor				= Vec4f(0.45f, 0.45f, 0.55f, 1.0f);
 
+		Vec4f SliderColor					= Vec4f(0.15f, 0.15f, 0.20f, 1.0f);
+		Vec4f SliderGrabColor				= Vec4f(0.40f, 0.40f, 0.50f, 1.0f);
+		Vec4f SliderGrabHotColor			= Vec4f(0.45f, 0.45f, 0.55f, 1.0f);
+		float SliderContentRatio			= 0.65f;
+		float SliderHeight					= 20.0f;
+		float SliderMinGrabWidth			= 15.0f;
+
+		Vec4f DragColor						= Vec4f(0.25f, 0.25f, 0.30f, 1.0f);
+		Vec4f DragHotColor					= Vec4f(0.30f, 0.30f, 0.40f, 1.0f);
+		Vec4f DragActiveColor				= Vec4f(0.35f, 0.35f, 0.50f, 1.0f);
+		float DragContentRatio				= 0.65f;
+		float DragHeight					= 20.0f;
+
 		Vec2f ButtonSize					= Vec2f(150.0f, 50.0f);
 
 		float WindowTitlebarHeight			= 24.0f;
@@ -77,6 +90,8 @@ namespace mui
 		Window* ResizingWindow	= nullptr;
 		Window* ScrollingWindow = nullptr;
 		Window* HotWindow		= nullptr;
+
+		size_t ActiveWidgetID = (size_t)-1;
 		
 		int* RadioButtonValue = nullptr;
 
@@ -110,6 +125,8 @@ namespace mui
 
 		DrawList WindowDrawList;
 		DrawList ContentDrawList;
+
+		std::unordered_map<std::string, size_t> WidgetIDs;
 
 		bool TitlebarHot() const
 		{
@@ -208,6 +225,18 @@ namespace mui
 				return Size;
 			}
 		}
+
+		void SetWidgetID(const std::string& id)
+		{
+			const std::string key = Name + id;
+			WidgetIDs[key] = std::hash<std::string>{}(key);
+		}
+
+		size_t GetWidgetID(const std::string& id)
+		{
+			const std::string key = Name + id;
+			return WidgetIDs.at(key);
+		}
 	};
 
 	static void ClampWindowInViewport(Window* window)
@@ -290,6 +319,8 @@ namespace mui
 				x += advance;
 			}
 		}
+
+		sz.X = max(sz.X, x);
 
 		if (size)
 			*size = sz;
@@ -773,6 +804,7 @@ namespace mui
 		{
 			g_Input.MouseDownPosition = { -1.0f, -1.0f };
 			g_Context.ScrollingWindow = nullptr;
+			g_Context.ActiveWidgetID = (size_t)-1;
 		}
 		
 		g_Input.MouseReleasePosition = { -1.0f, -1.0f };
@@ -1028,6 +1060,378 @@ namespace mui
 			return;
 
 		g_Context.RadioButtonValue = nullptr;
+	}
+
+	static void SliderIntImpl(const std::string& text, int* value, int min_, int max_, Vec2f position, Vec2f size)
+	{
+		Window& window = *g_Context.CurrentWindow;
+		DrawList& drawList = window.ContentDrawList;
+
+		window.SetWidgetID(text);
+
+		// Draw slider background
+		drawList.DrawQuad(position, size, g_Style.SliderColor);
+
+		*value = std::clamp(*value, min_, max_);
+		
+		float fvalue = *value;
+		float range = max_ - min_ + 1;
+		float step = size.X / range;
+
+		Vec2f grabSize = Vec2f(max(size.X / range, g_Style.SliderMinGrabWidth), size.Y);
+		Vec2f grabPosition = position + Vec2f(((fvalue - min_) / range) * size.X + step * 0.5f - grabSize.X * 0.5f, 0.0f);
+		grabPosition.X = std::clamp(grabPosition.X, position.X, position.X + size.X - grabSize.X);
+		bool hot = MouseInside(grabPosition, grabSize);
+		Vec4f color = hot ? g_Style.SliderGrabHotColor : g_Style.SliderGrabColor;
+		drawList.DrawQuad(grabPosition, grabSize, color);
+
+		float fontSize = g_Style.ContentFontSize;
+		Vec2f textSize;
+		const std::string drawText = ClampTextToWidth(std::to_string(*value), "...", size.X, fontSize, *g_Renderer->GetFont(), &textSize);
+		Vec2f textPosition = position + Vec2f((size.X - textSize.X) * 0.5f, fontSize + size.Y * 0.5f - textSize.Y * 0.5f);
+		drawList.DrawString(drawText, textPosition, fontSize, Vec4f(1.0f, 1.0f, 1.0f, 1.0f), *g_Renderer->GetFont());
+		
+		if (hot && g_Input.MouseLeftClicked)
+			g_Context.ActiveWidgetID = window.GetWidgetID(text);
+
+		if (g_Context.ActiveWidgetID == window.GetWidgetID(text))
+		{
+			*value = std::floor((g_Input.MousePosition.X - position.X) / size.X * range) + min_;
+		}
+	}
+
+	static void SliderIntEx(const std::string& text, int value[4], int min, int max, size_t count)
+	{
+		if (!g_Context.CurrentWindow)
+			return;
+		if (g_Context.CurrentWindow->Collapsed)
+			return;
+
+		Window& window = *g_Context.CurrentWindow;
+		DrawList& drawList = window.ContentDrawList;
+		Vec2f& cursor = window.Cursor;
+		Vec2f contentSize = window.ContentSize();
+
+		float slidersAreaWidthPx = contentSize.X * g_Style.SliderContentRatio;
+		float gap = g_Style.WindowPadding;
+		float totalSlidersGap = (count - 1) * gap;
+
+		Vec2f sliderPosition = window.Position + window.Cursor;
+		Vec2f sliderSize = Vec2f((slidersAreaWidthPx - totalSlidersGap) / count, g_Style.SliderHeight);
+
+		for (size_t i = 0; i < count; i++)
+		{
+			SliderIntImpl(text + std::to_string(i), &value[i], min, max, sliderPosition, sliderSize);
+			sliderPosition.X += sliderSize.X + gap;
+		}
+		
+		float fontSize = g_Style.ContentFontSize;
+		Vec2f textSize;
+		const std::string drawText = ClampTextToWidth(text, "...", contentSize.X * (1.0f - g_Style.SliderContentRatio), fontSize, *g_Renderer->GetFont(), &textSize);
+		Vec2f textPosition = window.Position + cursor + Vec2f(slidersAreaWidthPx + gap, fontSize + g_Style.SliderHeight * 0.5f - textSize.Y * 0.5f);
+		drawList.DrawString(drawText, textPosition, fontSize, Vec4f(1.0f, 1.0f, 1.0f, 1.0f), *g_Renderer->GetFont());
+
+		cursor.X = g_Style.WindowPadding;
+		cursor.Y += g_Style.SliderHeight + g_Style.WindowPadding;
+	}
+
+	void SliderInt(const std::string& text, int* value, int min /*= -2147483648*/, int max /*= 2147483647*/)
+	{
+		SliderIntEx(text, value, min, max, 1);
+	}
+
+	void SliderInt2(const std::string& text, int value[2], int min /*= -2147483648*/, int max /*= 2147483647*/)
+	{
+		SliderIntEx(text, value, min, max, 2);
+	}
+
+	void SliderInt3(const std::string& text, int value[3], int min /*= -2147483648*/, int max /*= 2147483647*/)
+	{
+		SliderIntEx(text, value, min, max, 3);
+	}
+
+	void SliderInt4(const std::string& text, int value[4], int min /*= -2147483648*/, int max /*= 2147483647*/)
+	{
+		SliderIntEx(text, value, min, max, 4);
+	}
+
+	static void SliderFloatImpl(const std::string& text, float* value, float step, float min_, float max_, Vec2f position, Vec2f size)
+	{
+		Window& window = *g_Context.CurrentWindow;
+		DrawList& drawList = window.ContentDrawList;
+
+		window.SetWidgetID(text);
+
+		// Draw slider background
+		drawList.DrawQuad(position, size, g_Style.SliderColor);
+
+		*value = std::clamp(*value, min_, max_);
+
+		float fvalue = *value;
+		float range = (max_ - min_) / step;
+		float stepPx = size.X / range;
+		
+		Vec2f grabSize = Vec2f(max(size.X / range, g_Style.SliderMinGrabWidth), size.Y);
+		float dragRange = size.X - grabSize.X;
+		Vec2f grabPosition = position + Vec2f((fvalue - min_) / range * ((size.X - grabSize.X) / step), 0.0f);
+		//grabPosition.X = std::clamp(grabPosition.X, position.X, position.X + size.X - grabSize.X);
+		bool hot = MouseInside(grabPosition, grabSize);
+		Vec4f color = hot ? g_Style.SliderGrabHotColor : g_Style.SliderGrabColor;
+		drawList.DrawQuad(grabPosition, grabSize, color);
+
+		float fontSize = g_Style.ContentFontSize;
+		Vec2f textSize;
+		const std::string drawText = ClampTextToWidth(std::to_string(*value), "...", size.X, fontSize, *g_Renderer->GetFont(), &textSize);
+		Vec2f textPosition = position + Vec2f((size.X - textSize.X) * 0.5f, fontSize + size.Y * 0.5f - textSize.Y * 0.5f);
+		drawList.DrawString(drawText, textPosition, fontSize, Vec4f(1.0f, 1.0f, 1.0f, 1.0f), *g_Renderer->GetFont());
+
+		if (hot && g_Input.MouseLeftClicked)
+			g_Context.ActiveWidgetID = window.GetWidgetID(text);
+
+		if (g_Context.ActiveWidgetID == window.GetWidgetID(text))
+		{
+			*value = (g_Input.MousePosition.X - position.X - grabSize.X * 0.5f) / dragRange; // 0 -> 1
+
+			int index = *value * range;
+			*value = step * index + min_;
+		}
+	}
+
+	static void SliderFloatEx(const std::string& text, float value[4], float step, float min, float max, size_t count)
+	{
+		if (!g_Context.CurrentWindow)
+			return;
+		if (g_Context.CurrentWindow->Collapsed)
+			return;
+		if (g_Context.CurrentWindow->Open && !*g_Context.CurrentWindow->Open)
+			return;
+
+		Window& window = *g_Context.CurrentWindow;
+		DrawList& drawList = window.ContentDrawList;
+		Vec2f& cursor = window.Cursor;
+		Vec2f contentSize = window.ContentSize();
+
+		float slidersAreaWidthPx = contentSize.X * g_Style.SliderContentRatio;
+		float gap = g_Style.WindowPadding;
+		float totalSlidersGap = (count - 1) * gap;
+
+		Vec2f sliderPosition = window.Position + window.Cursor;
+		Vec2f sliderSize = Vec2f((slidersAreaWidthPx - totalSlidersGap) / count, g_Style.SliderHeight);
+
+		for (size_t i = 0; i < count; i++)
+		{
+			SliderFloatImpl(text + std::to_string(i), &value[i], step, min, max, sliderPosition, sliderSize);
+			sliderPosition.X += sliderSize.X + gap;
+		}
+
+		float fontSize = g_Style.ContentFontSize;
+		Vec2f textSize;
+		const std::string drawText = ClampTextToWidth(text, "...", contentSize.X * (1.0f - g_Style.SliderContentRatio), fontSize, *g_Renderer->GetFont(), &textSize);
+		Vec2f textPosition = window.Position + cursor + Vec2f(slidersAreaWidthPx + gap, fontSize + g_Style.SliderHeight * 0.5f - textSize.Y * 0.5f);
+		drawList.DrawString(drawText, textPosition, fontSize, Vec4f(1.0f, 1.0f, 1.0f, 1.0f), *g_Renderer->GetFont());
+
+		cursor.X = g_Style.WindowPadding;
+		cursor.Y += g_Style.SliderHeight + g_Style.WindowPadding;
+	}
+
+	void SliderFloat(const std::string& text, float* value, float step, float min, float max)
+	{
+		SliderFloatEx(text, value, step, min, max, 1);
+	}
+
+	void SliderFloat2(const std::string& text, float value[2], float step, float min, float max)
+	{
+		SliderFloatEx(text, value, step, min, max, 2);
+	}
+
+	void SliderFloat3(const std::string& text, float value[3], float step, float min, float max)
+	{
+		SliderFloatEx(text, value, step, min, max, 3);
+	}
+
+	void SliderFloat4(const std::string& text, float value[4], float step, float min, float max)
+	{
+		SliderFloatEx(text, value, step, min, max, 4);
+	}
+
+	static void DragIntImpl(const std::string& text, int* value, int step, int min_, int max_, Vec2f position, Vec2f size)
+	{
+		Window& window = *g_Context.CurrentWindow;
+		DrawList& drawList = window.ContentDrawList;
+
+		window.SetWidgetID(text);
+
+		bool active = window.GetWidgetID(text) == g_Context.ActiveWidgetID;
+		bool hot = MouseInside(position, size) && g_Context.ActiveWidgetID == (size_t)-1;
+		
+		Vec4f color = hot ? g_Style.DragHotColor : g_Style.DragColor;
+		color = active ? color = g_Style.DragActiveColor : color;
+	
+		// Draw drag
+		drawList.DrawQuad(position, size, color);
+
+		float fontSize = g_Style.ContentFontSize;
+		Vec2f textSize;
+		const std::string drawText = ClampTextToWidth(std::to_string(*value), "...", size.X, fontSize, *g_Renderer->GetFont(), &textSize);
+		Vec2f textPosition = position + Vec2f((size.X - textSize.X) * 0.5f, fontSize + size.Y * 0.5f - textSize.Y * 0.5f);
+		drawList.DrawString(drawText, textPosition, fontSize, Vec4f(1.0f, 1.0f, 1.0f, 1.0f), *g_Renderer->GetFont());
+
+		if (hot && g_Input.MouseLeftClicked)
+			g_Context.ActiveWidgetID = window.GetWidgetID(text);
+
+		if (active)
+		{
+			*value += g_Input.MouseDelta.X * step;
+			*value = std::clamp(*value, min_, max_);
+		}
+	}
+
+	static void DragIntEx(const std::string& text, int* value, int step, int min, int max, size_t count)
+	{
+		if (!g_Context.CurrentWindow)
+			return;
+		if (g_Context.CurrentWindow->Collapsed)
+			return;
+		if (g_Context.CurrentWindow->Open && !*g_Context.CurrentWindow->Open)
+			return;
+
+		Window& window = *g_Context.CurrentWindow;
+		DrawList& drawList = window.ContentDrawList;
+		Vec2f& cursor = window.Cursor;
+		Vec2f contentSize = window.ContentSize();
+
+		float dragsAreaWidthPx = contentSize.X * g_Style.DragContentRatio;
+		float gap = g_Style.WindowPadding;
+		float totalSlidersGap = (count - 1) * gap;
+
+		Vec2f dragPosition = window.Position + window.Cursor;
+		Vec2f dragSize = Vec2f((dragsAreaWidthPx - totalSlidersGap) / count, g_Style.DragHeight);
+
+		for (size_t i = 0; i < count; i++)
+		{
+			DragIntImpl(text + std::to_string(i), &value[i], step, min, max, dragPosition, dragSize);
+			dragPosition.X += dragSize.X + gap;
+		}
+
+		float fontSize = g_Style.ContentFontSize;
+		Vec2f textSize;
+		const std::string drawText = ClampTextToWidth(text, "...", contentSize.X * (1.0f - g_Style.DragContentRatio), fontSize, *g_Renderer->GetFont(), &textSize);
+		Vec2f textPosition = window.Position + cursor + Vec2f(dragsAreaWidthPx + gap, fontSize + g_Style.DragHeight * 0.5f - textSize.Y * 0.5f);
+		drawList.DrawString(drawText, textPosition, fontSize, Vec4f(1.0f, 1.0f, 1.0f, 1.0f), *g_Renderer->GetFont());
+
+		cursor.X = g_Style.WindowPadding;
+		cursor.Y += g_Style.DragHeight + g_Style.WindowPadding;
+	}
+
+	void DragInt(const std::string& text, int* value, int step /*= 1*/, int min /*= -2147483648*/, int max /*= 2147483647*/)
+	{
+		DragIntEx(text, value, step, min, max, 1);
+	}
+
+	void DragInt2(const std::string& text, int* value, int step /*= 1*/, int min /*= -2147483648*/, int max /*= 2147483647*/)
+	{
+		DragIntEx(text, value, step, min, max, 2);
+	}
+
+	void DragInt3(const std::string& text, int* value, int step /*= 1*/, int min /*= -2147483648*/, int max /*= 2147483647*/)
+	{
+		DragIntEx(text, value, step, min, max, 3);
+	}
+
+	void DragInt4(const std::string& text, int* value, int step /*= 1*/, int min /*= -2147483648*/, int max /*= 2147483647*/)
+	{
+		DragIntEx(text, value, step, min, max, 4);
+	}
+
+	static void DragFloatImpl(const std::string& text, float* value, float step, float min_, float max_, Vec2f position, Vec2f size)
+	{
+		Window& window = *g_Context.CurrentWindow;
+		DrawList& drawList = window.ContentDrawList;
+
+		window.SetWidgetID(text);
+
+		bool active = window.GetWidgetID(text) == g_Context.ActiveWidgetID;
+		bool hot = MouseInside(position, size) && g_Context.ActiveWidgetID == (size_t)-1;
+
+		Vec4f color = hot ? g_Style.DragHotColor : g_Style.DragColor;
+		color = active ? color = g_Style.DragActiveColor : color;
+
+		// Draw drag
+		drawList.DrawQuad(position, size, color);
+
+		float fontSize = g_Style.ContentFontSize;
+		Vec2f textSize;
+		std::stringstream ss;
+		ss << std::fixed << std::setprecision(3) << *value;
+		const std::string drawText = ClampTextToWidth(ss.str(), "...", size.X, fontSize, *g_Renderer->GetFont(), &textSize);
+		Vec2f textPosition = position + Vec2f((size.X - textSize.X) * 0.5f, fontSize + size.Y * 0.5f - textSize.Y * 0.5f);
+		drawList.DrawString(drawText, textPosition, fontSize, Vec4f(1.0f, 1.0f, 1.0f, 1.0f), *g_Renderer->GetFont());
+
+		if (hot && g_Input.MouseLeftClicked)
+			g_Context.ActiveWidgetID = window.GetWidgetID(text);
+
+		if (active)
+		{
+			*value += g_Input.MouseDelta.X * step;
+			*value = std::clamp(*value, min_, max_);
+		}
+	}
+
+	static void DragFloatEx(const std::string& text, float* value, float step, float min, float max, size_t count)
+	{
+		if (!g_Context.CurrentWindow)
+			return;
+		if (g_Context.CurrentWindow->Collapsed)
+			return;
+		if (g_Context.CurrentWindow->Open && !*g_Context.CurrentWindow->Open)
+			return;
+
+		Window& window = *g_Context.CurrentWindow;
+		DrawList& drawList = window.ContentDrawList;
+		Vec2f& cursor = window.Cursor;
+		Vec2f contentSize = window.ContentSize();
+
+		float dragsAreaWidthPx = contentSize.X * g_Style.DragContentRatio;
+		float gap = g_Style.WindowPadding;
+		float totalSlidersGap = (count - 1) * gap;
+
+		Vec2f dragPosition = window.Position + window.Cursor;
+		Vec2f dragSize = Vec2f((dragsAreaWidthPx - totalSlidersGap) / count, g_Style.DragHeight);
+
+		for (size_t i = 0; i < count; i++)
+		{
+			DragFloatImpl(text + std::to_string(i), &value[i], step, min, max, dragPosition, dragSize);
+			dragPosition.X += dragSize.X + gap;
+		}
+
+		float fontSize = g_Style.ContentFontSize;
+		Vec2f textSize;
+		const std::string drawText = ClampTextToWidth(text, "...", contentSize.X * (1.0f - g_Style.DragContentRatio), fontSize, *g_Renderer->GetFont(), &textSize);
+		Vec2f textPosition = window.Position + cursor + Vec2f(dragsAreaWidthPx + gap, fontSize + g_Style.DragHeight * 0.5f - textSize.Y * 0.5f);
+		drawList.DrawString(drawText, textPosition, fontSize, Vec4f(1.0f, 1.0f, 1.0f, 1.0f), *g_Renderer->GetFont());
+
+		cursor.X = g_Style.WindowPadding;
+		cursor.Y += g_Style.DragHeight + g_Style.WindowPadding;
+	}
+
+	void DragFloat(const std::string& text, float* value, float step /*= 0.2f*/, float min /*= FLT_MIN*/, float max /*= FLT_MAX*/)
+	{
+		DragFloatEx(text, value, step, min, max, 1);
+	}
+
+	void DragFloat2(const std::string& text, float* value, float step /*= 0.2f*/, float min /*= FLT_MIN*/, float max /*= FLT_MAX*/)
+	{
+		DragFloatEx(text, value, step, min, max, 2);
+	}
+
+	void DragFloat3(const std::string& text, float* value, float step /*= 0.2f*/, float min /*= FLT_MIN*/, float max /*= FLT_MAX*/)
+	{
+		DragFloatEx(text, value, step, min, max, 3);
+	}
+
+	void DragFloat4(const std::string& text, float* value, float step /*= 0.2f*/, float min /*= FLT_MIN*/, float max /*= FLT_MAX*/)
+	{
+		DragFloatEx(text, value, step, min, max, 4);
 	}
 
 	void Render()
