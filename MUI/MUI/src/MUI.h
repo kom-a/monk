@@ -65,10 +65,10 @@ namespace mui
 	void Radio(const std::string& text, int index);
 	void EndRadio();
 
-	void SliderInt (const std::string& text, int* value  , int min = INT_MIN, int max = INT_MAX);
-	void SliderInt2(const std::string& text, int value[2], int min = INT_MIN, int max = INT_MAX);
-	void SliderInt3(const std::string& text, int value[3], int min = INT_MIN, int max = INT_MAX);
-	void SliderInt4(const std::string& text, int value[4], int min = INT_MIN, int max = INT_MAX);
+	void SliderInt (const std::string& text, int* value  , int min, int max);
+	void SliderInt2(const std::string& text, int value[2], int min, int max);
+	void SliderInt3(const std::string& text, int value[3], int min, int max);
+	void SliderInt4(const std::string& text, int value[4], int min, int max);
 
 	void SliderFloat (const std::string& text, float* value  , float step = 0.2f, float min = -FLT_MAX, float max = FLT_MAX);
 	void SliderFloat2(const std::string& text, float value[2], float step = 0.2f, float min = -FLT_MAX, float max = FLT_MAX);

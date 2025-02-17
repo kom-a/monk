@@ -1181,7 +1181,9 @@ namespace mui
 
 		float fontSize = g_Style.ContentFontSize;
 		Vec2f textSize;
-		const std::string drawText = ClampTextToWidth(std::to_string(*value), "...", size.X, fontSize, *g_Renderer->GetFont(), &textSize);
+		std::stringstream ss;
+		ss << std::fixed << std::setprecision(3) << *value;
+		const std::string drawText = ClampTextToWidth(ss.str(), "...", size.X, fontSize, *g_Renderer->GetFont(), &textSize);
 		Vec2f textPosition = position + Vec2f((size.X - textSize.X) * 0.5f, fontSize + size.Y * 0.5f - textSize.Y * 0.5f);
 		drawList.DrawString(drawText, textPosition, fontSize, Vec4f(1.0f, 1.0f, 1.0f, 1.0f), *g_Renderer->GetFont());
 
