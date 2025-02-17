@@ -1080,7 +1080,9 @@ namespace mui
 
 		Vec2f grabSize = Vec2f(max(size.X / range, g_Style.SliderMinGrabWidth), size.Y);
 		Vec2f grabPosition = position + Vec2f(((fvalue - min_) / range) * size.X + step * 0.5f - grabSize.X * 0.5f, 0.0f);
-		grabPosition.X = std::clamp(grabPosition.X, position.X, position.X + size.X - grabSize.X);
+		float min_x = min(position.X, position.X + size.X - grabSize.X);
+		float max_x = max(position.X, position.X + size.X - grabSize.X);
+		grabPosition.X = std::clamp(grabPosition.X, min_x, max_x);
 		bool hot = MouseInside(grabPosition, grabSize);
 		Vec4f color = hot ? g_Style.SliderGrabHotColor : g_Style.SliderGrabColor;
 		drawList.DrawQuad(grabPosition, grabSize, color);
