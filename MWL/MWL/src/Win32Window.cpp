@@ -112,6 +112,8 @@ namespace mwl
 		m_State.FullscreenRecoverPlacement = { 0 };
 		m_State.IsFullscreen			= false;
 
+		m_State.KeyCodeStates.resize(0xFF, KeyCodeState::Up);
+
 		if (!CreateWin32Window())
 		{
 			LOG_CRITICAL("Could not create window");
@@ -190,6 +192,11 @@ namespace mwl
 		return m_State.Height;
 	}
 
+	float Win32Window::GetAspectRatio() const
+	{
+		return static_cast<float>(m_State.Width) / m_State.Height;
+	}
+
 	void* Win32Window::GetNative()
 	{
 		return (void*)m_Win32Data.OpenGLHandle;
@@ -198,6 +205,11 @@ namespace mwl
 	WindowNativeType Win32Window::GetNativeType() const
 	{
 		return WindowNativeType::Win32;
+	}
+
+	mwl::KeyCodeState Win32Window::GetKeyCodeState(KeyCode keyCode) const
+	{
+		return m_State.KeyCodeStates[(size_t)keyCode];
 	}
 
 	void Win32Window::LoadCursorData(const CursorData& cursor)
@@ -752,7 +764,7 @@ namespace mwl
 		case VK_ESCAPE:		return KeyCode::Escape;
 		case VK_RETURN:		return KeyCode::Enter;
 		case VK_SPACE:		return KeyCode::Space;
-		case VK_LCONTROL:	return KeyCode::LeftControl;
+		case VK_CONTROL:	return KeyCode::LeftControl;
 		case VK_BACK:		return KeyCode::Backspace;
 
 		default: return KeyCode::None;
@@ -1254,7 +1266,7 @@ namespace mwl
 	
 	static LRESULT CALLBACK WindowProc(HWND hWindow, UINT uMessage, WPARAM wParam, LPARAM lParam)
 	{
-		auto window = (const Win32Window*)(GetWindowLongPtr(hWindow, GWLP_USERDATA));
+		auto window = (Win32Window*)(GetWindowLongPtr(hWindow, GWLP_USERDATA));
 
 		switch (uMessage) 
 		{
@@ -1317,14 +1329,18 @@ namespace mwl
 		}
 		case WM_KEYDOWN:
 		{
-			KeyCode keyCode = Win32KeyToKeyCode(wParam);
+ 			KeyCode keyCode = Win32KeyToKeyCode(wParam);
 			uint32_t repeat = lParam & (1 << 30);
+
+			window->m_State.KeyCodeStates[(size_t)keyCode] = KeyCodeState::Down;
 
 			SpawnKeyDownEvent(window, keyCode, repeat);
 		} break;
 		case WM_KEYUP:
 		{
 			KeyCode keyCode = Win32KeyToKeyCode(wParam);
+
+			window->m_State.KeyCodeStates[(size_t)keyCode] = KeyCodeState::Up;
 
 			SpawnKeyUpEvent(window, keyCode);
 		} break;

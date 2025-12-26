@@ -1,4 +1,6 @@
 #pragma once
 
-#include "../../src/Window.h"
-#include "../../src/KeyCodes.h"
+#include "Window.h"
+#include "KeyCodes.h"
+#include "MouseCodes.h"
+#include "Events.h"

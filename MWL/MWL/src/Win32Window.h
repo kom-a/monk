@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Window.h"
+#include <MWL/Window.h>
 
 #include <windows.h>
 #include <vector>
@@ -26,8 +26,11 @@ namespace mwl
 		bool IsFullscreen() const override;
 		uint32_t GetWidth()	const override;
 		uint32_t GetHeight() const override;
+		float GetAspectRatio() const override;
 		void* GetNative() override;
 		WindowNativeType GetNativeType() const override;
+
+		KeyCodeState GetKeyCodeState(KeyCode keyCode) const override;
 
 		void LoadCursorData(const CursorData& cursor) override;
 		void SetCursor(CursorType cursorType) override;
@@ -138,6 +141,8 @@ namespace mwl
 			uint32_t MouseX;
 			uint32_t MouseY;
 			MouseButton MouseClicked;
+
+			std::vector<KeyCodeState> KeyCodeStates;
 
 			OpenGLVersion OpenGLContextVersion;
 

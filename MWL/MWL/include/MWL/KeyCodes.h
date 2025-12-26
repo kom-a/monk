@@ -76,4 +76,10 @@ namespace mwl
 		LeftControl = 0xA2,
 		Backspace = 0x08,
 	};
+
+	enum KeyCodeState
+	{
+		Up,
+		Down
+	};
 }
