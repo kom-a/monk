@@ -4,6 +4,7 @@
 #include <cmath>
 
 #define TO_RADIANS(deg) (deg * M_PI / 180.0f)
+#define TO_DEGREES(rad) (rad * 180.0f / M_PI)
 
 namespace mml
 {
@@ -172,6 +173,11 @@ namespace mml
 	float ToRadians(float degrees)
 	{
 		return (float)TO_RADIANS(degrees);
+	}
+
+	float ToDegrees(float radians)
+	{
+		return (float)TO_DEGREES(radians);
 	}
 
 	mat4 Transpose(const mat4& mat)

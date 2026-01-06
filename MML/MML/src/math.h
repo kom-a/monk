@@ -12,6 +12,7 @@ namespace mml
 	mat4 Transpose(const mat4& mat);
 
 	float ToRadians(float degrees);
+	float ToDegrees(float radians);
 	
 	vec2 Normalize(const vec2& vector);
 	vec3 Normalize(const vec3& vector);

@@ -19,7 +19,7 @@ int main()
 	mwl::WindowProps windowProps;
 	windowProps.OpenGLContextVersion = mwl::OpenGLVersion::OPENGL_4_6;
 	window = mwl::Create(windowProps);
-	window->SetCursor(mwl::Cursor("./oxy-bluecurve/oxy-bluecurve.inf"));
+	//window->SetCursor(mwl::Cursor("./oxy-bluecurve/oxy-bluecurve.inf"));
 	window->SetKeyDownCallback(OnKeyDown);
 
 	if (mogl::OpenGLLoader::LoadOpenGL(mogl::OpenGLVersion::OPENGL_4_6) != mogl::OpenGLVersion::OPENGL_4_6)
@@ -37,7 +37,7 @@ int main()
 
 	std::string fox = "The quick brown fox jumps over the lazy dog!";
 
-	MFL::Font arial = MFL::Font("C:/Users/kamil/OneDrive/Рабочий стол/ponde___.ttf");
+	MFL::Font arial = MFL::Font("res/Freedom.ttf");
 	monk::Ref<monk::Texture2D> atlasTexture = monk::Texture2D::Create(arial.GetAtlasWidth(), arial.GetAtlasHeight(), monk::TextureFormat::RED, arial.GetAtlasTextureBuffer());
 
 	while (!window->Closed())
@@ -54,16 +54,16 @@ int main()
 
 		//renderer.DrawString(text, mml::vec2(10, y), 12, mml::vec4(0.0f, 1.0f, 0.0f, 1.0f));
 
-		//renderer.DrawTexture(mml::vec2(0.0f, 0.0f), atlasTexture->Size() / 2, atlasTexture);
+		renderer.DrawTexture(mml::vec2(0.0f, 0.0f), atlasTexture->Size(), atlasTexture);
 
-		renderer.DrawQuad(mml::vec2(0.0f, 350), mml::vec2(window->GetWidth(), 1000), mml::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+		//renderer.DrawQuad(mml::vec2(0.0f, 350), mml::vec2(window->GetWidth(), 1000), mml::vec4(0.0f, 0.0f, 0.0f, 1.0f));
 
-		renderer.DrawString(fox, mml::vec2(100, 100), 10, mml::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+		//renderer.DrawString(fox, mml::vec2(100, 100), 10, mml::vec4(1.0f, 1.0f, 1.0f, 1.0f));
 		//renderer.DrawString(fox, mml::vec2(100, 150), 18, mml::vec4(1.0f, 1.0f, 1.0f, 1.0f));
 		//renderer.DrawString(fox, mml::vec2(100, 200), 24, mml::vec4(1.0f, 1.0f, 1.0f, 1.0f));
 		//renderer.DrawString(fox, mml::vec2(100, 250), 32, mml::vec4(1.0f, 1.0f, 1.0f, 1.0f));
 		//renderer.DrawString(fox, mml::vec2(100, 300), 36, mml::vec4(1.0f, 1.0f, 1.0f, 1.0f));
-		renderer.DrawString(fox, mml::vec2(100, 350), 42, mml::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+		//renderer.DrawString(fox, mml::vec2(100, 350), 42, mml::vec4(1.0f, 1.0f, 1.0f, 1.0f));
 		//renderer.DrawString(text, mml::vec2(100, 400), 46, mml::vec4(1.0f, 1.0f, 1.0f, 1.0f));
 		//renderer.DrawString(fox, mml::vec2(100, 500), 64, mml::vec4(1.0f, 1.0f, 1.0f, 1.0f));
 		//renderer.DrawString(fox, mml::vec2(100, 600), 88, mml::vec4(1.0f, 1.0f, 1.0f, 1.0f));

@@ -128,8 +128,11 @@ namespace monk
 		{
 			float dist = length(v_Position - v_Center);
 
-			const float eps = 0.5f;
-			FragColor = vec4(v_Color.xyz, 1.0f - smoothstep(v_Radius - eps, v_Radius + eps, dist));
+			if(dist > v_Radius)
+				discard;
+
+			const float eps = 0.005f;
+			FragColor = vec4(v_Color.xyz, 1.0);
 		}
 	)";
 
@@ -223,7 +226,7 @@ namespace monk
 		uint32_t whiteTexture = 0xffffffff;
 		m_WhiteTexture = CreateUnique<Texture2D>(1, 1, TextureFormat::RGBA, (uint8_t*)&whiteTexture);
 
-		m_DefaultFont = CreateRef<MFL::Font>("C:/Users/kamil/OneDrive/Рабочий стол/small_pixel.ttf");
+		m_DefaultFont = CreateRef<MFL::Font>("C:/Users/kamil/OneDrive/Рабочий стол/NFPixels-Regular.ttf");
 		m_AtlasTexture = Texture2D::Create(m_DefaultFont->GetAtlasWidth(), m_DefaultFont->GetAtlasHeight(), TextureFormat::RED, m_DefaultFont->GetAtlasTextureBuffer());
 	}
 

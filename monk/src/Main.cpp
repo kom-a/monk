@@ -65,12 +65,22 @@ void Application::Run()
 
 	float drag = 0;
 
+	float x = 500;
+	float y = 100;
+	float r = 50;
+
+	float dx = 0;
+	float dy = 100;
+
 	while (!m_Window->Closed())
 	{
 		m_Window->Update();
+		camera->SetProjection(0.0f, m_Window->GetWidth(), m_Window->GetHeight(), 0, 0, 1);
 
-		glClearColor(0.6f, 0.8f, 1.0f, 1.0f);
+		glClearColor(0.25f, 0.1f, 0.20f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		float dt = timer.Delta();
 
 		glViewport(0, 0, m_Window->GetWidth(), m_Window->GetHeight());
 		mui::Input& muiInput = mui::GetInput();
@@ -82,12 +92,31 @@ void Application::Run()
 
 		float step = 1.0f / k;
 
-		for (float i = 0; i < 1; i += step)
+		//for (float i = 0; i < 1; i += step)
+		//{
+		//	for (float j = 0; j < 1; j += step)
+		//	{
+		//		m_Renderer2D->DrawQuad(mml::vec2(i, j), mml::vec2(step), mml::vec4(i, j, std::sin(timer.Elapsed()) * 0.5f + 0.5f, 1.0f));
+		//	}
+		//}
+
+		m_Renderer2D->DrawCircle(mml::vec2(x, y), r, mml::vec4(0.25f, 0.1f, 0.6f, 1.0f));
+
+		x += dx * dt;
+		y += dy * dt;
+
+		dy += 300 * dt;
+
+		if (y >= m_Window->GetHeight() - r)
 		{
-			for (float j = 0; j < 1; j += step)
-			{
-				m_Renderer2D->DrawQuad(mml::vec2(i, j), mml::vec2(step), mml::vec4(i, j, std::sin(timer.Elapsed()) * 0.5f + 0.5f, 1.0f));
-			}
+			dy *= -1;
+			y = m_Window->GetHeight() - r;
+		}
+
+		if (y <= r)
+		{
+			dy *= -1;
+			y = r;
 		}
 
 		m_Renderer2D->End();
@@ -99,7 +128,7 @@ void Application::Run()
 			mui::Begin("Hello world", &open);
 			mui::Text("Hello world");
 
-			mui::DragFloat("drag me", &drag);
+			mui::DragFloat("x", &x);
 			mui::End();
 
 			mui::Begin("Hello");
@@ -148,7 +177,6 @@ void Application::LoadOpenGL()
 
 void Application::OnWindowResize(mwl::WindowResizeEvent e)
 {
-	LOG_INFO("{0}, {1}", e.Width, e.Height);
 	glViewport(0, 0, e.Width, e.Height);
 
 	mui::Input& muiInput = mui::GetInput();
