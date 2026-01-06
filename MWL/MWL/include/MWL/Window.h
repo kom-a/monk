@@ -6,6 +6,7 @@
 #include <filesystem>
 #include <optional>
 
+#include "Event.h"
 #include "Events.h"
 
 namespace mwl
@@ -119,28 +120,30 @@ namespace mwl
 
 		virtual void SetFullscreen		(bool fullscreen) = 0;
 
-		void SetWindowResizeCallback	(const WindowResizeCallbackFn& callback);
-		void SetMouseMovedCallback		(const MouseMovedCallbackFn& callback);
-		void SetMouseButtonDownCallback	(const MouseButtonDownCallbackFn& callback);
-		void SetMouseButtonUpCallback	(const MouseButtonUpCallbackFn& callback);
-		void SetMouseClickedCallback	(const MouseClickedCallbackFn& callback);
-		void SetMouseScrollCalback		(const MouseScrollCallbackFn& callback);
-		void SetKeyDownCallback			(const KeyDownCallbackFn& callback);
-		void SetKeyUpCallback			(const KeyUpCallbackFn& callback);
+		
+		WindowResizeDelegate&		Resized();
+		MouseMovedDelegate&			MouseMoved();
+		MouseButtonDownDelegate&	MouseButtonDown();
+		MouseButtonUpDelegate&		MouseButtonUp();
+		MouseClickedDelegate&		MouseClicked();
+		MouseScrollDelegate&		MouseScroll();
+		KeyDownDelegate&			KeyDown();
+		KeyUpDelegate&				KeyUp();
 
 	protected:
 		struct
 		{
-			WindowResizeCallbackFn WindowResizeCallback			= nullptr;
+			WindowResizeDelegate WindowResize;
 
-			MouseMovedCallbackFn MouseMovedCallback				= nullptr;
-			MouseButtonDownCallbackFn MouseButtonDownCallback	= nullptr;
-			MouseButtonUpCallbackFn MouseButtonUpCallback		= nullptr;
-			MouseClickedCallbackFn MouseClickedCallback			= nullptr;
-			MouseScrollCallbackFn MouseScrollCallback			= nullptr;
+			MouseMovedDelegate MouseMoved;
 
-			KeyDownCallbackFn KeyDownCallback					= nullptr;
-			KeyUpCallbackFn KeyUpCallback						= nullptr;
+			MouseButtonDownDelegate MouseButtonDown;
+			MouseButtonUpDelegate MouseButtonUp;
+			MouseClickedDelegate MouseClicked;
+			MouseScrollDelegate MouseScroll;
+
+			KeyDownDelegate KeyDown;
+			KeyUpDelegate KeyUp;
 		} Callbacks;
 
 		CursorData m_Cursor = CursorData(L"");

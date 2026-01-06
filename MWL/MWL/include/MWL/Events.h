@@ -54,15 +54,14 @@ namespace mwl
 		KeyCode Key = KeyCode::None;
 	};
 
-	using WindowResizeCallbackFn	= std::function<void(WindowResizeEvent e)>;
+	using WindowResizeDelegate = Event<WindowResizeEvent>;
 
-	using MouseMovedCallbackFn		= std::function<void(MouseMovedEvent e)>;
-	using MouseButtonDownCallbackFn = std::function<void(MouseButtonDownEvent e)>;
-	using MouseButtonUpCallbackFn	= std::function<void(MouseButtonUpEvent e)>;
-	using MouseClickedCallbackFn	= std::function<void(MouseClickedEvent e)>;
-	using MouseScrollCallbackFn		= std::function<void(MouseScrollEvent e)>;
+	using MouseMovedDelegate = Event<MouseMovedEvent>;
+	using MouseButtonDownDelegate = Event<MouseButtonDownEvent>;
+	using MouseButtonUpDelegate = Event<MouseButtonUpEvent>;
+	using MouseClickedDelegate = Event<MouseClickedEvent>;
+	using MouseScrollDelegate = Event<MouseScrollEvent>;
 
-	using KeyDownCallbackFn			= std::function<void(KeyDownEvent e)>;
-	using KeyUpCallbackFn			= std::function<void(KeyUpEvent e)>;
-
-}
+	using KeyDownDelegate = Event<KeyDownEvent>;
+	using KeyUpDelegate = Event<KeyUpEvent>;
+} // namespace mwl

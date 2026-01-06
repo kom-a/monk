@@ -104,43 +104,43 @@ namespace mwl
 		m_Cursor = cursor;
 	}
 
-	void Window::SetWindowResizeCallback(const WindowResizeCallbackFn& callback)
+	WindowResizeDelegate& Window::Resized()
 	{
-		Callbacks.WindowResizeCallback = callback;
+		return Callbacks.WindowResize;
 	}
 
-	void Window::SetMouseMovedCallback(const MouseMovedCallbackFn& callback)
+	MouseMovedDelegate& Window::MouseMoved()
 	{
-		Callbacks.MouseMovedCallback = callback;
+		return Callbacks.MouseMoved;
 	}
 
-	void Window::SetMouseButtonDownCallback(const MouseButtonDownCallbackFn& callback)
+	MouseButtonDownDelegate& Window::MouseButtonDown()
 	{
-		Callbacks.MouseButtonDownCallback = callback;
+		return Callbacks.MouseButtonDown;
 	}
 
-	void Window::SetMouseButtonUpCallback(const MouseButtonUpCallbackFn& callback)
+	MouseButtonUpDelegate& Window::MouseButtonUp()
 	{
-		Callbacks.MouseButtonUpCallback = callback;
+		return Callbacks.MouseButtonUp;
 	}
 
-	void Window::SetMouseClickedCallback(const MouseClickedCallbackFn& callback)
+	MouseClickedDelegate& Window::MouseClicked()
 	{
-		Callbacks.MouseClickedCallback = callback;
+		return Callbacks.MouseClicked;
 	}
 
-	void Window::SetMouseScrollCalback(const MouseScrollCallbackFn& callback)
+	MouseScrollDelegate& Window::MouseScroll()
 	{
-		Callbacks.MouseScrollCallback = callback;
+		return Callbacks.MouseScroll;
 	}
 
-	void Window::SetKeyDownCallback(const KeyDownCallbackFn& callback)
+	KeyDownDelegate& Window::KeyDown()
 	{
-		Callbacks.KeyDownCallback = callback;
+		return Callbacks.KeyDown;
 	}
 
-	void Window::SetKeyUpCallback(const KeyUpCallbackFn& callback)
+	KeyUpDelegate& Window::KeyUp()
 	{
-		Callbacks.KeyUpCallback = callback;
+		return Callbacks.KeyUp;
 	}
 }
