@@ -45,6 +45,7 @@ namespace mui
 	};
 
 	void InitForWin32(void* handle);
+	void InitForMWL(void* MWLWindow);
 	void Shutdown();
 
 	Input& GetInput();

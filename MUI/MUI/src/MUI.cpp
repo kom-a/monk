@@ -12,6 +12,8 @@
 
 namespace mui
 {
+	void InitForMWLImpl(void* MWLWindow); // remove
+
 	IMPL_LOGGER("MUI");
 
 	struct Style
@@ -259,6 +261,13 @@ namespace mui
 	void InitForWin32(void* handle)
 	{
 		g_Context.Handle = (HWND)handle;
+
+		g_Renderer = new Renderer();
+	}
+
+	void InitForMWL(void* MWLWindow)
+	{
+		InitForMWLImpl(MWLWindow);
 
 		g_Renderer = new Renderer();
 	}

@@ -6,8 +6,10 @@ include "../MUI/MUI"
 include "../MFL/MFL"
 include "../Scriptorium/Scriptorium"
 
+local buildMonkStatic = _OPTIONS["monk_static"] ~= nil
+
 project "Monk"
-   kind "ConsoleApp"
+   kind ("StaticLib")
    language "C++"
    cppdialect "C++17"
 
@@ -45,6 +47,10 @@ project "Monk"
        "Scriptorium",
       "opengl32"
    }
+
+   if buildMonkStatic then
+      defines { "MONK_STATIC" }
+   end
 
    filter "configurations:Debug"
       defines { "DEBUG" }

@@ -128,11 +128,11 @@ void Application::InitWindow()
 
 	m_Window.reset(mwl::Create(windowProps));
 
-	m_Window->SetWindowResizeCallback(BIND_FUNCTION(Application::OnWindowResize));
-	m_Window->SetMouseMovedCallback(BIND_FUNCTION(Application::OnMouseMove));
-	m_Window->SetMouseButtonDownCallback(BIND_FUNCTION(Application::OnButtonDown));
-	m_Window->SetMouseButtonUpCallback(BIND_FUNCTION(Application::OnButtonUp));
-	m_Window->SetKeyDownCallback(BIND_FUNCTION(Application::OnKeyDown));
+	//m_Window->SetWindowResizeCallback(BIND_FUNCTION(Application::OnWindowResize));
+	//m_Window->SetMouseMovedCallback(BIND_FUNCTION(Application::OnMouseMove));
+	//m_Window->SetMouseButtonDownCallback(BIND_FUNCTION(Application::OnButtonDown));
+	//m_Window->SetMouseButtonUpCallback(BIND_FUNCTION(Application::OnButtonUp));
+	//m_Window->SetKeyDownCallback(BIND_FUNCTION(Application::OnKeyDown));
 
 	mwl::CursorData cursor("res/oxy-bluecurve/oxy-bluecurve.inf");
 	m_Window->LoadCursorData(cursor);

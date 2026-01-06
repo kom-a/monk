@@ -19,12 +19,15 @@ project "MUI"
 		IncludeDir["WangMauna"],
 		IncludeDir["MOGL"],
 		IncludeDir["MFL"],
+		IncludeDir["MWL"], --[[ include only if MWL is backend --]]
+		IncludeDir["MUI"]
 	}
 
 	links {
 		"WangMauna",
 		"MOGL",
-		"MFL"
+		"MFL",
+		"MWL" --[[ link only if MWL is backend --]]
 	}
 
 	filter "configurations:Debug"

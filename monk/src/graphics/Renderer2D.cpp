@@ -223,7 +223,7 @@ namespace monk
 		uint32_t whiteTexture = 0xffffffff;
 		m_WhiteTexture = CreateUnique<Texture2D>(1, 1, TextureFormat::RGBA, (uint8_t*)&whiteTexture);
 
-		m_DefaultFont = CreateRef<MFL::Font>("C:/Users/kamil/OneDrive/Рабочий стол/small_pixel.ttf");
+		m_DefaultFont = CreateRef<MFL::Font>("C:/Users/kamil/Downloads/Atkinson_Hyperlegible_Mono/static/AtkinsonHyperlegibleMono-Regular.ttf");
 		m_AtlasTexture = Texture2D::Create(m_DefaultFont->GetAtlasWidth(), m_DefaultFont->GetAtlasHeight(), TextureFormat::RED, m_DefaultFont->GetAtlasTextureBuffer());
 	}
 
@@ -379,10 +379,12 @@ namespace monk
 		float offsetY = 0.0f;
 		float maxRowHeight = 0.0f;
 
+		monk::Ref<MFL::Font> font = m_FontStack.size() ? m_FontStack.back() : m_DefaultFont;
+
 		for (uint32_t c : text)
 		{
-			const MFL::GlyphData& glyphData = m_DefaultFont->GetGlyphDataByUnicode(c);
-			float scale = m_DefaultFont->GetScaleForFontSize(fontSize);
+			const MFL::GlyphData& glyphData = font->GetGlyphDataByUnicode(c);
+			float scale = font->GetScaleForFontSize(fontSize);
 
 			float width		= glyphData.Width		* scale;
 			float height	= glyphData.Height		* scale;

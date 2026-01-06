@@ -83,7 +83,7 @@ namespace mui
 
 		//m_Font			= std::make_unique<MFL::Font>("C:/Windows/Fonts/arial.ttf");
 		//m_Font			= std::make_unique<MFL::Font>("C:/Users/kamil/OneDrive/Рабочий стол/Roboto-Medium.ttf");
-		m_Font = std::make_unique<MFL::Font>(g_FontBuffer_small_pixel);
+		m_Font = std::make_unique<MFL::Font>("C:/Users/kamil/Downloads/Atkinson_Hyperlegible_Mono/static/AtkinsonHyperlegibleMono-ExtraBold.ttf");
 		m_AtlasTexture	= CreateAtlasTexture();
 	}
 

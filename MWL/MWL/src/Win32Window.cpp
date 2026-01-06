@@ -576,14 +576,11 @@ namespace mwl
 		if (!window)
 			return;
 
-		if (!window->Callbacks.WindowResizeCallback)
-			return;
-
 		WindowResizeEvent e;
 		e.Width	 = window->m_State.Width;
 		e.Height = window->m_State.Height;
 
-		window->Callbacks.WindowResizeCallback(e);
+		window->Callbacks.WindowResize.Invoke(e);
 	}
 
 	static void SpawnMouseMoveEvent(const Win32Window* window)
@@ -591,14 +588,11 @@ namespace mwl
 		if (!window)
 			return;
 
-		if (!window->Callbacks.MouseMovedCallback)
-			return;
-
 		MouseMovedEvent e;
 		e.X = window->m_State.MouseX;
 		e.Y = window->m_State.MouseY;
 
-		window->Callbacks.MouseMovedCallback(e);
+		window->Callbacks.MouseMoved.Invoke(e);
 	}
 
 	static void SpawnMouseButtonDownEvent(const Win32Window* window, MouseButton button)
@@ -606,15 +600,12 @@ namespace mwl
 		if (!window)
 			return;
 
-		if (!window->Callbacks.MouseButtonDownCallback)
-			return;
-
 		MouseButtonDownEvent e;
 		e.X = window->m_State.MouseX;
 		e.Y = window->m_State.MouseY;
 		e.Button = button;
 
-		window->Callbacks.MouseButtonDownCallback(e);
+		window->Callbacks.MouseButtonDown.Invoke(e);
 	}
 
 	static void SpawnMouseButtonUpEvent(const Win32Window* window, MouseButton button)
@@ -622,15 +613,12 @@ namespace mwl
 		if (!window)
 			return;
 
-		if (!window->Callbacks.MouseButtonUpCallback)
-			return;
-
 		MouseButtonUpEvent e;
 		e.X = window->m_State.MouseX;
 		e.Y = window->m_State.MouseY;
 		e.Button = button;
 
-		window->Callbacks.MouseButtonUpCallback(e);
+		window->Callbacks.MouseButtonUp.Invoke(e);
 	}
 
 	static void SpawnMouseButtonClickedEvent(const Win32Window* window, MouseButton button)
@@ -638,15 +626,12 @@ namespace mwl
 		if (!window)
 			return;
 
-		if (!window->Callbacks.MouseClickedCallback)
-			return;
-
 		MouseClickedEvent e;
 		e.X = window->m_State.MouseX;
 		e.Y = window->m_State.MouseY;
 		e.Button = button;
 
-		window->Callbacks.MouseClickedCallback(e);
+		window->Callbacks.MouseClicked.Invoke(e);
 	}
 
 	void SpawnMouseScrollEvent(const Win32Window* window, int delta)
@@ -654,13 +639,10 @@ namespace mwl
 		if (!window)
 			return;
 
-		if (!window->Callbacks.MouseScrollCallback)
-			return;
-
 		MouseScrollEvent e;
 		e.Delta = delta;
 
-		window->Callbacks.MouseScrollCallback(e);
+		window->Callbacks.MouseScroll.Invoke(e);
 	}
 
 	static void SpawnKeyDownEvent(const Win32Window* window, KeyCode keyCode, bool repeat)
@@ -668,15 +650,12 @@ namespace mwl
 		if (!window)
 			return;
 
-		if (!window->Callbacks.KeyDownCallback)
-			return;
-
 		KeyDownEvent e;
 		e.Key = keyCode;
 		e.Repeat = repeat;
 
 		if(e.Key != KeyCode::None)
-			window->Callbacks.KeyDownCallback(e);
+			window->Callbacks.KeyDown.Invoke(e);
 	}
 
 	static void SpawnKeyUpEvent(const Win32Window* window, KeyCode keyCode)
@@ -684,14 +663,11 @@ namespace mwl
 		if (!window)
 			return;
 
-		if (!window->Callbacks.KeyUpCallback)
-			return;
-
 		KeyUpEvent e;
 		e.Key = keyCode;
 
 		if (e.Key != KeyCode::None)
-			window->Callbacks.KeyUpCallback(e);
+			window->Callbacks.KeyUp.Invoke(e);
 	}
 
 	static KeyCode Win32KeyToKeyCode(WPARAM keyCode)
